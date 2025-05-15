@@ -1,7 +1,9 @@
 from datetime import datetime
 from enum import Enum
 from pydantic import EmailStr
-from sqlmodel import SQLModel, Field, Column, DateTime, func
+from sqlmodel import Relationship, SQLModel, Field, Column, DateTime, func
+
+from app.models.company_model import Company
 
 
 class GenderEnum(str, Enum):
@@ -17,6 +19,7 @@ class UserBase(SQLModel):
     last_name: str
     gender: GenderEnum = GenderEnum.MALE
     email: EmailStr = Field(nullable=False, unique=True, index=True)
+    company_id: int | None = Field(default=None, foreign_key="companies.id")
 
 
 # Properties to receive via API on creation
@@ -34,6 +37,7 @@ class UserUpdateMe(SQLModel):
     last_name: str | None = Field(default=None)
     gender: GenderEnum | None = Field(default=None)
     email: EmailStr | None = Field(default=None)
+    company_id: int | None = Field(default=None)
 
 
 class UpdatePassword(SQLModel):
@@ -51,9 +55,14 @@ class User(UserBase, table=True):
     )
     deleted_at: datetime | None = Field(default=None)
 
+    company: Company = Relationship(
+        back_populates="employees", sa_relationship_kwargs={"lazy": "noload"}
+    )
+
 
 class UserPublic(UserBase):
     id: int
+    company: Company | None = None
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
