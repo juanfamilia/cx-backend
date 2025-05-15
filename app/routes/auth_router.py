@@ -27,13 +27,14 @@ async def login(
     session: AsyncSession = Depends(get_db),
 ):
     user = await get_user_by_email(session, form_data.username)
-    public_user = UserPublic.model_validate(user)
 
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise InvalidCredentialsException()
 
     if user.deleted_at:
         raise DisabledException("User disabled or deleted")
+
+    public_user = UserPublic.model_validate(user)
 
     access_token = create_access_token(
         user.email,
