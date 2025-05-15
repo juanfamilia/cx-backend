@@ -14,6 +14,7 @@ from app.services.users_services import (
 )
 from app.utils.deps import get_auth_user
 from app.utils.exeptions import PermissionDeniedException
+from app.utils.helpers.role_checker import check_role_creation_permissions
 
 router = APIRouter(
     prefix="/user",
@@ -33,7 +34,10 @@ async def get_all_users(
     if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="retrieve all users")
 
-    users = await get_users(session, offset, limit)
+    if request.state.user.role == 1:
+        users = await get_users(session, offset, limit, request.state.user.company_id)
+    else:
+        users = await get_users(session, offset, limit)
 
     return users
 
@@ -43,7 +47,7 @@ async def get_current_user(request: Request) -> UserPublic:
 
     if not request.state.user:
         raise JSONResponse(
-            content="User session not found or expired",
+            content="User session not found or expired session",
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
 
@@ -75,6 +79,12 @@ async def get_one_user(
         if user.id != request.state.user.id:
             raise PermissionDeniedException(custom_message="retrieve this user")
 
+    if (
+        request.state.user.role == 1
+        and user.company_id != request.state.user.company_id
+    ):
+        raise PermissionDeniedException(custom_message="retrieve this user")
+
     return user
 
 
@@ -85,6 +95,11 @@ async def register_user(
 
     if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="create users")
+
+    if request.state.user.role == 1:
+        user_create.company_id = request.state.user.company_id
+
+    check_role_creation_permissions(request.state.user.role, user_create.role)
 
     save_user = await create_user(session, user_create)
 
@@ -102,6 +117,14 @@ async def update_any_user(
     if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="update this user")
 
+    if (
+        request.state.user.role == 1
+        and request.state.user.company != user_update.company_id
+    ):
+        raise PermissionDeniedException(custom_message="update this user")
+
+    check_role_creation_permissions(request.state.user.role, user_update.role)
+
     updated_user = await update_user(session, user_id, user_update)
 
     return updated_user
@@ -114,7 +137,12 @@ async def delete_user(
     session: AsyncSession = Depends(get_db),
 ):
 
+    user = await get_user(session, user_id)
+
     if request.state.user.role not in [0, 1]:
+        raise PermissionDeniedException(custom_message="delete this user")
+
+    if request.state.user.role == 1 and request.state.user.company != user.company_id:
         raise PermissionDeniedException(custom_message="delete this user")
 
     await soft_delete_user(session, user_id)

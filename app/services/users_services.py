@@ -1,6 +1,7 @@
 from typing import List
-from fastapi import Depends, Query
+from fastapi import Query
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
@@ -19,10 +20,17 @@ async def get_users(
     session: AsyncSession,
     offset: int = 0,
     limit: int = Query(default=10, le=100),
+    company_id: int | None = None,
 ) -> List[UserPublic]:
 
-    statement = select(User).where(User.deleted_at == None).offset(offset).limit(limit)
-    result = await session.execute(statement)
+    query = select(User).where(User.deleted_at == None)
+
+    if company_id:
+        query = query.where(User.company_id == company_id)
+
+    query = query.offset(offset).limit(limit)
+
+    result = await session.execute(query)
     db_users = result.scalars().all()
 
     if not db_users:
@@ -46,8 +54,9 @@ async def get_user_by_email(
     email: str,
 ) -> User:
 
-    statement = select(User).where(User.email == email)
-    result = await session.execute(statement)
+    query = select(User).where(User.email == email)
+
+    result = await session.execute(query)
     db_user = result.scalars().first()
 
     if not db_user:
