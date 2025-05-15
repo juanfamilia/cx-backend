@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.models.users_model import UserCreate, UserPublic, UserUpdate, UserUpdateMe
+from app.models.user_model import UserCreate, UserPublic, UserUpdate, UserUpdateMe
 from app.services.users_services import (
     create_user,
     get_user,

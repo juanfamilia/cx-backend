@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from app.core.security import get_password_hash
-from app.models.users_model import (
+from app.models.user_model import (
     User,
     UserCreate,
     UserPublic,
