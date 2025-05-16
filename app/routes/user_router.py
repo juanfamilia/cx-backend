@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Request, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,7 +24,7 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_all_users(
+async def get_all(
     request: Request,
     session: AsyncSession = Depends(get_db),
     offset: int = 0,
@@ -43,7 +43,7 @@ async def get_all_users(
 
 
 @router.get("/me")
-async def get_current_user(request: Request) -> UserPublic:
+async def get_current(request: Request) -> UserPublic:
 
     if not request.state.user:
         raise JSONResponse(
@@ -55,7 +55,7 @@ async def get_current_user(request: Request) -> UserPublic:
 
 
 @router.put("/me/{user_id}")
-async def update_current_user(
+async def update_current(
     request: Request,
     user_update: UserUpdateMe,
     session: AsyncSession = Depends(get_db),
@@ -67,7 +67,7 @@ async def update_current_user(
 
 
 @router.get("/{user_id}")
-async def get_one_user(
+async def get_one(
     request: Request,
     user_id: int,
     session: AsyncSession = Depends(get_db),
@@ -89,7 +89,7 @@ async def get_one_user(
 
 
 @router.post("/", response_model=UserCreate)
-async def register_user(
+async def create(
     request: Request, user_create: UserCreate, session: AsyncSession = Depends(get_db)
 ) -> UserPublic:
 
@@ -107,7 +107,7 @@ async def register_user(
 
 
 @router.put("/{user_id}", response_model=UserPublic)
-async def update_any_user(
+async def update_any(
     request: Request,
     user_id: int,
     user_update: UserUpdate,
@@ -131,7 +131,7 @@ async def update_any_user(
 
 
 @router.delete("/{user_id}")
-async def delete_user(
+async def delete(
     request: Request,
     user_id: int,
     session: AsyncSession = Depends(get_db),

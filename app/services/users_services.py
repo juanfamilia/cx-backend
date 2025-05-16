@@ -28,13 +28,13 @@ async def get_users(
     if company_id:
         query = query.where(User.company_id == company_id)
 
-    query = query.offset(offset).limit(limit)
+    query = query.order_by(User.id).offset(offset).limit(limit)
 
     result = await session.execute(query)
     db_users = result.scalars().all()
 
     if not db_users:
-        raise NotFoundException("Users not found")
+        return []
 
     return [UserPublic.model_validate(user) for user in db_users]
 
