@@ -1,9 +1,16 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, Request, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.models.user_model import UserCreate, UserPublic, UserUpdate, UserUpdateMe
+from app.models.user_model import (
+    UserCreate,
+    UserPublic,
+    UserUpdate,
+    UserUpdateMe,
+    UsersPublic,
+)
 from app.services.users_services import (
     create_user,
     get_user,
@@ -29,15 +36,19 @@ async def get_all(
     session: AsyncSession = Depends(get_db),
     offset: int = 0,
     limit: int = Query(default=10, le=100),
-) -> list[UserPublic]:
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+) -> UsersPublic:
 
     if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="retrieve all users")
 
     if request.state.user.role == 1:
-        users = await get_users(session, offset, limit, request.state.user.company_id)
+        users = await get_users(
+            session, offset, limit, filter, search, request.state.user.company_id
+        )
     else:
-        users = await get_users(session, offset, limit)
+        users = await get_users(session, offset, limit, filter, search)
 
     return users
 

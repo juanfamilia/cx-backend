@@ -11,7 +11,9 @@ from app.core.security import (
 )
 from app.core.config import settings
 from app.models.user_model import UserPublic
+from app.services.payment_services import is_company_payment_valid
 from app.services.users_services import get_user_by_email
+from app.utils.deps import check_company_payment_status
 from app.utils.exeptions import (
     DisabledException,
     InvalidCredentialsException,
@@ -28,11 +30,13 @@ async def login(
 ):
     user = await get_user_by_email(session, form_data.username)
 
+    await check_company_payment_status(user, session)
+
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise InvalidCredentialsException()
 
     if user.deleted_at:
-        raise DisabledException("User disabled or deleted")
+        raise DisabledException("Usuario desactivado o eliminado")
 
     public_user = UserPublic.model_validate(user)
 

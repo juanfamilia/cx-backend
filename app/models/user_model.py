@@ -1,9 +1,11 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import EmailStr
+from typing import Optional
+from pydantic import BaseModel, EmailStr
 from sqlmodel import Relationship, SQLModel, Field, Column, DateTime, func
 
 from app.models.company_model import Company
+from app.types.pagination import Pagination
 
 
 class GenderEnum(str, Enum):
@@ -62,7 +64,12 @@ class User(UserBase, table=True):
 
 class UserPublic(UserBase):
     id: int
-    company: Company | None = None
+    company: Optional[Company] = None
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
+
+
+class UsersPublic(BaseModel):
+    data: list[UserPublic]
+    pagination: Pagination

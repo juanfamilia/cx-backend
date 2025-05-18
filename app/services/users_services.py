@@ -1,42 +1,80 @@
-from typing import List
+from typing import List, Optional
 from fastapi import Query
-from sqlmodel import select
+from sqlmodel import and_, func, or_, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from app.core.security import get_password_hash
+from app.models.company_model import Company
 from app.models.user_model import (
     User,
     UserCreate,
     UserPublic,
     UserUpdate,
     UserUpdateMe,
+    UsersPublic,
 )
-from app.utils.exeptions import NotFoundException
+from app.types.pagination import Pagination
+from app.utils.exeptions import InvalidCredentialsException, NotFoundException
 
 
 async def get_users(
     session: AsyncSession,
     offset: int = 0,
-    limit: int = Query(default=10, le=100),
+    limit: int = Query(default=10, le=50),
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
     company_id: int | None = None,
-) -> List[UserPublic]:
+) -> List[UsersPublic]:
 
-    query = select(User).where(User.deleted_at == None)
+    query = (
+        select(User, func.count().over().label("total"))
+        .options(selectinload(User.company))
+        .where(User.deleted_at == None)
+    )
 
-    if company_id:
+    if company_id is not None:
         query = query.where(User.company_id == company_id)
+
+    if filter and search:
+        match filter:
+            case "full_name":
+                names = search.split()
+                if len(names) == 1:
+                    query = query.where(
+                        or_(
+                            User.first_name.ilike(f"%{names[0]}%"),
+                            User.last_name.ilike(f"%{names[0]}%"),
+                        )
+                    )
+                else:
+                    query = query.where(
+                        and_(
+                            User.first_name.ilike(f"%{names[0]}%"),
+                            User.last_name.ilike(f"%{' '.join(names[1:])}%"),
+                        )
+                    )
+
+            case "email":
+                query = query.where(User.email.ilike(f"%{search}%"))
+
+            case "company":
+                query = query.where(Company.name.ilike(f"%{search}%"))
 
     query = query.order_by(User.id).offset(offset).limit(limit)
 
     result = await session.execute(query)
-    db_users = result.scalars().all()
+    db_users = result.unique().all()
 
     if not db_users:
         return []
 
-    return [UserPublic.model_validate(user) for user in db_users]
+    patients = [row[0] for row in db_users]
+    total = db_users[0][1] if db_users else 0
+    pagination = Pagination(first=offset, rows=limit, total=total)
+
+    return UsersPublic(data=patients, pagination=pagination)
 
 
 async def get_user(session: AsyncSession, user_id: int) -> UserPublic:
@@ -46,7 +84,7 @@ async def get_user(session: AsyncSession, user_id: int) -> UserPublic:
     if not db_user:
         raise NotFoundException("User not found")
 
-    return UserPublic.model_validate(db_user)
+    return db_user
 
 
 async def get_user_by_email(
@@ -60,9 +98,9 @@ async def get_user_by_email(
     db_user = result.scalars().first()
 
     if not db_user:
-        raise NotFoundException("User not found by email")
+        raise InvalidCredentialsException()
 
-    return db_user
+    return User.model_validate(db_user)
 
 
 async def create_user(session: AsyncSession, user: UserCreate) -> UserPublic:

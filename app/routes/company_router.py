@@ -93,6 +93,6 @@ async def delete(
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="delete this company")
 
-    company = await soft_delete_company(session, company_id)
+    await soft_delete_company(session, company_id)
 
-    return company
+    return {"message": "Company deleted"}

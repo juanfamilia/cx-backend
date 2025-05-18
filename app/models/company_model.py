@@ -4,6 +4,7 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 if TYPE_CHECKING:
     from app.models.user_model import User
+    from app.models.payment_model import Payment
 
 
 class CompanyBase(SQLModel):
@@ -36,6 +37,7 @@ class Company(CompanyBase, table=True):
     deleted_at: datetime | None = Field(default=None)
 
     employees: list["User"] = Relationship(back_populates="company")
+    payments: list["Payment"] = Relationship(back_populates="company")
 
 
 class CompanyPublic(CompanyBase):

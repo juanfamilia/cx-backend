@@ -6,7 +6,7 @@ from alembic import context
 from sqlmodel import SQLModel
 from app.core.db import engine
 
-from app.models import user_model, company_model
+from app.models import user_model, company_model, payment_model
 
 config = context.config
 
