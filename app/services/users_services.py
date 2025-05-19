@@ -68,7 +68,7 @@ async def get_users(
     db_users = result.unique().all()
 
     if not db_users:
-        return []
+        raise NotFoundException("Users not found")
 
     patients = [row[0] for row in db_users]
     total = db_users[0][1] if db_users else 0
@@ -110,8 +110,9 @@ async def create_user(session: AsyncSession, user: UserCreate) -> UserPublic:
         role=user.role,
         first_name=user.first_name,
         last_name=user.last_name,
-        identity_number=user.identity_number,
+        gender=user.gender,
         email=user.email,
+        company_id=user.company_id,
         hashed_password=hashed_password,
     )
 
@@ -119,7 +120,7 @@ async def create_user(session: AsyncSession, user: UserCreate) -> UserPublic:
     await session.commit()
     await session.refresh(db_user)
 
-    return UserPublic.model_validate(db_user)
+    return db_user
 
 
 async def update_user(

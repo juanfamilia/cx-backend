@@ -99,10 +99,12 @@ async def get_one(
     return user
 
 
-@router.post("/", response_model=UserCreate)
+@router.post("/", response_model=UserPublic)
 async def create(
     request: Request, user_create: UserCreate, session: AsyncSession = Depends(get_db)
 ) -> UserPublic:
+
+    print(user_create)
 
     if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="create users")
