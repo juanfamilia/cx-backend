@@ -1,32 +1,56 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from sqlmodel import func, select
 
-from app.models.company_model import Company, CompanyBase, CompanyPublic, CompanyUpdate
+from app.models.company_model import (
+    CompaniesPublic,
+    Company,
+    CompanyBase,
+    CompanyPublic,
+    CompanyUpdate,
+)
+from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 
 
 async def get_companies(
-    session: AsyncSession, offset: int = 0, limit: int = Query(default=10, le=100)
-) -> List[CompanyPublic]:
+    session: AsyncSession,
+    offset: int = 0,
+    limit: int = Query(default=10, le=50),
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+) -> CompaniesPublic:
 
-    query = (
-        select(Company)
-        .where(Company.deleted_at == None)
-        .order_by(Company.id)
-        .offset(offset)
-        .limit(limit)
+    query = select(Company, func.count().over().label("total")).where(
+        Company.deleted_at == None
     )
 
+    if filter and search:
+        match filter:
+            case "name":
+                query = query.where(Company.name.ilike(f"%{search}%"))
+
+            case "phone":
+                query = query.where(Company.phone.ilike(f"%{search}%"))
+
+            case "email":
+                query = query.where(Company.email.ilike(f"%{search}%"))
+
+    query = query.order_by(Company.id).offset(offset).limit(limit)
+
     result = await session.execute(query)
-    db_companies = result.scalars().all()
+    db_companies = result.unique().all()
 
     if not db_companies:
-        return []
+        raise NotFoundException("Companies not found")
 
-    return [CompanyPublic.model_validate(company) for company in db_companies]
+    companies = [row[0] for row in db_companies]
+    total = db_companies[0][1] if db_companies else 0
+    pagination = Pagination(first=offset, rows=limit, total=total)
+
+    return CompaniesPublic(data=companies, pagination=pagination)
 
 
 async def get_company(session: AsyncSession, company_id: int) -> CompanyPublic:

@@ -1,8 +1,14 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.models.company_model import CompanyBase, CompanyPublic, CompanyUpdate
+from app.models.company_model import (
+    CompaniesPublic,
+    CompanyBase,
+    CompanyPublic,
+    CompanyUpdate,
+)
 from app.services.company_services import (
     create_company,
     get_companies,
@@ -27,12 +33,14 @@ async def get_all(
     session: AsyncSession = Depends(get_db),
     offset: int = 0,
     limit: int = Query(default=10, le=100),
-) -> list[CompanyPublic]:
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+) -> CompaniesPublic:
 
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="retrieve companies")
 
-    companies = await get_companies(session, offset, limit)
+    companies = await get_companies(session, offset, limit, filter, search)
 
     return companies
 

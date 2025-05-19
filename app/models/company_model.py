@@ -1,6 +1,9 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
+from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
+
+from app.types.pagination import Pagination
 
 if TYPE_CHECKING:
     from app.models.user_model import User
@@ -45,3 +48,8 @@ class CompanyPublic(CompanyBase):
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
+
+
+class CompaniesPublic(BaseModel):
+    data: List[CompanyPublic]
+    pagination: Pagination
