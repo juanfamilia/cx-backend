@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.middlewares.error_middleware import db_exception_handler
 from app.routes.main import api_router
 from app.core.config import settings
 
@@ -17,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.middleware("http")(db_exception_handler)
+app.middleware("http")(db_exception_handler)
 
 # Routing
 app.include_router(api_router, prefix=settings.API_URL)
