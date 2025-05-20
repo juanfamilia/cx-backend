@@ -1,7 +1,10 @@
 from datetime import datetime
+from typing import List
+from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.models.company_model import Company
+from app.types.pagination import Pagination
 
 
 class PaymentBase(SQLModel):
@@ -39,3 +42,8 @@ class PaymentPublic(PaymentBase):
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
+
+
+class PaymentsPublic(BaseModel):
+    data: List[PaymentPublic]
+    pagination: Pagination

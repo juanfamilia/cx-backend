@@ -15,7 +15,6 @@ class CompanyBase(SQLModel):
     phone: str
     email: str
     address: str
-    city: str
     state: str
     country: str = "DO"
 
@@ -25,7 +24,6 @@ class CompanyUpdate(SQLModel):
     phone: str | None = Field(default=None)
     email: str | None = Field(default=None)
     address: str | None = Field(default=None)
-    city: str | None = Field(default=None)
     state: str | None = Field(default=None)
     country: str | None = Field(default=None)
 

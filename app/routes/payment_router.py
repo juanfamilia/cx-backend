@@ -1,8 +1,14 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.models.payment_model import PaymentBase, PaymentPublic, PaymentUpdate
+from app.models.payment_model import (
+    PaymentBase,
+    PaymentPublic,
+    PaymentUpdate,
+    PaymentsPublic,
+)
 from app.services.payment_services import (
     create_payment,
     get_payment,
@@ -27,12 +33,14 @@ async def get_all(
     session: AsyncSession = Depends(get_db),
     offset: int = 0,
     limit: int = Query(default=10, le=100),
-) -> list[PaymentPublic]:
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+) -> PaymentsPublic:
 
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="retrieve payments")
 
-    payments = await get_payments(session, offset, limit)
+    payments = await get_payments(session, offset, limit, filter, search)
 
     return payments
 
@@ -62,6 +70,12 @@ async def create(
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="create a payment")
 
+    if payment.date is not None:
+        payment.date = payment.date.replace(tzinfo=None)
+
+    if payment.valid_before is not None:
+        payment.valid_before = payment.valid_before.replace(tzinfo=None)
+
     payment = await create_payment(session, payment)
 
     return payment
@@ -77,6 +91,12 @@ async def update(
 
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="update this payment")
+
+    if payment_update.date is not None:
+        payment_update.date = payment_update.date.replace(tzinfo=None)
+
+    if payment_update.valid_before is not None:
+        payment_update.valid_before = payment_update.valid_before.replace(tzinfo=None)
 
     payment = await update_payment(session, payment_id, payment_update)
 

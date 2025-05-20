@@ -96,7 +96,7 @@ async def delete(
     request: Request,
     company_id: int,
     session: AsyncSession = Depends(get_db),
-) -> CompanyPublic:
+):
 
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="delete this company")
