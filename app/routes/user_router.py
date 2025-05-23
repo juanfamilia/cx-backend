@@ -19,14 +19,14 @@ from app.services.users_services import (
     update_user,
     update_user_me,
 )
-from app.utils.deps import get_auth_user
+from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 from app.utils.helpers.role_checker import check_role_creation_permissions
 
 router = APIRouter(
     prefix="/user",
     tags=["User"],
-    dependencies=[Depends(get_auth_user)],
+    dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )
 
 
@@ -103,8 +103,6 @@ async def get_one(
 async def create(
     request: Request, user_create: UserCreate, session: AsyncSession = Depends(get_db)
 ) -> UserPublic:
-
-    print(user_create)
 
     if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="create users")

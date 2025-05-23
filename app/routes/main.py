@@ -4,6 +4,8 @@ from app.routes import (
     company_router,
     user_router,
     payment_router,
+    user_zone_router,
+    zone_router,
 )
 
 
@@ -13,3 +15,5 @@ api_router.include_router(auth_router.router)
 api_router.include_router(user_router.router)
 api_router.include_router(company_router.router)
 api_router.include_router(payment_router.router)
+api_router.include_router(zone_router.router)
+api_router.include_router(user_zone_router.router)
