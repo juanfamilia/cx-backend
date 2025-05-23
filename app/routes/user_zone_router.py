@@ -80,7 +80,7 @@ async def create(
     session: AsyncSession = Depends(get_db),
 ):
 
-    if request.state.user.role is not 1:
+    if request.state.user.role != 1:
         raise PermissionDeniedException(custom_message="create a user zone")
 
     save_user_zones = await create_zone_users(session, data)
@@ -96,7 +96,7 @@ async def update(
     session: AsyncSession = Depends(get_db),
 ) -> UserZonePublic:
 
-    if request.state.user.role is not 1:
+    if request.state.user.role != 1:
         raise PermissionDeniedException(custom_message="update this user zone")
 
     user_zone = await update_user_zone(session, user_zone_id, new_zone_id)
