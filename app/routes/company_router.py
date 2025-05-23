@@ -16,14 +16,14 @@ from app.services.company_services import (
     soft_delete_company,
     update_company,
 )
-from app.utils.deps import get_auth_user
+from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(
     prefix="/company",
     tags=["Company"],
-    dependencies=[Depends(get_auth_user)],
+    dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )
 
 

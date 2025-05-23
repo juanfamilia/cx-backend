@@ -1,11 +1,14 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Relationship, SQLModel, Field, Column, DateTime, func
 
 from app.models.company_model import Company
 from app.types.pagination import Pagination
+
+if TYPE_CHECKING:
+    from app.models.user_zone_model import UserZone
 
 
 class GenderEnum(str, Enum):
@@ -59,6 +62,10 @@ class User(UserBase, table=True):
 
     company: Company = Relationship(
         back_populates="employees", sa_relationship_kwargs={"lazy": "noload"}
+    )
+
+    user_zones: List["UserZone"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
 
 
