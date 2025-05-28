@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func, select, update
@@ -12,10 +12,9 @@ from app.models.user_zone_model import (
     UserZonePublic,
     UserZonesPublic,
 )
-from app.models.zone_model import Zone, ZonePublic
-from app.services.users_services import get_user
+from app.models.zone_model import Zone
 from app.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException, PermissionDeniedException
+from app.utils.exeptions import NotFoundException
 
 
 async def get_users_zones(

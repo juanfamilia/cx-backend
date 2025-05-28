@@ -14,6 +14,7 @@ from app.models.user_model import (
 from app.services.users_services import (
     create_user,
     get_user,
+    get_user_by_zone,
     get_users,
     soft_delete_user,
     update_user,
@@ -40,17 +41,30 @@ async def get_all(
     search: Optional[str] = None,
 ) -> UsersPublic:
 
-    if request.state.user.role not in [0, 1]:
+    role = request.state.user.role
+
+    if role not in [0, 1, 2]:
         raise PermissionDeniedException(custom_message="retrieve all users")
 
-    if request.state.user.role == 1:
-        users = await get_users(
-            session, offset, limit, filter, search, request.state.user.company_id
-        )
-    else:
-        users = await get_users(session, offset, limit, filter, search)
+    match role:
+        case 0:
+            return await get_users(session, offset, limit, filter, search)
 
-    return users
+        case 1:
+            return await get_users(
+                session, offset, limit, filter, search, request.state.user.company_id
+            )
+
+        case 2:
+            return await get_user_by_zone(
+                session,
+                offset,
+                limit,
+                filter,
+                search,
+                request.state.user.id,
+                request.state.user.company_id,
+            )
 
 
 @router.get("/me")
