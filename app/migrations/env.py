@@ -12,7 +12,9 @@ from app.models import (
     payment_model,
     zone_model,
     user_zone_model,
+    video_model,
     survey_model,
+    survey_forms_model,
 )
 
 config = context.config
