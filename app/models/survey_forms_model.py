@@ -3,6 +3,9 @@ from typing import TYPE_CHECKING, List
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
+if TYPE_CHECKING:
+    from app.models.campaign_model import Campaign
+
 from app.types.pagination import Pagination
 from app.models.survey_model import (
     SurveySection,
@@ -30,6 +33,7 @@ class SurveyForm(SurveyFormBase, table=True):
     deleted_at: datetime | None = Field(default=None)
 
     sections: List[SurveySection] = Relationship(back_populates="form")
+    campaigns: List["Campaign"] = Relationship(back_populates="survey")
 
 
 class SurveyFormsCreate(BaseModel):

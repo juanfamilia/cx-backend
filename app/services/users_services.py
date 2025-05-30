@@ -27,7 +27,7 @@ async def get_users(
     filter: Optional[str] = None,
     search: Optional[str] = None,
     company_id: int | None = None,
-) -> List[UsersPublic]:
+) -> UsersPublic:
 
     query = (
         select(User, func.count().over().label("total"))

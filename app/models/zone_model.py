@@ -4,6 +4,7 @@ from sqlmodel import Column, DateTime, Relationship, SQLModel, Field, func
 
 if TYPE_CHECKING:
     from app.models.user_zone_model import UserZone
+    from app.models.campaign_zone_model import CampaignZone
 
 
 class ZoneBase(SQLModel):
@@ -22,6 +23,9 @@ class Zone(ZoneBase, table=True):
     deleted_at: datetime | None = Field(default=None)
 
     user_zones: list["UserZone"] = Relationship(back_populates="zone")
+    campaigns_zone: list["CampaignZone"] = Relationship(
+        back_populates="zone", sa_relationship_kwargs={"lazy": "noload"}
+    )
 
 
 class ZonePublic(ZoneBase):

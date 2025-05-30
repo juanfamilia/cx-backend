@@ -1,0 +1,228 @@
+from datetime import datetime
+from typing import Optional
+from fastapi import Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import and_, func, or_, select
+from sqlalchemy.orm import selectinload
+
+from app.models.campaign_model import Campaign
+from app.models.campaign_user_model import (
+    CampaignUser,
+    CampaignUserPublic,
+    CampaignUsersPublic,
+)
+from app.models.campaign_zone_model import (
+    CampaignZone,
+    CampaignZonePublic,
+    CampaignZonesPublic,
+)
+from app.models.user_model import User
+from app.models.zone_model import Zone
+from app.types.pagination import Pagination
+from app.utils.exeptions import NotFoundException
+
+
+async def get_assigments_by_user(
+    session: AsyncSession,
+    offset: int = 0,
+    limit: int = Query(default=10, le=50),
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+    company_id: Optional[int] = None,
+) -> CampaignUsersPublic:
+
+    query = (
+        select(CampaignUser, func.count().over().label("total"))
+        .join(Campaign, CampaignUser.campaign_id == Campaign.id, isouter=True)
+        .join(User, CampaignUser.user_id == User.id, isouter=True)
+        .where(CampaignUser.deleted_at == None)
+        .options(selectinload(CampaignUser.user), selectinload(CampaignUser.campaign))
+    )
+
+    if company_id is not None:
+        query = query.where(User.company_id == company_id)
+
+    if filter and search:
+        match filter:
+            case "full_name":
+                names = search.split()
+                if len(names) == 1:
+                    query = query.where(
+                        or_(
+                            User.first_name.ilike(f"%{names[0]}%"),
+                            User.last_name.ilike(f"%{names[0]}%"),
+                        )
+                    )
+                else:
+                    query = query.where(
+                        and_(
+                            User.first_name.ilike(f"%{names[0]}%"),
+                            User.last_name.ilike(f"%{' '.join(names[1:])}%"),
+                        )
+                    )
+
+            case "campaign":
+                query = query.where(Campaign.name.ilike(f"%{search}%"))
+
+            case "channel":
+                query = query.where(Campaign.channel.ilike(f"%{search}%"))
+
+    query = query.order_by(CampaignUser.id).offset(offset).limit(limit)
+
+    result = await session.execute(query)
+    db_campaign_users = result.unique().all()
+
+    if not db_campaign_users:
+        raise NotFoundException("Campaign by users not found")
+
+    campaign_users = [row[0] for row in db_campaign_users]
+    total = db_campaign_users[0][1] if db_campaign_users else 0
+    pagination = Pagination(first=offset, rows=limit, total=total)
+
+    return CampaignUsersPublic(data=campaign_users, pagination=pagination)
+
+
+async def get_campaign_user(
+    session: AsyncSession, campaign_user_id: int, company_id: Optional[int] = None
+) -> CampaignUserPublic:
+    query = (
+        select(CampaignUser)
+        .join(Campaign, CampaignUser.campaign_id == Campaign.id, isouter=True)
+        .where(CampaignUser.id == campaign_user_id, CampaignUser.deleted_at == None)
+        .options(selectinload(CampaignUser.user), selectinload(CampaignUser.campaign))
+    )
+
+    if company_id is not None:
+        query = query.where(Campaign.company_id == company_id)
+
+    result = await session.execute(query)
+    db_campaign_user = result.scalars().first()
+
+    if not db_campaign_user:
+        raise NotFoundException("Campaign user not found")
+
+    return db_campaign_user
+
+
+async def assign_users_to_campaign(
+    session: AsyncSession, campaign_id: int, user_ids: list[int]
+):
+    # Crea nuevas asignaciones
+    assignments = [
+        CampaignUser(campaign_id=campaign_id, user_id=user_id) for user_id in user_ids
+    ]
+    session.add_all(assignments)
+    await session.commit()
+
+
+async def soft_delete_campaign_users(
+    session: AsyncSession, asignment_id: int, company_id: Optional[int] = None
+) -> CampaignUserPublic:
+
+    db_campaign_user = await get_campaign_user(session, asignment_id, company_id)
+
+    db_campaign_user.deleted_at = datetime.now()
+
+    session.add(db_campaign_user)
+    await session.commit()
+    await session.refresh(db_campaign_user)
+
+    return db_campaign_user
+
+
+# Assign Campaign to Zones Service
+
+
+async def get_assigments_by_zones(
+    session: AsyncSession,
+    offset: int = 0,
+    limit: int = Query(default=10, le=50),
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+    company_id: Optional[int] = None,
+) -> CampaignZonesPublic:
+
+    query = (
+        select(CampaignZone, func.count().over().label("total"))
+        .join(Campaign, CampaignZone.campaign_id == Campaign.id, isouter=True)
+        .join(Zone, CampaignZone.zone_id == Zone.id, isouter=True)
+        .where(CampaignZone.deleted_at == None)
+        .options(selectinload(CampaignZone.zone), selectinload(CampaignZone.campaign))
+    )
+
+    if company_id is not None:
+        query = query.where(Campaign.company_id == company_id)
+
+    if filter and search:
+        match filter:
+            case "zone":
+                query = query.where(Zone.name.ilike(f"%{search}%"))
+
+            case "campaign":
+                query = query.where(Campaign.name.ilike(f"%{search}%"))
+
+            case "channel":
+                query = query.where(Campaign.channel.ilike(f"%{search}%"))
+
+    query = query.order_by(CampaignZone.id).offset(offset).limit(limit)
+
+    result = await session.execute(query)
+    db_campaign_zones = result.unique().all()
+
+    if not db_campaign_zones:
+        raise NotFoundException("Campaign by zones not found")
+
+    campaign_users = [row[0] for row in db_campaign_zones]
+    total = db_campaign_zones[0][1] if db_campaign_zones else 0
+    pagination = Pagination(first=offset, rows=limit, total=total)
+
+    return CampaignZonesPublic(data=campaign_users, pagination=pagination)
+
+
+async def get_campaign_zone(
+    session: AsyncSession,
+    campaign_zone_id: int,
+    company_id: Optional[int] = None,
+) -> CampaignZonePublic:
+    query = (
+        select(CampaignZone)
+        .join(Campaign, CampaignZone.campaign_id == Campaign.id, isouter=True)
+        .where(CampaignZone.id == campaign_zone_id, CampaignZone.deleted_at == None)
+        .options(selectinload(CampaignZone.campaign), selectinload(CampaignZone.zone))
+    )
+
+    if company_id is not None:
+        query = query.where(Campaign.company_id == company_id)
+
+    result = await session.execute(query)
+    db_campaign_zone = result.scalars().first()
+
+    if not db_campaign_zone:
+        raise NotFoundException("Campaign zone not found")
+
+    return db_campaign_zone
+
+
+async def assign_zones_to_campaign(
+    session: AsyncSession, campaign_id: int, zone_ids: list[int]
+):
+    assignments = [
+        CampaignZone(campaign_id=campaign_id, zone_id=zone_id) for zone_id in zone_ids
+    ]
+    session.add_all(assignments)
+    await session.commit()
+
+
+async def soft_delete_campaign_zone(
+    session: AsyncSession,
+    asignment_id: int,
+    company_id: Optional[int] = None,
+) -> CampaignZonePublic:
+
+    db_campaign_zone = await get_campaign_zone(session, asignment_id, company_id)
+
+    db_campaign_zone.deleted_at = datetime.now()
+
+    session.add(db_campaign_zone)
+    await session.commit()
+    await session.refresh(db_campaign_zone)

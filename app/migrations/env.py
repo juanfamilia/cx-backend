@@ -15,6 +15,9 @@ from app.models import (
     video_model,
     survey_model,
     survey_forms_model,
+    campaign_model,
+    campaign_user_model,
+    campaign_zone_model,
 )
 
 config = context.config
