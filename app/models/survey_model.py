@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.models.video_model import Video
@@ -76,6 +76,8 @@ class SurveySectionPublic(BaseModel):
     order: int
     aspects: List["SurveyAspectPublic"] | None = None
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 # ----------- ASPECTS -----------
 class SurveyAspectBase(SQLModel):
@@ -109,6 +111,8 @@ class SurveyAspectPublic(BaseModel):
     description: str
     maximum_score: int
     order: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ----------- ANSWERS -----------

@@ -17,6 +17,7 @@ from app.models.campaign_zone_model import (
     CampaignZonesPublic,
 )
 from app.models.user_model import User
+from app.models.user_zone_model import UserZone
 from app.models.zone_model import Zone
 from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
@@ -29,18 +30,35 @@ async def get_assigments_by_user(
     filter: Optional[str] = None,
     search: Optional[str] = None,
     company_id: Optional[int] = None,
+    user_id: Optional[int] = None,
 ) -> CampaignUsersPublic:
 
     query = (
         select(CampaignUser, func.count().over().label("total"))
         .join(Campaign, CampaignUser.campaign_id == Campaign.id, isouter=True)
         .join(User, CampaignUser.user_id == User.id, isouter=True)
+        .join(UserZone, User.id == UserZone.user_id)
         .where(CampaignUser.deleted_at == None)
         .options(selectinload(CampaignUser.user), selectinload(CampaignUser.campaign))
     )
 
     if company_id is not None:
         query = query.where(User.company_id == company_id)
+
+    if user_id is not None:
+        # Obtener las zonas asignadas al usuario que realiza la petición
+        user_zones = await session.execute(
+            select(UserZone.zone_id).where(
+                UserZone.user_id == user_id, UserZone.deleted_at == None
+            )
+        )
+        zone_ids = [row[0] for row in user_zones]
+
+        if not zone_ids:
+            raise NotFoundException("No zones assigned to user")
+
+        # Filtrar las asignaciones de usuarios dentro de esas zonas
+        query = query.where(UserZone.zone_id.in_(zone_ids))
 
     if filter and search:
         match filter:
@@ -63,9 +81,6 @@ async def get_assigments_by_user(
 
             case "campaign":
                 query = query.where(Campaign.name.ilike(f"%{search}%"))
-
-            case "channel":
-                query = query.where(Campaign.channel.ilike(f"%{search}%"))
 
     query = query.order_by(CampaignUser.id).offset(offset).limit(limit)
 
@@ -140,6 +155,7 @@ async def get_assigments_by_zones(
     filter: Optional[str] = None,
     search: Optional[str] = None,
     company_id: Optional[int] = None,
+    user_id: Optional[int] = None,
 ) -> CampaignZonesPublic:
 
     query = (
@@ -153,6 +169,19 @@ async def get_assigments_by_zones(
     if company_id is not None:
         query = query.where(Campaign.company_id == company_id)
 
+    if user_id is not None:
+        user_zones = await session.execute(
+            select(UserZone.zone_id).where(
+                UserZone.user_id == user_id, UserZone.deleted_at == None
+            )
+        )
+        zones_ids = [row[0] for row in user_zones]
+
+        if not zones_ids:
+            raise NotFoundException("No zones assigned to user")
+
+        query = query.where(CampaignZone.zone_id.in_(zones_ids))
+
     if filter and search:
         match filter:
             case "zone":
@@ -160,9 +189,6 @@ async def get_assigments_by_zones(
 
             case "campaign":
                 query = query.where(Campaign.name.ilike(f"%{search}%"))
-
-            case "channel":
-                query = query.where(Campaign.channel.ilike(f"%{search}%"))
 
     query = query.order_by(CampaignZone.id).offset(offset).limit(limit)
 

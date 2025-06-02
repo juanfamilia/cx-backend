@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 if TYPE_CHECKING:
@@ -32,7 +32,9 @@ class SurveyForm(SurveyFormBase, table=True):
     )
     deleted_at: datetime | None = Field(default=None)
 
-    sections: List[SurveySection] = Relationship(back_populates="form")
+    sections: List[SurveySection] = Relationship(
+        back_populates="form", sa_relationship_kwargs={"lazy": "noload"}
+    )
     campaigns: List["Campaign"] = Relationship(back_populates="survey")
 
 
@@ -47,6 +49,8 @@ class SurveyFormPublic(SurveyFormBase):
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SurveyFormsPublic(BaseModel):

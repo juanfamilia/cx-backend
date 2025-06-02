@@ -29,7 +29,7 @@ from app.utils.exeptions import PermissionDeniedException
 
 router = APIRouter(
     prefix="/campaign-assignment",
-    tags=["Campaign"],
+    tags=["Campaign Assigments"],
     dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )
 
@@ -47,9 +47,21 @@ async def get_all_by_users(
     if request.state.user.role not in [1, 2]:
         raise PermissionDeniedException(custom_message="retrieve campaigns")
 
-    campaigns = await get_assigments_by_user(
-        session, offset, limit, filter, search, request.state.user.company_id
-    )
+    match request.state.user.role:
+        case 1:
+            campaigns = await get_assigments_by_user(
+                session, offset, limit, filter, search, request.state.user.company_id
+            )
+        case 2:
+            campaigns = await get_assigments_by_user(
+                session,
+                offset,
+                limit,
+                filter,
+                search,
+                request.state.user.company_id,
+                request.state.user.id,
+            )
 
     return campaigns
 
@@ -116,9 +128,21 @@ async def get_all_by_zones(
     if request.state.user.role not in [1, 2]:
         raise PermissionDeniedException(custom_message="retrieve campaigns")
 
-    campaigns = await get_assigments_by_zones(
-        session, offset, limit, filter, search, request.state.user.company_id
-    )
+    match request.state.user.role:
+        case 1:
+            campaigns = await get_assigments_by_zones(
+                session, offset, limit, filter, search, request.state.user.company_id
+            )
+        case 2:
+            campaigns = await get_assigments_by_zones(
+                session,
+                offset,
+                limit,
+                filter,
+                search,
+                request.state.user.company_id,
+                request.state.user.id,
+            )
 
     return campaigns
 

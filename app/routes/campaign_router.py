@@ -48,15 +48,15 @@ async def get_all(
 
 @router.get("/{campaign_id}")
 async def get_one(
-    request: Request,
     campaign_id: int,
+    request: Request,
     session: AsyncSession = Depends(get_db),
 ) -> CampaignPublic:
 
     if request.state.user.role not in [1, 2]:
         raise PermissionDeniedException(custom_message="retrieve this campaign")
 
-    campaign = await get_campaigns(session, campaign_id)
+    campaign = await get_campaign(session, campaign_id)
 
     if campaign.company_id != request.state.user.company_id:
         raise PermissionDeniedException(custom_message="retrieve this campaign")
@@ -85,9 +85,9 @@ async def create(
 
 @router.put("/{campaign_id}")
 async def update(
-    request: Request,
     campaign_id: int,
     campaign_update: CampaignUpdate,
+    request: Request,
     session: AsyncSession = Depends(get_db),
 ) -> CampaignPublic:
 
@@ -98,6 +98,9 @@ async def update(
 
     if campaign_db.company_id != request.state.user.company_id:
         raise PermissionDeniedException(custom_message="update this campaign")
+
+    campaign_update.date_start = campaign_update.date_start.replace(tzinfo=None)
+    campaign_update.date_end = campaign_update.date_end.replace(tzinfo=None)
 
     campaign = await update_campaign(session, campaign_id, campaign_update)
 

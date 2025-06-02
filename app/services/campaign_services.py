@@ -13,6 +13,7 @@ from app.models.campaign_model import (
     CampaignsPublic,
 )
 from app.models.survey_forms_model import SurveyForm
+from app.models.survey_model import SurveySection
 from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 
@@ -26,8 +27,10 @@ async def get_campaigns(
     company_id: int | None = None,
 ) -> CampaignsPublic:
 
-    query = select(Campaign, func.count().over().label("total")).where(
-        Campaign.company_id == company_id, Campaign.deleted_at == None
+    query = (
+        select(Campaign, func.count().over().label("total"))
+        .options(selectinload(Campaign.survey))
+        .where(Campaign.company_id == company_id, Campaign.deleted_at == None)
     )
 
     if filter and search:
@@ -37,9 +40,6 @@ async def get_campaigns(
 
             case "objective":
                 query = query.where(Campaign.objective.ilike(f"%{search}%"))
-
-            case "channel":
-                query = query.where(Campaign.channel.ilike(f"%{search}%"))
 
             case "survey":
                 query = query.where(SurveyForm.title.ilike(f"%{search}%"))
@@ -52,7 +52,7 @@ async def get_campaigns(
     if not db_campaigns:
         raise NotFoundException("Campaigns not found")
 
-    campaigns = [row[0] for row in db_campaigns]
+    campaigns = [CampaignPublic.model_validate(row[0]) for row in db_campaigns]
     total = db_campaigns[0][1] if db_campaigns else 0
     pagination = Pagination(first=offset, rows=limit, total=total)
 
@@ -62,7 +62,11 @@ async def get_campaigns(
 async def get_campaign(session: AsyncSession, campaign_id: int) -> CampaignPublic:
     query = (
         select(Campaign)
-        .options(selectinload(Campaign.survey))
+        .options(
+            selectinload(Campaign.survey)
+            .selectinload(SurveyForm.sections)
+            .selectinload(SurveySection.aspects)
+        )
         .where(Campaign.id == campaign_id, Campaign.deleted_at == None)
     )
 

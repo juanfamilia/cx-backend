@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 if TYPE_CHECKING:
@@ -69,6 +69,8 @@ class CampaignPublic(CampaignBase):
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CampaignsPublic(BaseModel):

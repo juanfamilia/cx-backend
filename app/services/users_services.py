@@ -78,6 +78,53 @@ async def get_users(
     return UsersPublic(data=patients, pagination=pagination)
 
 
+async def get_users_plain(
+    session: AsyncSession,
+    company_id: int | None = None,
+    user_id: int | None = None,
+):
+
+    query = (
+        select(User)
+        .options(selectinload(User.company))
+        .join(UserZone, User.id == UserZone.user_id)
+        .where(User.role == 3, User.deleted_at == None)
+    )
+
+    if company_id is not None:
+        query = query.where(User.company_id == company_id)
+
+    if user_id is not None:
+        # Obtener las zonas del usuario que hace la consulta
+        user_zones = await session.execute(
+            select(UserZone.zone_id).where(
+                UserZone.user_id == user_id, UserZone.deleted_at == None
+            )
+        )
+        zone_ids = [row[0] for row in user_zones]
+
+        if not zone_ids:
+            raise NotFoundException("No zones assigned to user")
+
+        # Filtrar usuarios por las zonas del usuario que consulta
+        query = query.where(UserZone.zone_id.in_(zone_ids))
+
+    query = query.order_by(User.id)
+
+    result = await session.execute(query)
+    db_users = result.scalars().all()
+
+    if not db_users:
+        raise NotFoundException("Users not found")
+
+    users = [
+        {"name": f"{user.first_name} {user.last_name}", "value": user.id}
+        for user in db_users
+    ]
+
+    return users
+
+
 async def get_user(session: AsyncSession, user_id: int) -> UserPublic:
 
     db_user = await session.get(User, user_id)
