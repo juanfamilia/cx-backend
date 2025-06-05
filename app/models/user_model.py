@@ -18,12 +18,32 @@ class GenderEnum(str, Enum):
     OTHER = "other"
 
 
+class CivilStatusEnum(str, Enum):
+    SINGLE = "soltero"
+    MARRIED = "casado"
+    DIVORCED = "divorciado"
+    WIDOWED = "viudo"
+    SEPARATED = "separado"
+
+
+class SocioeconomicEnum(str, Enum):
+    LOW = "bajo"
+    MEDIUM = "medio"
+    HIGH = "alto"
+
+
 # Shared properties
 class UserBase(SQLModel):
     role: int = 3
     first_name: str
     last_name: str
     gender: GenderEnum = GenderEnum.MALE
+    birthdate: datetime | None = Field(default=None, nullable=True)
+    civil_status: CivilStatusEnum = Field(default=CivilStatusEnum.SINGLE, nullable=True)
+    socioeconomic: SocioeconomicEnum = Field(
+        default=SocioeconomicEnum.LOW, nullable=True
+    )
+    inclusivity: str = Field(default=None, nullable=True)
     email: EmailStr = Field(nullable=False, unique=True, index=True)
     company_id: int | None = Field(default=None, foreign_key="companies.id")
 
@@ -42,6 +62,10 @@ class UserUpdateMe(SQLModel):
     first_name: str | None = Field(default=None)
     last_name: str | None = Field(default=None)
     gender: GenderEnum | None = Field(default=None)
+    birthdate: datetime | None = Field(default=None)
+    civil_status: CivilStatusEnum | None = Field(default=None)
+    socioeconomic: SocioeconomicEnum | None = Field(default=None)
+    inclusivity: str | None = Field(default=None)
     email: EmailStr | None = Field(default=None)
     company_id: int | None = Field(default=None)
 
