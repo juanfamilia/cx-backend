@@ -1,26 +1,94 @@
 import datetime
+from typing import Optional
 import uuid
 import boto3
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from sqlmodel import and_, func, or_, select
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.models.campaign_model import Campaign
+from app.models.company_model import Company
 from app.models.evaluation_model import (
     Evaluation,
     EvaluationAnswer,
     EvaluationCreate,
     EvaluationPublic,
     EvaluationUpdate,
+    EvaluationsPublic,
     StatusEnum,
 )
 from app.models.survey_forms_model import SurveyForm
 from app.models.survey_model import SurveySection
+from app.models.user_model import User
 from app.models.video_model import Video
+from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 from app.utils.helpers.s3_get_url import get_s3_url
+
+
+async def get_evaluations(
+    session: AsyncSession,
+    offset: int,
+    limit: int,
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+    company_id: Optional[int] = None,
+    user_id: Optional[int] = None,
+) -> EvaluationsPublic:
+
+    query = (
+        select(Evaluation, func.count().over().label("total"))
+        .join(Campaign, Evaluation.campaigns_id == Campaign.id, isouter=True)
+        .join(User, Evaluation.user_id == User.id, isouter=True)
+        .options(selectinload(Evaluation.campaign), selectinload(Evaluation.user))
+        .where(Evaluation.deleted_at == None)
+    )
+
+    if company_id is not None:
+        query = query.where(Campaign.company_id == company_id)
+
+    if user_id is not None:
+        query = query.where(
+            Evaluation.user_id == user_id, Evaluation.status == StatusEnum.REJECTED
+        )
+
+    if filter and search:
+        match filter:
+            case "campaign":
+                query = query.where(Campaign.name.ilike(f"%{search}%"))
+
+            case "evaluator":
+                names = search.split()
+                if len(names) == 1:
+                    query = query.where(
+                        or_(
+                            User.first_name.ilike(f"%{names[0]}%"),
+                            User.last_name.ilike(f"%{names[0]}%"),
+                        )
+                    )
+                else:
+                    query = query.where(
+                        and_(
+                            User.first_name.ilike(f"%{names[0]}%"),
+                            User.last_name.ilike(f"%{' '.join(names[1:])}%"),
+                        )
+                    )
+
+    query = query.order_by(Evaluation.id).offset(offset).limit(limit)
+
+    result = await session.execute(query)
+    db_evaluations = result.unique().all()
+
+    if not db_evaluations:
+        raise NotFoundException("Evaluations not found")
+
+    evaluations = [row[0] for row in db_evaluations]
+    total = db_evaluations[0][1] if db_evaluations else 0
+    pagination = Pagination(first=offset, rows=limit, total=total)
+
+    return EvaluationsPublic(data=evaluations, pagination=pagination)
 
 
 async def get_evaluation(session: AsyncSession, evaluation_id: int) -> EvaluationPublic:

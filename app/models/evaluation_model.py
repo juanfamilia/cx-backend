@@ -7,12 +7,14 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.models.campaign_model import Campaign, CampaignPublic
 from app.models.survey_model import SurveyAspect, SurveyAspectPublic
+from app.models.user_model import User, UserPublic
 from app.models.video_model import Video
+from app.types.pagination import Pagination
 
 
 class StatusEnum(str, Enum):
     SEND = "enviado"
-    UPDATED = "atualizado"
+    UPDATED = "actualizado"
     APROVED = "aprovado"
     REJECTED = "rechazado"
 
@@ -36,8 +38,13 @@ class Evaluation(EvaluationBase, table=True):
     )
     deleted_at: datetime | None = Field(default=None)
 
-    video: Video = Relationship(back_populates="evaluations")
+    video: Video = Relationship(
+        back_populates="evaluations", sa_relationship_kwargs={"lazy": "noload"}
+    )
     campaign: Campaign = Relationship(
+        back_populates="evaluations", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    user: User = Relationship(
         back_populates="evaluations", sa_relationship_kwargs={"lazy": "noload"}
     )
     evaluation_answers: List["EvaluationAnswer"] = Relationship(
@@ -62,9 +69,15 @@ class EvaluationPublic(EvaluationBase):
     video: Video | None = None
     campaign: CampaignPublic | None = None
     evaluation_answers: List["EvaluationAnswerPublic"] | None = None
+    user: UserPublic | None = None
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
+
+
+class EvaluationsPublic(BaseModel):
+    data: List[EvaluationPublic]
+    pagination: Pagination
 
 
 # ----------- ANSWERS -----------

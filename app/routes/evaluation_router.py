@@ -1,6 +1,15 @@
 import json
 from typing import Optional
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -11,10 +20,12 @@ from app.models.evaluation_model import (
     EvaluationCreate,
     EvaluationPublic,
     EvaluationUpdate,
+    EvaluationsPublic,
 )
 from app.services.evaluation_services import (
     create_evaluation,
     get_evaluation,
+    get_evaluations,
     soft_delete_evaluation,
     update_evaluation,
 )
@@ -30,8 +41,48 @@ router = APIRouter(
 )
 
 
+@router.get("/")
+async def get_all(
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+    offset: int = 0,
+    limit: int = Query(default=10, le=50),
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+) -> EvaluationsPublic:
+
+    match request.state.user.role:
+        case 0:
+            evaluations = await get_evaluations(session, offset, limit, filter, search)
+        case 1:
+            evaluations = await get_evaluations(
+                session, offset, limit, filter, search, request.state.user.company_id
+            )
+        case 2:
+            evaluations = await get_evaluations(
+                session,
+                offset,
+                limit,
+                filter,
+                search,
+                request.state.user.company_id,
+            )
+        case 3:
+            evaluations = await get_evaluations(
+                session,
+                offset,
+                limit,
+                filter,
+                search,
+                request.state.user.company_id,
+                request.state.user.id,
+            )
+
+    return evaluations
+
+
 @router.get("/{evaluation_id}")
-async def get_evaluations(
+async def get_one(
     request: Request,
     evaluation_id: int,
     session: AsyncSession = Depends(get_db),
@@ -49,7 +100,7 @@ async def get_evaluations(
 
 
 @router.post("/")
-async def submit_evaluation(
+async def create(
     request: Request,
     session: AsyncSession = Depends(get_db),
     media: UploadFile = File(...),

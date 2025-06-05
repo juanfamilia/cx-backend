@@ -10,6 +10,7 @@ from app.types.pagination import Pagination
 if TYPE_CHECKING:
     from app.models.user_zone_model import UserZone
     from app.models.campaign_user_model import CampaignUser
+    from app.models.evaluation_model import Evaluation
 
 
 class GenderEnum(str, Enum):
@@ -92,6 +93,9 @@ class User(UserBase, table=True):
         back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
     campaigns_user: List["CampaignUser"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    evaluations: List["Evaluation"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
 
