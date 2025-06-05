@@ -12,6 +12,13 @@ from app.models import (
     payment_model,
     zone_model,
     user_zone_model,
+    video_model,
+    survey_model,
+    survey_forms_model,
+    campaign_model,
+    campaign_user_model,
+    campaign_zone_model,
+    evaluation_model,
 )
 
 config = context.config

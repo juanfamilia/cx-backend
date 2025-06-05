@@ -1,9 +1,9 @@
 from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_db
 from app.models.zone_model import ZonePublic
-from app.services.zone_services import get_zone, get_zones
+from app.services.zone_services import get_limit_zones, get_zone, get_zones
 from app.utils.deps import check_company_payment_status, get_auth_user
 
 
@@ -15,11 +15,22 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_all(session: AsyncSession = Depends(get_db)) -> List[ZonePublic]:
+async def get_all(
+    request: Request, session: AsyncSession = Depends(get_db)
+) -> List[ZonePublic]:
 
-    zones = await get_zones(session)
+    match request.state.user.role:
+        case 0:
+            return await get_zones(session)
 
-    return zones
+        case 1:
+            return await get_zones(session)
+
+        case 2:
+            return await get_limit_zones(session, request.state.user.id)
+
+        case 3:
+            return await get_limit_zones(session, request.state.user.id)
 
 
 @router.get("/{zone_id}")

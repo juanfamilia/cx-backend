@@ -9,6 +9,8 @@ from app.types.pagination import Pagination
 
 if TYPE_CHECKING:
     from app.models.user_zone_model import UserZone
+    from app.models.campaign_user_model import CampaignUser
+    from app.models.evaluation_model import Evaluation
 
 
 class GenderEnum(str, Enum):
@@ -17,12 +19,32 @@ class GenderEnum(str, Enum):
     OTHER = "other"
 
 
+class CivilStatusEnum(str, Enum):
+    SINGLE = "soltero"
+    MARRIED = "casado"
+    DIVORCED = "divorciado"
+    WIDOWED = "viudo"
+    SEPARATED = "separado"
+
+
+class SocioeconomicEnum(str, Enum):
+    LOW = "bajo"
+    MEDIUM = "medio"
+    HIGH = "alto"
+
+
 # Shared properties
 class UserBase(SQLModel):
     role: int = 3
     first_name: str
     last_name: str
     gender: GenderEnum = GenderEnum.MALE
+    birthdate: datetime | None = Field(default=None, nullable=True)
+    civil_status: CivilStatusEnum = Field(default=CivilStatusEnum.SINGLE, nullable=True)
+    socioeconomic: SocioeconomicEnum = Field(
+        default=SocioeconomicEnum.LOW, nullable=True
+    )
+    inclusivity: str = Field(default=None, nullable=True)
     email: EmailStr = Field(nullable=False, unique=True, index=True)
     company_id: int | None = Field(default=None, foreign_key="companies.id")
 
@@ -41,6 +63,10 @@ class UserUpdateMe(SQLModel):
     first_name: str | None = Field(default=None)
     last_name: str | None = Field(default=None)
     gender: GenderEnum | None = Field(default=None)
+    birthdate: datetime | None = Field(default=None)
+    civil_status: CivilStatusEnum | None = Field(default=None)
+    socioeconomic: SocioeconomicEnum | None = Field(default=None)
+    inclusivity: str | None = Field(default=None)
     email: EmailStr | None = Field(default=None)
     company_id: int | None = Field(default=None)
 
@@ -63,8 +89,13 @@ class User(UserBase, table=True):
     company: Company = Relationship(
         back_populates="employees", sa_relationship_kwargs={"lazy": "noload"}
     )
-
     user_zones: List["UserZone"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    campaigns_user: List["CampaignUser"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    evaluations: List["Evaluation"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
 
