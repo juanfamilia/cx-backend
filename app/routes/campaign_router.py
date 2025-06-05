@@ -53,7 +53,7 @@ async def get_one(
     session: AsyncSession = Depends(get_db),
 ) -> CampaignPublic:
 
-    if request.state.user.role not in [1, 2]:
+    if request.state.user.role not in [1, 2, 3]:
         raise PermissionDeniedException(custom_message="retrieve this campaign")
 
     campaign = await get_campaign(session, campaign_id)

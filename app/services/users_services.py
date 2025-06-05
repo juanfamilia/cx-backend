@@ -112,7 +112,7 @@ async def get_users_plain(
     query = query.order_by(User.id)
 
     result = await session.execute(query)
-    db_users = result.scalars().all()
+    db_users = result.scalars().unique().all()
 
     if not db_users:
         raise NotFoundException("Users not found")

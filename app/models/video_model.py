@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, List
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.models.survey_model import Survey
+    from app.models.evaluation_model import Evaluation
 
 
 class Video(SQLModel, table=True):
@@ -11,4 +11,9 @@ class Video(SQLModel, table=True):
     title: str
     url: str
 
-    surveys: List["Survey"] = Relationship(back_populates="video")
+    evaluations: List["Evaluation"] = Relationship(back_populates="video")
+
+
+class VideoCreate(SQLModel):
+    title: str
+    url: str

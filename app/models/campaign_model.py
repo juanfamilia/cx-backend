@@ -7,6 +7,7 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 if TYPE_CHECKING:
     from app.models.campaign_user_model import CampaignUser
     from app.models.campaign_zone_model import CampaignZone
+    from app.models.evaluation_model import Evaluation
 
 from app.models.company_model import Company
 from app.models.survey_forms_model import SurveyForm, SurveyFormPublic
@@ -59,6 +60,9 @@ class Campaign(CampaignBase, table=True):
         back_populates="campaign", sa_relationship_kwargs={"lazy": "noload"}
     )
     campaigns_zone: List["CampaignZone"] = Relationship(
+        back_populates="campaign", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    evaluations: List["Evaluation"] = Relationship(
         back_populates="campaign", sa_relationship_kwargs={"lazy": "noload"}
     )
 

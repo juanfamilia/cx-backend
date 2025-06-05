@@ -15,7 +15,10 @@ from app.models.campaign_zone_model import (
     CampaignZone,
     CampaignZonePublic,
     CampaignZonesPublic,
+    currentAssignedCampaign,
 )
+from app.models.survey_forms_model import SurveyForm
+from app.models.survey_model import SurveySection
 from app.models.user_model import User
 from app.models.user_zone_model import UserZone
 from app.models.zone_model import Zone
@@ -243,7 +246,7 @@ async def soft_delete_campaign_zone(
     session: AsyncSession,
     asignment_id: int,
     company_id: Optional[int] = None,
-) -> CampaignZonePublic:
+):
 
     db_campaign_zone = await get_campaign_zone(session, asignment_id, company_id)
 
@@ -252,3 +255,57 @@ async def soft_delete_campaign_zone(
     session.add(db_campaign_zone)
     await session.commit()
     await session.refresh(db_campaign_zone)
+
+    return {"message": "Campaign zone deleted"}
+
+
+async def get_assiments_campaigns(
+    session: AsyncSession,
+    user_id: int,
+    company_id: Optional[int] = None,
+) -> currentAssignedCampaign:
+    query_by_user = (
+        select(CampaignUser)
+        .join(Campaign, CampaignUser.campaign_id == Campaign.id, isouter=True)
+        .where(
+            CampaignUser.user_id == user_id,
+            Campaign.date_end >= datetime.now(),
+            CampaignUser.deleted_at == None,
+        )
+        .options(selectinload(CampaignUser.campaign))
+        .order_by(CampaignUser.id)
+    )
+    result_by_user = await session.execute(query_by_user)
+    db_campaigns = result_by_user.scalars().all()
+
+    user_zones = await session.execute(
+        select(UserZone.zone_id).where(
+            UserZone.user_id == user_id, UserZone.deleted_at == None
+        )
+    )
+    zone_ids = [row[0] for row in user_zones]
+
+    if not zone_ids:
+        raise NotFoundException("No zones assigned to user")
+
+    query_by_zone = (
+        select(CampaignZone)
+        .join(Campaign, CampaignZone.campaign_id == Campaign.id, isouter=True)
+        .where(
+            CampaignZone.zone_id.in_(zone_ids),
+            Campaign.date_end >= datetime.now(),
+            CampaignZone.deleted_at == None,
+        )
+        .options(selectinload(CampaignZone.campaign), selectinload(CampaignZone.zone))
+        .order_by(CampaignZone.id)
+    )
+    result_by_zone = await session.execute(query_by_zone)
+    db_campaigns_zone = result_by_zone.scalars().all()
+
+    if not db_campaigns:
+        raise NotFoundException("Campaigns not found")
+
+    if not db_campaigns_zone:
+        raise NotFoundException("Campaigns zones not found")
+
+    return currentAssignedCampaign(by_user=db_campaigns, by_zone=db_campaigns_zone)

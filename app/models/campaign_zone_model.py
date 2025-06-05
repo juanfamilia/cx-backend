@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.models.campaign_model import Campaign, CampaignPublic
+from app.models.campaign_user_model import CampaignUserPublic
 from app.models.zone_model import Zone, ZonePublic
 from app.types.pagination import Pagination
 
@@ -47,3 +48,8 @@ class CampaignZonesPublic(BaseModel):
 class createCampaignZone(BaseModel):
     campaign_id: int
     zone_ids: list[int]
+
+
+class currentAssignedCampaign(BaseModel):
+    by_user: List[CampaignUserPublic]
+    by_zone: List[CampaignZonePublic]

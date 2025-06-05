@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
 
-from app.models.survey_model import Survey, SurveyAnswer, SurveySection, Video
+from app.models.survey_model import SurveySection
 from app.utils.exeptions import NotFoundException
 
 

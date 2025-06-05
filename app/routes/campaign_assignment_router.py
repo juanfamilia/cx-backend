@@ -18,6 +18,7 @@ from app.services.campaign_assignment_services import (
     assign_zones_to_campaign,
     get_assigments_by_user,
     get_assigments_by_zones,
+    get_assiments_campaigns,
     get_campaign_user,
     get_campaign_zone,
     soft_delete_campaign_users,
@@ -191,3 +192,12 @@ async def delete_zone(
     )
 
     return {"message": "Campaign zone deleted"}
+
+
+@router.get("/assignments")
+async def get_assiments(request: Request, session: AsyncSession = Depends(get_db)):
+
+    if request.state.user.role != 3:
+        raise PermissionDeniedException(custom_message="retrieve campaigns")
+
+    return await get_assiments_campaigns(session, request.state.user.id)

@@ -181,4 +181,4 @@ async def soft_delete_form(
     await session.commit()
     await session.refresh(db_form)
 
-    return SurveyForm.model_validate(db_form)
+    return db_form

@@ -18,6 +18,7 @@ from app.models import (
     campaign_model,
     campaign_user_model,
     campaign_zone_model,
+    evaluation_model,
 )
 
 config = context.config
