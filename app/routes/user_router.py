@@ -148,6 +148,8 @@ async def create(
     if request.state.user.role == 1:
         user_create.company_id = request.state.user.company_id
 
+    user_create.birthdate.replace(tzinfo=None)
+
     check_role_creation_permissions(request.state.user.role, user_create.role)
 
     save_user = await create_user(session, user_create)
@@ -173,6 +175,9 @@ async def update_any(
         raise PermissionDeniedException(custom_message="update this user")
 
     check_role_creation_permissions(request.state.user.role, user_update.role)
+
+    if user_update.birthdate:
+        user_update.birthdate.replace(tzinfo=None)
 
     updated_user = await update_user(session, user_id, user_update)
 
