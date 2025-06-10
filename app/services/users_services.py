@@ -80,8 +80,8 @@ async def get_users(
 
 async def get_users_plain(
     session: AsyncSession,
-    company_id: int | None = None,
-    user_id: int | None = None,
+    company_id: Optional[int] = None,
+    user_id: Optional[int] = None,
 ):
 
     query = (

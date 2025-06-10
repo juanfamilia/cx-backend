@@ -109,7 +109,6 @@ async def get_users_plain_list(
             return await get_users_plain(session, request.state.user.company_id)
 
         case 2:
-            # TODO: Filter user by zones
             return await get_users_plain(
                 session, request.state.user.company_id, request.state.user.id
             )
