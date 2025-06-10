@@ -5,7 +5,7 @@ from app.middlewares.error_middleware import db_exception_handler
 from app.routes.main import api_router
 from app.core.config import settings
 
-app = FastAPI()
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 app.title = settings.PROJECT_NAME
 
 origins = ["http://localhost:4200", "https://cx.dreez.dev"]
