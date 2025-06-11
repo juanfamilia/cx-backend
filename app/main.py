@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 app.add_middleware(HTTPSRedirectMiddleware)
-app.middleware("http")(db_exception_handler)
+# app.middleware("http")(db_exception_handler)
 
 # Routing
 app.include_router(api_router, prefix=settings.API_URL)
