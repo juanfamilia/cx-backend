@@ -9,7 +9,7 @@ from app.core.config import settings
 app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 app.title = settings.PROJECT_NAME
 
-origins = ["http://localhost:4200", "https://cx.dreez.dev"]
+origins = ["https://cx.dreez.dev"]
 
 app.add_middleware(
     CORSMiddleware,
