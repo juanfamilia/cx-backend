@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 engine = create_async_engine(
     settings.POSTGRES_URI,
-    echo=True,
+    echo=False,
     poolclass=AsyncAdaptedQueuePool,
     pool_pre_ping=True,
 )
