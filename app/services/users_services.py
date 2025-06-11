@@ -91,7 +91,6 @@ async def get_users_plain(
     query = (
         select(User)
         .options(selectinload(User.company))
-        .join(UserZone, User.id == UserZone.user_id)
         .where(User.role == 3, User.deleted_at == None)
     )
 
@@ -100,6 +99,8 @@ async def get_users_plain(
 
     if user_id is not None:
         # Obtener las zonas del usuario que hace la consulta
+        query = query.join(UserZone, User.id == UserZone.user_id)
+
         user_zones = await session.execute(
             select(UserZone.zone_id).where(
                 UserZone.user_id == user_id, UserZone.deleted_at == None
