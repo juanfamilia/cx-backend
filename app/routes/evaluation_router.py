@@ -21,8 +21,10 @@ from app.models.evaluation_model import (
     EvaluationPublic,
     EvaluationUpdate,
     EvaluationsPublic,
+    StatusEnum,
 )
 from app.services.evaluation_services import (
+    change_evaluation_status,
     create_evaluation,
     get_evaluation,
     get_evaluations,
@@ -79,6 +81,22 @@ async def get_all(
             )
 
     return evaluations
+
+
+@router.put("/status/{evaluation_id}")
+async def change_status(
+    request: Request,
+    evaluation_id: int,
+    status: StatusEnum,
+    session: AsyncSession = Depends(get_db),
+) -> EvaluationPublic:
+
+    if request.state.user.role not in [1, 2]:
+        raise PermissionDeniedException(custom_message="change status")
+
+    evaluation = await change_evaluation_status(session, evaluation_id, status)
+
+    return evaluation
 
 
 @router.get("/{evaluation_id}")

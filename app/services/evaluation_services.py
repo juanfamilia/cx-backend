@@ -184,6 +184,20 @@ async def update_evaluation(
     return db_evaluation
 
 
+async def change_evaluation_status(
+    session: AsyncSession, evaluation_id: int, status: StatusEnum
+) -> EvaluationPublic:
+    db_evaluation = await get_evaluation(session, evaluation_id)
+
+    db_evaluation.status = status
+
+    session.add(db_evaluation)
+    await session.commit()
+    await session.refresh(db_evaluation)
+
+    return db_evaluation
+
+
 async def soft_delete_evaluation(
     session: AsyncSession, evaluation_id: int
 ) -> EvaluationPublic:
