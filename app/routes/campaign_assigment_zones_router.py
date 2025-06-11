@@ -26,7 +26,7 @@ router = APIRouter(
 )
 
 
-@router.get("/zones")
+@router.get("/")
 async def get_all_by_zones(
     request: Request,
     session: AsyncSession = Depends(get_db),
@@ -58,7 +58,7 @@ async def get_all_by_zones(
     return campaigns
 
 
-@router.get("/zones/{assignment_id}")
+@router.get("/{assignment_id}")
 async def get_one_zone_assignment(
     assignment_id: int,
     request: Request,
@@ -74,7 +74,7 @@ async def get_one_zone_assignment(
     return campaign_zone
 
 
-@router.post("/zones")
+@router.post("/")
 async def assign_zones(
     request: Request,
     data: createCampaignZone,
@@ -88,7 +88,7 @@ async def assign_zones(
     return {"message": "Campaign zones assigned"}
 
 
-@router.delete("/zones/{assignment_id}")
+@router.delete("/{assignment_id}")
 async def delete_zone(
     assignment_id: int,
     request: Request,
@@ -102,12 +102,3 @@ async def delete_zone(
     )
 
     return {"message": "Campaign zone deleted"}
-
-
-@router.get("/assignments")
-async def get_assiments(request: Request, session: AsyncSession = Depends(get_db)):
-
-    if request.state.user.role != 3:
-        raise PermissionDeniedException(custom_message="retrieve campaigns")
-
-    return await get_assiments_campaigns(session, request.state.user.id)
