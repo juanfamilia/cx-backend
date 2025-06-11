@@ -11,6 +11,8 @@ app.title = settings.PROJECT_NAME
 
 origins = ["https://cx.dreez.dev"]
 
+app.add_middleware(HTTPSRedirectMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -19,7 +21,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(HTTPSRedirectMiddleware)
 # app.middleware("http")(db_exception_handler)
 
 # Routing
