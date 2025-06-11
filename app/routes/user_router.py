@@ -53,7 +53,13 @@ async def get_all(
 
         case 1:
             return await get_users(
-                session, offset, limit, filter, search, request.state.user.company_id
+                session,
+                offset,
+                limit,
+                filter,
+                search,
+                request.state.user.company_id,
+                request.state.user.id,
             )
 
         case 2:

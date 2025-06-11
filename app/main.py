@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from app.middlewares.error_middleware import db_exception_handler
 from app.routes.main import api_router
@@ -18,6 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_middleware(HTTPSRedirectMiddleware)
 app.middleware("http")(db_exception_handler)
 
 # Routing

@@ -26,7 +26,8 @@ async def get_users(
     limit: int = Query(default=10, le=50),
     filter: Optional[str] = None,
     search: Optional[str] = None,
-    company_id: int | None = None,
+    company_id: Optional[int] = None,
+    user_id: Optional[int] = None,
 ) -> UsersPublic:
 
     query = (
@@ -37,6 +38,9 @@ async def get_users(
 
     if company_id is not None:
         query = query.where(User.company_id == company_id)
+
+    if user_id is not None:
+        query = query.where(User.id != user_id)
 
     if filter and search:
         match filter:
