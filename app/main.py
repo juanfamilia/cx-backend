@@ -11,7 +11,7 @@ app.title = settings.PROJECT_NAME
 
 origins = ["https://cx.dreez.dev"]
 
-app.add_middleware(HTTPSRedirectMiddleware)
+# app.add_middleware(HTTPSRedirectMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
