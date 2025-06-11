@@ -302,10 +302,7 @@ async def get_assiments_campaigns(
     result_by_zone = await session.execute(query_by_zone)
     db_campaigns_zone = result_by_zone.scalars().all()
 
-    if not db_campaigns:
+    if not db_campaigns and db_campaigns_zone:
         raise NotFoundException("Campaigns not found")
-
-    if not db_campaigns_zone:
-        raise NotFoundException("Campaigns zones not found")
 
     return currentAssignedCampaign(by_user=db_campaigns, by_zone=db_campaigns_zone)
