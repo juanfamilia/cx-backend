@@ -28,7 +28,7 @@ router = APIRouter(
 )
 
 
-@router.get("/forms")
+@router.get("/")
 async def get_all_forms(
     request: Request,
     session: AsyncSession = Depends(get_db),
@@ -48,7 +48,7 @@ async def get_all_forms(
     return surveyForms
 
 
-@router.get("/forms/{form_id}")
+@router.get("/{form_id}")
 async def get_one_form(
     form_id: int,
     request: Request,
@@ -60,7 +60,7 @@ async def get_one_form(
     return surveyForm
 
 
-@router.post("/forms")
+@router.post("/")
 async def create_form(
     request: Request,
     data: SurveyFormsCreate,
@@ -75,7 +75,7 @@ async def create_form(
     return surveyForm
 
 
-@router.put("/forms/{form_id}")
+@router.put("/{form_id}")
 async def update_form(
     form_id: int,
     data: SurveyFormsCreate,
@@ -93,7 +93,7 @@ async def update_form(
     return surveyForm
 
 
-@router.delete("/forms/{form_id}")
+@router.delete("/{form_id}")
 async def delete_form(
     form_id: int,
     request: Request,

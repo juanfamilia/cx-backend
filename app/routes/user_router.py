@@ -74,6 +74,28 @@ async def get_all(
             )
 
 
+@router.get("/plain-list")
+async def get_users_plain_list(
+    request: Request, session: AsyncSession = Depends(get_db)
+):
+    role = request.state.user.role
+
+    if role not in [0, 1, 2]:
+        raise PermissionDeniedException(custom_message="retrieve all users")
+
+    match role:
+        case 0:
+            return await get_users_plain(session)
+
+        case 1:
+            return await get_users_plain(session, request.state.user.company_id)
+
+        case 2:
+            return await get_users_plain(
+                session, request.state.user.company_id, request.state.user.id
+            )
+
+
 @router.get("/me")
 async def get_current(request: Request) -> UserPublic:
 
@@ -96,28 +118,6 @@ async def update_current(
     user = await update_user_me(session, request.state.user.id, user_update)
 
     return user
-
-
-@router.get("/plain-list")
-async def get_users_plain_list(
-    request: Request, session: AsyncSession = Depends(get_db)
-):
-    role = request.state.user.role
-
-    if role not in [0, 1, 2]:
-        raise PermissionDeniedException(custom_message="retrieve all users")
-
-    match role:
-        case 0:
-            return await get_users_plain(session)
-
-        case 1:
-            return await get_users_plain(session, request.state.user.company_id)
-
-        case 2:
-            return await get_users_plain(
-                session, request.state.user.company_id, request.state.user.id
-            )
 
 
 @router.get("/{user_id}")
