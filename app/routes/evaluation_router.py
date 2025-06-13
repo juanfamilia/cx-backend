@@ -2,6 +2,7 @@ import json
 from typing import Optional
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     File,
     Form,
@@ -87,7 +88,7 @@ async def get_all(
 async def change_status(
     request: Request,
     evaluation_id: int,
-    status: StatusEnum,
+    status: StatusEnum = Body(...),
     session: AsyncSession = Depends(get_db),
 ) -> EvaluationPublic:
 

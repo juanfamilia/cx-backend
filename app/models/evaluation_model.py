@@ -14,8 +14,9 @@ from app.types.pagination import Pagination
 
 class StatusEnum(str, Enum):
     SEND = "enviado"
+    EDIT = "editar"
     UPDATED = "actualizado"
-    APROVED = "aprovado"
+    APROVED = "aprobado"
     REJECTED = "rechazado"
 
 

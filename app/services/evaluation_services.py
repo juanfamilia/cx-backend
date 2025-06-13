@@ -51,7 +51,7 @@ async def get_evaluations(
 
     if user_id is not None:
         query = query.where(
-            Evaluation.user_id == user_id, Evaluation.status == StatusEnum.REJECTED
+            Evaluation.user_id == user_id, Evaluation.status == StatusEnum.EDIT
         )
 
     if filter and search:
