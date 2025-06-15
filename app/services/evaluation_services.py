@@ -19,10 +19,12 @@ from app.models.evaluation_model import (
     EvaluationsPublic,
     StatusEnum,
 )
+from app.models.notification_model import NotificationBase
 from app.models.survey_forms_model import SurveyForm
 from app.models.survey_model import SurveySection
 from app.models.user_model import User
 from app.models.video_model import Video
+from app.services.notification_services import create_notification
 from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 from app.utils.helpers.s3_get_url import get_s3_url
@@ -194,6 +196,11 @@ async def change_evaluation_status(
     session.add(db_evaluation)
     await session.commit()
     await session.refresh(db_evaluation)
+
+    notification = NotificationBase(
+        user_id=db_evaluation.user_id, evaluation_id=db_evaluation.id, status=status
+    )
+    await create_notification(session, notification)
 
     return db_evaluation
 

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.models.user_zone_model import UserZone
     from app.models.campaign_user_model import CampaignUser
     from app.models.evaluation_model import Evaluation
+    from app.models.notification_model import Notification
 
 
 class GenderEnum(str, Enum):
@@ -96,6 +97,9 @@ class User(UserBase, table=True):
         back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
     evaluations: List["Evaluation"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    notifications: List["Notification"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
 

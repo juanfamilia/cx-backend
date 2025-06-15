@@ -7,6 +7,7 @@ from app.routes import (
     campaign_router,
     company_router,
     evaluation_router,
+    notification_router,
     survey_router,
     user_router,
     payment_router,
@@ -29,3 +30,4 @@ api_router.include_router(campaign_assignment_router.router)
 api_router.include_router(campaign_assigment_users_router.router)
 api_router.include_router(campaign_assigment_zones_router.router)
 api_router.include_router(evaluation_router.router)
+api_router.include_router(notification_router.router)

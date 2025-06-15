@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
@@ -10,6 +10,9 @@ from app.models.survey_model import SurveyAspect, SurveyAspectPublic
 from app.models.user_model import User, UserPublic
 from app.models.video_model import Video
 from app.types.pagination import Pagination
+
+if TYPE_CHECKING:
+    from app.models.notification_model import Notification
 
 
 class StatusEnum(str, Enum):
@@ -49,6 +52,9 @@ class Evaluation(EvaluationBase, table=True):
         back_populates="evaluations", sa_relationship_kwargs={"lazy": "noload"}
     )
     evaluation_answers: List["EvaluationAnswer"] = Relationship(
+        back_populates="evaluation", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    notifications: List["Notification"] = Relationship(
         back_populates="evaluation", sa_relationship_kwargs={"lazy": "noload"}
     )
 
