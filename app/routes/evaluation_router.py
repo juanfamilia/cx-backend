@@ -24,6 +24,7 @@ from app.models.evaluation_model import (
     EvaluationsPublic,
     StatusEnum,
 )
+from app.models.video_model import Video
 from app.services.evaluation_services import (
     change_evaluation_status,
     create_evaluation,
@@ -32,7 +33,7 @@ from app.services.evaluation_services import (
     soft_delete_evaluation,
     update_evaluation,
 )
-from app.services.video_services import upload_raw_video
+from app.services.video_services import update_video_status, upload_raw_video
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
@@ -98,6 +99,18 @@ async def change_status(
     evaluation = await change_evaluation_status(session, evaluation_id, status)
 
     return evaluation
+
+
+@router.get("/check-video/{video_id}")
+async def check_video(
+    request: Request,
+    video_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> Video:
+
+    video = await update_video_status(session, video_id)
+
+    return video
 
 
 @router.get("/{evaluation_id}")

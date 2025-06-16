@@ -1,10 +1,12 @@
 import uuid
 import boto3
+from botocore.exceptions import ClientError
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models.video_model import Video
+from app.utils.exeptions import NotFoundException
 from app.utils.helpers.s3_get_url import get_s3_url
 
 s3 = boto3.client("s3")
@@ -28,10 +30,49 @@ async def upload_raw_video(
 
 async def create_video(session: AsyncSession, url: str, title: str) -> Video:
 
-    video = Video(url=url, title=title)
+    video = Video(url=url, title=title, status="processing")
 
     session.add(video)
     await session.commit()
     await session.refresh(video)
 
     return video
+
+
+async def get_video(session: AsyncSession, video_id: str) -> Video:
+
+    video = await session.get(Video, video_id)
+
+    if not video:
+        raise NotFoundException("Video not found")
+
+    return video
+
+
+async def update_video_status(session: AsyncSession, video_id: int) -> Video:
+
+    # Buscar el video en la base de datos
+    video = await get_video(session, video_id)
+
+    compressed_key = "/".join(video.url.split("/")[-2:])
+
+    if not check_s3_object_exists(settings.AWS_BUCKET_NAME, compressed_key):
+        return NotFoundException("Video processing")
+
+    video.status = "available"
+    await session.commit()
+    await session.refresh(video)
+
+    return video
+
+
+def check_s3_object_exists(bucket_name: str, object_key: str) -> bool:
+    try:
+        s3.head_object(Bucket=bucket_name, Key=object_key)
+        return True
+
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "404":
+            return False
+        else:
+            raise False
