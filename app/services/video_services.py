@@ -3,6 +3,7 @@ import boto3
 from botocore.exceptions import ClientError
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
+import aiofiles
 
 from app.core.config import settings
 from app.models.video_model import Video
@@ -20,7 +21,12 @@ async def upload_raw_video(
     raw_key = f"raw/{video_id}.{ext}"
     compressed_key = f"compressed/{video_id}.{ext}"
 
-    s3.upload_fileobj(media.file, settings.AWS_BUCKET_NAME, raw_key)
+    async with aiofiles.open(media.filename, "wb") as f:
+        while chunk := await media.read(1024 * 1024 * 4):  # Leer en bloques de 4MB
+            await f.write(chunk)
+
+    with open(media.filename, "rb") as file_obj:
+        s3.upload_fileobj(file_obj, settings.AWS_BUCKET_NAME, raw_key)
 
     # Save video to database
     video = await create_video(session, get_s3_url(compressed_key), title)
