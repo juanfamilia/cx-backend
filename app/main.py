@@ -4,11 +4,11 @@ from app.routes.main import api_router
 from app.core.config import settings
 
 # config
-app = FastAPI()
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
 app.title = settings.PROJECT_NAME
 
-origins = ["https://cx.dreez.dev", "http://localhost:4200"]
+origins = ["https://cx.dreez.dev"]
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
