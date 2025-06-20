@@ -2,15 +2,14 @@ import json
 from typing import Optional
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Body,
     Depends,
-    File,
     Form,
-    HTTPException,
     Query,
     Request,
-    UploadFile,
 )
+import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -26,6 +25,7 @@ from app.models.evaluation_model import (
     StatusEnum,
 )
 from app.models.video_model import Video
+from app.services.cloudflare_stream_services import enable_download
 from app.services.evaluation_services import (
     change_evaluation_status,
     create_evaluation,
@@ -34,7 +34,11 @@ from app.services.evaluation_services import (
     soft_delete_evaluation,
     update_evaluation,
 )
-from app.services.video_services import update_video_status, upload_raw_video
+from app.services.symb_webhook_services import get_video_url, send_video_to_symbl
+from app.services.video_services import (
+    create_video,
+    update_video_status,
+)
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
@@ -135,8 +139,9 @@ async def get_one(
 @router.post("/")
 async def create(
     request: Request,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
-    media: UploadFile = File(...),
+    media_url: str = Form(...),
     video_title: str = Form(...),
     campaign_id: int = Form(...),
     location: Optional[str] = Form(default=None),
@@ -144,16 +149,11 @@ async def create(
     evaluation_answers: str = Form(...),
 ) -> Evaluation:
 
-    if not media.content_type.startswith("video/"):
-        raise HTTPException(
-            status_code=400, detail="Solo se permiten archivos de video"
-        )
-
-    video_upload = await upload_raw_video(session, media, video_title)
+    video_url = get_video_url(media_url)
+    video_upload = await create_video(session, video_url, video_title)
+    await enable_download(media_url)
 
     parsed_answers = json.loads(evaluation_answers)
-
-    # Convertir cada diccionario a una instancia de EvaluationAnswerBase
     answers_list = [EvaluationAnswerBase(**item) for item in parsed_answers]
 
     evaluation = EvaluationCreate(
@@ -167,6 +167,8 @@ async def create(
 
     evaluation_db = await create_evaluation(session, evaluation)
 
+    background_tasks.add_task(send_video_to_symbl, media_url)
+
     return evaluation_db
 
 
@@ -174,7 +176,8 @@ async def create(
 async def update(
     request: Request,
     evaluation_id: int,
-    media: Optional[UploadFile] = File(default=None),
+    background_tasks: BackgroundTasks,
+    media_url: Optional[str] = Form(default=None),
     video_title: Optional[str] = Form(default=None),
     location: Optional[str] = Form(default=None),
     evaluated_collaborator: Optional[str] = Form(default=None),
@@ -197,14 +200,11 @@ async def update(
         evaluation_answers=answers_list,
     )
 
-    if media:
-        if not media.content_type.startswith("video/"):
-            raise HTTPException(
-                status_code=400, detail="Solo se permiten archivos de video"
-            )
-
-        video_upload = await upload_raw_video(session, media, video_title)
+    if media_url:
+        video_url = get_video_url(media_url)
+        video_upload = await create_video(session, video_url, video_title)
         evaluation_update.video_id = video_upload.id
+        background_tasks.add_task(send_video_to_symbl, media_url)
 
     evaluation = await update_evaluation(session, evaluation_id, evaluation_update)
 

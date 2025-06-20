@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str
     AWS_BUCKET_NAME: str
     AWS_REGION: str
+    CLOUDFLARE_STREAM_KEY: str
+    CLOUDFLARE_ACCOUNT_ID: str
+    WEB_HOOK_URL: str
+    SYMBL_APP_ID: str
+    SYMBL_APP_SECRET: str
 
 
 settings = Settings()
