@@ -27,7 +27,6 @@ from app.models.video_model import Video
 from app.services.notification_services import create_notification
 from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
-from app.utils.helpers.s3_get_url import get_s3_url
 
 
 async def get_evaluations(
