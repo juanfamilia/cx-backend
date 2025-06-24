@@ -25,7 +25,7 @@ from app.models.evaluation_model import (
     StatusEnum,
 )
 from app.models.video_model import Video
-from app.services.cloudflare_stream_services import enable_download
+from app.services.cloudflare_stream_services import enable_download, get_video_url
 from app.services.evaluation_services import (
     change_evaluation_status,
     create_evaluation,
@@ -34,7 +34,7 @@ from app.services.evaluation_services import (
     soft_delete_evaluation,
     update_evaluation,
 )
-from app.services.symb_webhook_services import get_video_url, send_video_to_symbl
+from app.services.extract_audio_services import process_audio
 from app.services.video_services import (
     create_video,
     update_video_status,
@@ -151,7 +151,6 @@ async def create(
 
     video_url = get_video_url(media_url)
     video_upload = await create_video(session, video_url, video_title)
-    await enable_download(media_url)
 
     parsed_answers = json.loads(evaluation_answers)
     answers_list = [EvaluationAnswerBase(**item) for item in parsed_answers]
@@ -167,7 +166,11 @@ async def create(
 
     evaluation_db = await create_evaluation(session, evaluation)
 
-    background_tasks.add_task(send_video_to_symbl, media_url)
+    # Habilitar video en MP4
+    await enable_download(media_url)
+
+    # Extraer Audio y pasar a una IA
+    background_tasks.add_task(process_audio, media_url)
 
     return evaluation_db
 
@@ -204,7 +207,6 @@ async def update(
         video_url = get_video_url(media_url)
         video_upload = await create_video(session, video_url, video_title)
         evaluation_update.video_id = video_upload.id
-        background_tasks.add_task(send_video_to_symbl, media_url)
 
     evaluation = await update_evaluation(session, evaluation_id, evaluation_update)
 
