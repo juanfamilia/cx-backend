@@ -1,15 +1,26 @@
+import asyncio
 import os
+import random
+import tempfile
+import time
 import uuid
-import boto3
-from fastapi import logger
 from moviepy import VideoFileClip
+import openai
 import requests
 
 from app.core.config import settings
+from app.services.cloudflare_rs_services import r2_upload
+from app.services.cloudflare_stream_services import (
+    enable_download,
+    get_download_status,
+    wait_until_ready_to_stream,
+)
+from app.services.openai_services import audio_analysis
 
 
 def download_video(url: str, ruta_destino: str):
     response = requests.get(url, stream=True)
+    response.raise_for_status()
     with open(ruta_destino, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
@@ -20,38 +31,78 @@ def extract_audio(video_path: str, audio_path: str):
         clip.audio.write_audiofile(audio_path)
 
 
-def r2_upload(archivo_local, nombre_objetivo):
-    session = boto3.Session()
-    s3 = session.client(
-        service_name="s3",
-        aws_access_key_id=settings.R2_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
-        endpoint_url=settings.R2_ENDPOINT_URL,
-    )
-    with open(archivo_local, "rb") as data:
-        s3.upload_fileobj(data, settings.R2_BUCKET, nombre_objetivo)
+async def wait_and_download_video(
+    video_uid: str, ruta_destino: str, max_retries: int = 10, base_wait: int = 5
+):
+    for intento in range(max_retries):
+        status, url = await get_download_status(video_uid)
+        print(f"🔃 Intento {intento + 1} | {status}")
+
+        if status == "ready" and url:
+            try:
+                print("⏳ Descargando video...")
+                download_video(url, ruta_destino)
+                print("✅ Descarga completada.")
+                return True, url  # ✅
+            except Exception as e:
+                print(f"❌ Error durante la descarga: {e}")
+                return False, None
+
+        # Backoff exponencial con jitter
+        wait_time = base_wait * (2**intento) + random.uniform(0, 1)
+        print(f"🔃 Reintentado en {wait_time:.2f} segundos...")
+        time.sleep(wait_time)
+
+    print("❌ Error limite de reintentos alcanzado.")
+    return False, None
 
 
-def process_audio(video_url: str):
+async def handle_stream_to_audio(video_uid: str):
+    id_archivo = str(uuid.uuid4())
+
+    tmp_dir = tempfile.gettempdir()  # ✅ Asegura que /tmp exista
+
+    video_path = f"{tmp_dir}/{id_archivo}.mp4"
+    audio_path = f"{tmp_dir}/{id_archivo}.mp3"
+    r2_key = f"audios/{id_archivo}.mp3"
+
     try:
-        id_archivo = str(uuid.uuid4())
-        video_path = f"/tmp/{id_archivo}.mp4"
-        audio_path = f"/tmp/{id_archivo}.mp3"
+        is_ready = await wait_until_ready_to_stream(video_uid)
 
-        download_video(video_url, video_path)
+        if not is_ready:
+            print("❌ El video no está listo. Abortando proceso.")
+            return None
+
+        print("📥 Habilitando descarga del video en Cloudflare...")
+        await enable_download(video_uid)
+
+        print("⏳ Esperando a que el enlace de descarga esté listo...")
+        success, download_url = await wait_and_download_video(video_uid, video_path)
+
+        if not success:
+            print("Fallo en la descarga del video.")
+            return None
+
+        print("🎧 Extrayendo audio...")
         extract_audio(video_path, audio_path)
 
-        r2_upload(
-            archivo_local=audio_path,
-            nombre_objetivo=f"audios/{id_archivo}.mp3",
-        )
-        return logger.info(f"Audio procesado y subido: audios/{id_archivo}.mp3")
+        print("📤 Subiendo audio a R2...")
+        r2_upload(archivo_local=audio_path, nombre_objetivo=r2_key)
+        print(f"✅ Audio disponible en R2: {r2_key}")
+
+        print("🧠 Enviando audio a Whisper...")
+        audio_result = audio_analysis(audio_path)
+
+        print(f"📝 Transcripción completada:\n{audio_result}...")
+
+        return {"r2_key": r2_key, "transcription": audio_result}
 
     except Exception as e:
-        logger.error(f"Error al procesar el audio: {e}")
+        print(f"❌ Error durante el proceso: {e}")
         return None
 
     finally:
         for f in [video_path, audio_path]:
             if os.path.exists(f):
                 os.remove(f)
+                print(f"🗑️ Archivo temporal eliminado: {f}")

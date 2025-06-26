@@ -9,7 +9,6 @@ from fastapi import (
     Query,
     Request,
 )
-import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -25,7 +24,7 @@ from app.models.evaluation_model import (
     StatusEnum,
 )
 from app.models.video_model import Video
-from app.services.cloudflare_stream_services import enable_download, get_video_url
+from app.services.cloudflare_stream_services import get_video_url
 from app.services.evaluation_services import (
     change_evaluation_status,
     create_evaluation,
@@ -34,7 +33,7 @@ from app.services.evaluation_services import (
     soft_delete_evaluation,
     update_evaluation,
 )
-from app.services.extract_audio_services import process_audio
+from app.services.extract_audio_services import handle_stream_to_audio
 from app.services.video_services import (
     create_video,
     update_video_status,
@@ -166,11 +165,8 @@ async def create(
 
     evaluation_db = await create_evaluation(session, evaluation)
 
-    # Habilitar video en MP4
-    await enable_download(media_url)
-
     # Extraer Audio y pasar a una IA
-    background_tasks.add_task(process_audio, media_url)
+    background_tasks.add_task(handle_stream_to_audio, media_url)
 
     return evaluation_db
 

@@ -13,6 +13,7 @@ dependencies = [
     "fastapi[standard]>=0.115.12",
     "httpx>=0.28.1",
     "moviepy>=2.2.1",
+    "openai>=1.91.0",
     "passlib[bcrypt]>=1.7.4",
     "psycopg2-binary>=2.9.10",
     "pydantic-settings>=2.9.1",

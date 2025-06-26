@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     R2_SECRET_ACCESS_KEY: str
     R2_BUCKET: str
     R2_ENDPOINT_URL: str
+    OPENAI_API_KEY: str
 
 
 settings = Settings()
