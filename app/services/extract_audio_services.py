@@ -88,9 +88,8 @@ async def handle_stream_to_audio(video_uid: str):
 
         print("📤 Subiendo audio a R2...")
         r2_upload(archivo_local=audio_path, nombre_objetivo=r2_key)
-        print(f"✅ Audio disponible en R2: {r2_key}")
 
-        print("🧠 Enviando audio a Whisper...")
+        print("🧠 Enviando audio...")
         audio_result = audio_analysis(audio_path)
 
         print(f"📝 Transcripción completada:\n{audio_result}...")
