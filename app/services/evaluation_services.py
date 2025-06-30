@@ -1,15 +1,10 @@
 import datetime
 from typing import Optional
-import uuid
-import boto3
-from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import and_, func, or_, select
 from sqlalchemy.orm import selectinload
 
-from app.core.config import settings
 from app.models.campaign_model import Campaign
-from app.models.company_model import Company
 from app.models.evaluation_model import (
     Evaluation,
     EvaluationAnswer,
@@ -23,7 +18,6 @@ from app.models.notification_model import NotificationBase
 from app.models.survey_forms_model import SurveyForm
 from app.models.survey_model import SurveySection
 from app.models.user_model import User
-from app.models.video_model import Video
 from app.services.notification_services import create_notification
 from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException

@@ -13,6 +13,7 @@ from app.types.pagination import Pagination
 
 if TYPE_CHECKING:
     from app.models.notification_model import Notification
+    from app.models.evaluation_analysis_model import EvaluationAnalysis
 
 
 class StatusEnum(str, Enum):
@@ -55,6 +56,10 @@ class Evaluation(EvaluationBase, table=True):
         back_populates="evaluation", sa_relationship_kwargs={"lazy": "noload"}
     )
     notifications: List["Notification"] = Relationship(
+        back_populates="evaluation", sa_relationship_kwargs={"lazy": "noload"}
+    )
+
+    analysis: "EvaluationAnalysis" = Relationship(
         back_populates="evaluation", sa_relationship_kwargs={"lazy": "noload"}
     )
 

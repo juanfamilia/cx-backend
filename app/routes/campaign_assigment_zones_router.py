@@ -11,7 +11,6 @@ from app.models.campaign_zone_model import (
 from app.services.campaign_assignment_services import (
     assign_zones_to_campaign,
     get_assigments_by_zones,
-    get_assiments_campaigns,
     get_campaign_zone,
     soft_delete_campaign_zone,
 )

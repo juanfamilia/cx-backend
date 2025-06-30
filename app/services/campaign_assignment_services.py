@@ -17,8 +17,6 @@ from app.models.campaign_zone_model import (
     CampaignZonesPublic,
     currentAssignedCampaign,
 )
-from app.models.survey_forms_model import SurveyForm
-from app.models.survey_model import SurveySection
 from app.models.user_model import User
 from app.models.user_zone_model import UserZone
 from app.models.zone_model import Zone

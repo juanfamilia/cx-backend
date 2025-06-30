@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, Header, Response
 import httpx
+
+from fastapi import APIRouter, Depends, Header, Response
 from pydantic import BaseModel
 
 from app.core.config import settings

@@ -11,7 +11,6 @@ from app.core.security import (
 )
 from app.core.config import settings
 from app.models.user_model import UserPublic
-from app.services.payment_services import is_company_payment_valid
 from app.services.users_services import get_user_by_email
 from app.utils.deps import check_company_payment_status
 from app.utils.exeptions import (

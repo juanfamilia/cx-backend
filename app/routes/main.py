@@ -9,6 +9,7 @@ from app.routes import (
     cloudflare_webhook_router,
     company_router,
     dashboard_router,
+    evaluation_analysis_router,
     evaluation_router,
     notification_router,
     survey_router,
@@ -37,3 +38,4 @@ api_router.include_router(notification_router.router)
 api_router.include_router(dashboard_router.router)
 api_router.include_router(cloudflare_router.router)
 api_router.include_router(cloudflare_webhook_router.router)
+api_router.include_router(evaluation_analysis_router.router)

@@ -166,7 +166,7 @@ async def create(
     evaluation_db = await create_evaluation(session, evaluation)
 
     # Extraer Audio y pasar a una IA
-    background_tasks.add_task(handle_stream_to_audio, media_url)
+    background_tasks.add_task(handle_stream_to_audio, media_url, evaluation_db.id)
 
     return evaluation_db
 

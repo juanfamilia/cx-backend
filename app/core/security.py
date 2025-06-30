@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
 from fastapi import HTTPException, status
 import jwt
-import secrets
 from jwt.exceptions import DecodeError
 from passlib.context import CryptContext
 
@@ -13,9 +11,7 @@ from app.utils.exeptions import InvalidTokenException
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def create_access_token(
-    subject: str, expires_delta: timedelta
-) -> str:
+def create_access_token(subject: str, expires_delta: timedelta) -> str:
 
     expire = datetime.now(timezone.utc) + expires_delta
     to_encode = {"exp": expire, "sub": str(subject)}
@@ -33,6 +29,7 @@ def create_access_token(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error to generate access token",
         )
+
 
 def decode_token(token: str) -> dict:
     try:

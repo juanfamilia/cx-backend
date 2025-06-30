@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from fastapi import Query
 from sqlmodel import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +15,6 @@ from app.models.survey_forms_model import (
 from app.models.survey_model import (
     SurveySection,
     SurveyAspect,
-    SurveySectionCreate,
 )
 from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException

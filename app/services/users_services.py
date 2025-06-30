@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from fastapi import Query
 from sqlmodel import and_, func, or_, select
 from sqlalchemy.orm import selectinload

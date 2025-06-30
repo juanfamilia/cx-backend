@@ -1,14 +1,17 @@
-import asyncio
 import os
 import random
 import tempfile
 import time
 import uuid
-from moviepy import VideoFileClip
-import openai
-import requests
 
-from app.core.config import settings
+from fastapi import Depends
+from moviepy import VideoFileClip
+import requests
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.db import get_db
+from app.models.evaluation_analysis_model import EvaluationAnalysisBase
+from app.services.evaluation_analysis_services import create_evaluation_analysis
 from app.services.cloudflare_rs_services import r2_upload
 from app.services.cloudflare_stream_services import (
     enable_download,
@@ -57,7 +60,7 @@ async def wait_and_download_video(
     return False, None
 
 
-async def handle_stream_to_audio(video_uid: str):
+async def handle_stream_to_audio(video_uid: str, evaluation_id: int):
     id_archivo = str(uuid.uuid4())
 
     tmp_dir = tempfile.gettempdir()  # ✅ Asegura que /tmp exista
@@ -94,7 +97,15 @@ async def handle_stream_to_audio(video_uid: str):
 
         print(f"📝 Transcripción completada:\n{audio_result}...")
 
-        return {"r2_key": r2_key, "transcription": audio_result}
+        print("💾 Guardando análisis de evaluación...")
+        evaluation_analysis = EvaluationAnalysisBase(
+            evaluation_id=evaluation_id, analysis=audio_result
+        )
+        session: AsyncSession = Depends(get_db)
+
+        await create_evaluation_analysis(session, evaluation_analysis)
+
+        return "✅ Transcripción completada y guardada."
 
     except Exception as e:
         print(f"❌ Error durante el proceso: {e}")

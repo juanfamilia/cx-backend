@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,7 +9,6 @@ from app.models.survey_forms_model import (
     SurveyFormsCreate,
     SurveyFormsPublic,
 )
-from app.models.survey_model import SurveySectionPublic
 from app.services.survey_forms_services import (
     create_survey_form,
     get_form_by_id,
