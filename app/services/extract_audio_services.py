@@ -60,7 +60,7 @@ async def wait_and_download_video(
     return False, None
 
 
-async def handle_stream_to_audio(video_uid: str, evaluation_id: int):
+async def handle_stream_to_audio(video_uid: str, evaluation_id: int, session: AsyncSession):
     id_archivo = str(uuid.uuid4())
 
     tmp_dir = tempfile.gettempdir()  # ✅ Asegura que /tmp exista
@@ -101,7 +101,6 @@ async def handle_stream_to_audio(video_uid: str, evaluation_id: int):
         evaluation_analysis = EvaluationAnalysisBase(
             evaluation_id=evaluation_id, analysis=audio_result
         )
-        session: AsyncSession = Depends(get_db)
 
         await create_evaluation_analysis(session, evaluation_analysis)
 
