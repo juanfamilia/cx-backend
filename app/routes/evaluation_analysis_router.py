@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.models.evaluation_analysis_model import EvaluationAnalysisPublic
+from app.services.evaluation_analysis_services import get_evaluation_analysis
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
@@ -15,7 +16,7 @@ router = APIRouter(
 
 
 @router.get("/evaluation-analysis/{evaluation_id}")
-async def get_evaluation_analysis(
+async def get_analysis(
     request: Request,
     evaluation_id: int,
     session: AsyncSession = Depends(get_db),
