@@ -9,13 +9,13 @@ from app.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(
-    prefix="/evaluations-analysis",
+    prefix="/evaluation-analysis",
     tags=["Evaluations Analysis"],
     dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )
 
 
-@router.get("/evaluation-analysis/{evaluation_id}")
+@router.get("/{evaluation_id}")
 async def get_analysis(
     request: Request,
     evaluation_id: int,
