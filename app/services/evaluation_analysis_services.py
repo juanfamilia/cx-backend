@@ -14,9 +14,9 @@ async def get_evaluation_analysis(
     session: AsyncSession, evaluation_id: int
 ) -> EvaluationAnalysisPublic:
 
-    query = select(EvaluationAnalysisPublic).where(
-        EvaluationAnalysisPublic.evaluation_id == evaluation_id,
-        EvaluationAnalysisPublic.deleted_at == None,
+    query = select(EvaluationAnalysis).where(
+        EvaluationAnalysis.evaluation_id == evaluation_id,
+        EvaluationAnalysis.deleted_at == None,
     )
 
     result = await session.execute(query)
