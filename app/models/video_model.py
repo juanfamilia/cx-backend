@@ -10,7 +10,6 @@ class Video(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     title: str
     url: str
-    status: str = "processing"
 
     evaluations: List["Evaluation"] = Relationship(back_populates="video")
 

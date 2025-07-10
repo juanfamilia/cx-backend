@@ -6,7 +6,7 @@ from app.utils.exeptions import NotFoundException
 
 async def create_video(session: AsyncSession, url: str, title: str) -> Video:
 
-    video = Video(url=url, title=title, status="processing")
+    video = Video(url=url, title=title)
 
     session.add(video)
     await session.commit()
