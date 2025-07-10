@@ -21,6 +21,7 @@ from app.models import (
     evaluation_model,
     notification_model,
     evaluation_analysis_model,
+    campaign_goals_evaluator_model,
 )
 
 config = context.config

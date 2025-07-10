@@ -4,6 +4,7 @@ from app.routes import (
     campaign_assigment_users_router,
     campaign_assigment_zones_router,
     campaign_assignment_router,
+    campaign_goals_evaluator_router,
     campaign_router,
     cloudflare_router,
     cloudflare_webhook_router,
@@ -39,3 +40,4 @@ api_router.include_router(dashboard_router.router)
 api_router.include_router(cloudflare_router.router)
 api_router.include_router(cloudflare_webhook_router.router)
 api_router.include_router(evaluation_analysis_router.router)
+api_router.include_router(campaign_goals_evaluator_router.router)

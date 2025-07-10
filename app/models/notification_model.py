@@ -10,6 +10,7 @@ class NotificationBase(SQLModel):
     evaluation_id: int | None = Field(default=None, foreign_key="evaluations.id")
     status: StatusEnum
     read: bool = Field(default=False)
+    comment: str | None = Field(nullable=True)
 
 
 class Notification(NotificationBase, table=True):

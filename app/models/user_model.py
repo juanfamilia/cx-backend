@@ -7,6 +7,7 @@ from sqlmodel import Relationship, SQLModel, Field, Column, DateTime, func
 from app.models.company_model import Company
 from app.types.pagination import Pagination
 
+
 if TYPE_CHECKING:
     from app.models.user_zone_model import UserZone
     from app.models.campaign_user_model import CampaignUser
@@ -102,6 +103,9 @@ class User(UserBase, table=True):
     notifications: List["Notification"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
+    campaign_goals_evaluators: List["CampaignGoalsEvaluator"] = Relationship(
+        back_populates="evaluator", sa_relationship_kwargs={"lazy": "noload"}
+    )
 
 
 class UserPublic(UserBase):
@@ -115,3 +119,6 @@ class UserPublic(UserBase):
 class UsersPublic(BaseModel):
     data: list[UserPublic]
     pagination: Pagination
+
+
+from app.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator

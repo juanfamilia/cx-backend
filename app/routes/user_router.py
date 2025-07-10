@@ -153,7 +153,7 @@ async def create(
     if request.state.user.role == 1:
         user_create.company_id = request.state.user.company_id
 
-    user_create.birthdate.replace(tzinfo=None)
+    user_create.birthdate = user_create.birthdate.replace(tzinfo=None)
 
     check_role_creation_permissions(request.state.user.role, user_create.role)
 

@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from app.models.campaign_user_model import CampaignUser
     from app.models.campaign_zone_model import CampaignZone
     from app.models.evaluation_model import Evaluation
+    from app.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator
 
 from app.models.company_model import Company
 from app.models.survey_forms_model import SurveyForm, SurveyFormPublic
@@ -29,6 +30,7 @@ class CampaignBase(SQLModel):
     channel: ChannelType = ChannelType.presencial
     survey_id: int | None = Field(default=None, foreign_key="survey_forms.id")
     notes: str | None = Field(nullable=True)
+    goal: int = Field(default=0)
 
 
 class CampaignUpdate(SQLModel):
@@ -39,6 +41,7 @@ class CampaignUpdate(SQLModel):
     channel: ChannelType | None = Field(default=None)
     survey_id: int | None = Field(default=None)
     notes: str | None = Field(default=None)
+    goal: int | None = Field(default=None)
 
 
 class Campaign(CampaignBase, table=True):
@@ -63,6 +66,9 @@ class Campaign(CampaignBase, table=True):
         back_populates="campaign", sa_relationship_kwargs={"lazy": "noload"}
     )
     evaluations: List["Evaluation"] = Relationship(
+        back_populates="campaign", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    campaign_goals_evaluators: List["CampaignGoalsEvaluator"] = Relationship(
         back_populates="campaign", sa_relationship_kwargs={"lazy": "noload"}
     )
 

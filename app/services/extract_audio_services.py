@@ -1,13 +1,14 @@
+import asyncio
 import os
 import random
 import tempfile
 import time
 import uuid
 
-from fastapi import Depends
+import httpx
 from moviepy import VideoFileClip
-import requests
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.concurrency import run_in_threadpool
 
 from app.core.db import get_db
 from app.models.evaluation_analysis_model import EvaluationAnalysisBase
@@ -21,12 +22,13 @@ from app.services.cloudflare_stream_services import (
 from app.services.openai_services import audio_analysis
 
 
-def download_video(url: str, ruta_destino: str):
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    with open(ruta_destino, "wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
+async def download_video(url: str, ruta_destino: str):
+    async with httpx.AsyncClient() as client:
+        async with client.stream("GET", url) as response:
+            response.raise_for_status()
+            with open(ruta_destino, "wb") as f:
+                async for chunk in response.aiter_bytes():
+                    f.write(chunk)
 
 
 def extract_audio(video_path: str, audio_path: str):
@@ -44,7 +46,7 @@ async def wait_and_download_video(
         if status == "ready" and url:
             try:
                 print("⏳ Descargando video...")
-                download_video(url, ruta_destino)
+                await download_video(url, ruta_destino)
                 print("✅ Descarga completada.")
                 return True, url  # ✅
             except Exception as e:
@@ -54,7 +56,7 @@ async def wait_and_download_video(
         # Backoff exponencial con jitter
         wait_time = base_wait * (2**intento) + random.uniform(0, 1)
         print(f"🔃 Reintentado en {wait_time:.2f} segundos...")
-        time.sleep(wait_time)
+        await asyncio.sleep(wait_time)
 
     print("❌ Error limite de reintentos alcanzado.")
     return False, None
@@ -87,13 +89,13 @@ async def handle_stream_to_audio(video_uid: str, evaluation_id: int, session: As
             return None
 
         print("🎧 Extrayendo audio...")
-        extract_audio(video_path, audio_path)
+        await run_in_threadpool(extract_audio, video_path, audio_path)
 
         print("📤 Subiendo audio a R2...")
-        r2_upload(archivo_local=audio_path, nombre_objetivo=r2_key)
+        await run_in_threadpool(r2_upload, archivo_local=audio_path, nombre_objetivo=r2_key)
 
         print("🧠 Enviando audio...")
-        audio_result = audio_analysis(audio_path)
+        audio_result = await run_in_threadpool(audio_analysis, audio_path)
 
         print(f"📝 Transcripción completada:\n{audio_result}...")
 

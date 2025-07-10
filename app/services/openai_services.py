@@ -67,7 +67,7 @@ def audio_analysis(audio_path: str):
                         },
                         "13. Impacto estimado en el negocio": {
                         "tipo": "Emocional / Operativo / Reputacional / Económico",
-                        "riesgo_oportunidad": "¿Qué puede ganar o perder la marca si no mejora esta experiencia?"
+                        "riesgo oportunidad": "¿Qué puede ganar o perder la marca si no mejora esta experiencia?"
                         }
                     },
                     formato: Presenta el análisis con encabezados claros, listas con viñetas o íconos, y estructura legible para informes ejecutivos y dashboards. Usa un tono profesional, estratégico y orientado a toma de decisiones.

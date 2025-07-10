@@ -116,6 +116,7 @@ async def soft_delete_user_zone(
 
     db_user_zone.deleted_at = datetime.now()
 
+    session.add(db_user_zone)
     await session.commit()
     await session.refresh(db_user_zone)
 
