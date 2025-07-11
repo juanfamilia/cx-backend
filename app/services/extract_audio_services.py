@@ -23,7 +23,7 @@ from app.services.openai_services import audio_analysis
 
 
 async def download_video(url: str, ruta_destino: str):
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(follow_redirects=True) as client:
         async with client.stream("GET", url) as response:
             response.raise_for_status()
             with open(ruta_destino, "wb") as f:
@@ -62,7 +62,9 @@ async def wait_and_download_video(
     return False, None
 
 
-async def handle_stream_to_audio(video_uid: str, evaluation_id: int, session: AsyncSession):
+async def handle_stream_to_audio(
+    video_uid: str, evaluation_id: int, session: AsyncSession
+):
     id_archivo = str(uuid.uuid4())
 
     tmp_dir = tempfile.gettempdir()  # ✅ Asegura que /tmp exista
@@ -92,7 +94,9 @@ async def handle_stream_to_audio(video_uid: str, evaluation_id: int, session: As
         await run_in_threadpool(extract_audio, video_path, audio_path)
 
         print("📤 Subiendo audio a R2...")
-        await run_in_threadpool(r2_upload, archivo_local=audio_path, nombre_objetivo=r2_key)
+        await run_in_threadpool(
+            r2_upload, archivo_local=audio_path, nombre_objetivo=r2_key
+        )
 
         print("🧠 Enviando audio...")
         audio_result = await run_in_threadpool(audio_analysis, audio_path)
