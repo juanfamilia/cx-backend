@@ -175,14 +175,14 @@ async def update_any(
 
     if (
         request.state.user.role == 1
-        and request.state.user.company != user_update.company_id
+        and request.state.user.company_id != user_update.company_id
     ):
-        raise PermissionDeniedException(custom_message="update this user")
+        raise PermissionDeniedException(custom_message="update users to other company")
 
     check_role_creation_permissions(request.state.user.role, user_update.role)
 
     if user_update.birthdate:
-        user_update.birthdate.replace(tzinfo=None)
+        user_update.birthdate = user_update.birthdate.replace(tzinfo=None)
 
     updated_user = await update_user(session, user_id, user_update)
 
