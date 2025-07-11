@@ -92,6 +92,11 @@ class EvaluationsPublic(BaseModel):
     pagination: Pagination
 
 
+class StatusChangeRequest(BaseModel):
+    comment: str | None = None
+    status: StatusEnum
+
+
 # ----------- ANSWERS -----------
 class EvaluationAnswerBase(SQLModel):
     evaluation_id: int | None = Field(default=None, foreign_key="evaluations.id")

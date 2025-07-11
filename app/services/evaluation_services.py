@@ -12,6 +12,7 @@ from app.models.evaluation_model import (
     EvaluationPublic,
     EvaluationUpdate,
     EvaluationsPublic,
+    StatusChangeRequest,
     StatusEnum,
 )
 from app.models.notification_model import NotificationBase
@@ -180,18 +181,21 @@ async def update_evaluation(
 
 
 async def change_evaluation_status(
-    session: AsyncSession, evaluation_id: int, status: StatusEnum
+    session: AsyncSession, evaluation_id: int, status: StatusChangeRequest
 ) -> EvaluationPublic:
     db_evaluation = await get_evaluation(session, evaluation_id)
 
-    db_evaluation.status = status
+    db_evaluation.status = status.status
 
     session.add(db_evaluation)
     await session.commit()
     await session.refresh(db_evaluation)
 
     notification = NotificationBase(
-        user_id=db_evaluation.user_id, evaluation_id=db_evaluation.id, status=status
+        user_id=db_evaluation.user_id,
+        evaluation_id=db_evaluation.id,
+        status=status.status,
+        comment=status.comment,
     )
     await create_notification(session, notification)
 

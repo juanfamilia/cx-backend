@@ -21,6 +21,7 @@ from app.models.evaluation_model import (
     EvaluationPublic,
     EvaluationUpdate,
     EvaluationsPublic,
+    StatusChangeRequest,
     StatusEnum,
 )
 from app.models.video_model import Video
@@ -93,7 +94,7 @@ async def get_all(
 async def change_status(
     request: Request,
     evaluation_id: int,
-    status: StatusEnum = Body(...),
+    status: StatusChangeRequest = Body(...),
     session: AsyncSession = Depends(get_db),
 ) -> EvaluationPublic:
 
@@ -166,7 +167,9 @@ async def create(
     evaluation_db = await create_evaluation(session, evaluation)
 
     # Extraer Audio y pasar a una IA
-    background_tasks.add_task(handle_stream_to_audio, media_url, evaluation_db.id, session)
+    background_tasks.add_task(
+        handle_stream_to_audio, media_url, evaluation_db.id, session
+    )
 
     return evaluation_db
 
