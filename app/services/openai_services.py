@@ -71,6 +71,11 @@ def audio_analysis(audio_path: str):
                         }
                     },
                     formato: Presenta el análisis con encabezados claros, listas con viñetas o íconos, y estructura legible para informes ejecutivos y dashboards. Usa un tono profesional, estratégico y orientado a toma de decisiones.
+                    Instrucciones de formato de salida:
+                        - Presenta el análisis en **formato Markdown legible**.
+                        - Usa **encabezados** (##), listas con viñetas, y tablas si es útil.
+                        - Usa bloques de código solo si es necesario (por ejemplo, para mostrar JSON limpio o frases clave).
+                        - **No devuelvas el análisis como JSON literal ni escapado.**
             """,
             },
             {
