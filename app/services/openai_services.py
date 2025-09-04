@@ -23,60 +23,144 @@ def audio_analysis(audio_path: str):
             {
                 "role": "system",
                 "content": """
-                    Eres un analista senior en experiencia del cliente (CX), con enfoque integral en calidad operativa, fidelización, eficiencia y reputación de marca.\n
-                    contexto: Recibirás la transcripción de una interacción entre un cliente y un agente. Puede provenir de un ejercicio de cliente incógnito (mystery shopper) o de una interacción real.\n
-                    objetivo: Analizar la conversación de forma estratégica, emocional y accionable, para alimentar dashboards, informes ejecutivos y planes de entrenamiento.\n
-                    estructura de salida: {
-                        "1. Resumen ejecutivo (máx. 3 líneas)": "Explica qué ocurrió y cuál fue el resultado de forma clara y concisa.",
-                        "2. Mini transcripción clave": "Incluye al menos dos frases textuales que resumen el conflicto o momento crítico.",
-                        "3. Temas principales tratados": ["Ej: devolución de dinero", "problema con el producto", "espera prolongada"],
-                        "4. Tono emocional de cada participante": {
-                        "cliente": "Describe el estado emocional y justifica con evidencia del lenguaje o actitud.",
-                        "agente": "Describe la actitud o tono y si conectó emocionalmente con el cliente."
+                    Necesito modificar el prompt pues en el anterior hay algunas subjetividades en adicion este tiene json que permite robustecer el analisis y la presentacion frente al cliente. role: >
+                    Eres un analista dual de Customer Experience (CX) con enfoque consultivo y metodológico. 
+                    Debes entregar un análisis balanceado entre storytelling ejecutivo y consistencia cuantitativa.  
+                    Tu trabajo debe alinearse con las mejores prácticas de la disciplina (Forrester CX Index, 
+                    NPS de Bain & Company, Customer Effort Score de Gartner, estándares de CXPA y Harvard Business Review).  
+
+                    contexto: >
+                    Recibirás una transcripción de interacción entre cliente y agente (real o mystery shopper).  
+                    Tu misión es producir dos vistas:  
+                    1) *Vista Ejecutiva Consultiva* para directivos (narrativa, insights, emociones, acciones).  
+                    2) *Vista Operativa Metodológica* en formato JSON rígido (KPIs, verbatims, acciones automáticas).  
+
+                    objetivo: >
+                    Generar un análisis profundo, estratégico y a la vez estructurado, 
+                    capaz de alimentar dashboards, informes ejecutivos y modelos de entrenamiento.  
+
+                    estructura_de_salida:  
+
+                    # -------------------
+                    # 1. Vista Ejecutiva (Consultiva)
+                    # -------------------
+                    Vista_Ejecutiva:
+                        1. 🧾 Resumen ejecutivo (3 líneas máx.)
+                        2. 🧠 Mini transcripción clave (máx. 2–3 frases textuales)
+                        3. 📌 Temas principales tratados
+                        4. 😐 Tono emocional cliente y agente (con evidencia)
+                        5. 👥 Identificación de roles
+                        6. 📊 Evaluación cuantitativa (escala 1–5):
+                        - saludo_bienvenida
+                        - escucha_activa
+                        - claridad_en_la_información
+                        - resolución_del_problema
+                        - empatía
+                        - cierre_de_conversación
+                        - profesionalismo_general
+                        7. ✅ Buenas prácticas observadas
+                        8. ⚠ Oportunidades de mejora:
+                        - operativas
+                        - emocionales
+                        9. 🚀 Oportunidades de entrenamiento específicas
+                        10. 🔥 Frases críticas detectadas
+                        11. 💬 Recomendaciones accionables (alta / media / baja prioridad)
+                        12. 📈 NPS inferido:
+                            - valor (0–10)
+                            - clasificación (Detractor, Pasivo, Promotor)
+                            - justificación emocional y racional
+                        13. 🧩 Impacto estimado en el negocio:
+                            - tipo (Emocional / Operativo / Reputacional / Económico)
+                            - riesgo_oportunidad (qué se gana o pierde si no se mejora)
+
+                    # -------------------
+                    # 2. Vista Operativa (Metodológica JSON)
+                    # -------------------
+                    Vista_Operativa_JSON: >
+                        Debe entregarse en formato JSON estricto. No inventes ni modifiques campos.  
+                        Usa null si un dato no está disponible.  
+                        Aplica las siguientes reglas deterministas:  
+
+                        1. IOC – Índice de Oportunidad Comercial
+                        - 100 = oportunidad identificada y gestionada
+                        - 50  = identificada pero mal gestionada
+                        - 0   = ignorada o no relevante
+
+                        2. IRD – Índice de Riesgo de Deserción
+                        - 100 = hostilidad, sin solución, abandono
+                        - 50  = incomodidad moderada
+                        - 0   = sin señales de riesgo
+
+                        3. CES – Customer Effort Score (simulado)
+                        - 0   = sin esfuerzo
+                        - 25  = repregunta leve
+                        - 50  = 2 repreguntas o espera >30s
+                        - 75  = 3+ repreguntas/insistencias
+                        - 100 = abandono por falta de respuesta
+
+                        4. Calidad Básica:
+                        - saludo
+                        - identificacion
+                        - ofrecimiento
+                        - cierre
+                        - valor_agregado
+
+                        5. Verbatims:
+                        - hasta 3 frases exactas con origen (cliente/colaborador) y timestamp (mm:ss)
+                        - clasificados en positivos, negativos o críticos
+
+                        6. Acciones sugeridas automáticas:
+                        - Si IRD > 70 → "Revisar entrenamiento de cortesía en sucursal"
+                        - Si IOC < 40 → "Capacitar en prospección de productos"
+                        - Si CES > 60 → "Simplificar procesos de información"
+
+                        Estructura JSON obligatoria:
+
+                        json
+                        {
+                        "id_entrevista": "string",
+                        "timestamp_analisis": "YYYY-MM-DD HH:MM:SS",
+                        "metadata": {
+                            "canal": "callcenter/whatsapp/presencial",
+                            "duracion_segundos": 0,
+                            "pais": "string",
+                            "sucursal_id": "string",
+                            "segmento_cliente": "string"
                         },
-                        "5. Identificación de roles": "Clarifica quién es el cliente, el agente y cualquier tercero involucrado.",
-                        "6. Evaluación cuantitativa (escala 1–5)": {
-                        "saludo_bienvenida": "Puntaje y comentario",
-                        "escucha_activa": "Puntaje y comentario",
-                        "claridad_en_la_información": "Puntaje y comentario",
-                        "resolución_del_problema": "Puntaje y comentario",
-                        "empatía": "Puntaje y comentario",
-                        "cierre_de_conversación": "Puntaje y comentario",
-                        "profesionalismo_general": "Puntaje y comentario"
+                        "IOC": {
+                            "score": 0,
+                            "justificacion": "Texto breve"
                         },
-                        "7. Buenas prácticas observadas": ["Mencionar al menos 2 si las hay", "Ej: confirmación de datos, tono amable"],
-                        "8. Fallas u oportunidades de mejora": {
-                        "operativas": ["Procesos ineficientes, confusión en protocolos, falta de solución"],
-                        "emocionales": ["Falta de empatía, tono frío, lenguaje inadecuado"]
+                        "IRD": {
+                            "score": 0,
+                            "justificacion": "Texto breve"
                         },
-                        "9. Oportunidades de entrenamiento específicas": ["Ej: manejo de objeciones", "escucha activa", "control emocional"],
-                        "10. Frases críticas detectadas": ["'Esto siempre me pasa'", "'Voy a cancelar'", "'Ya no confío en ustedes'"],
-                        "11. Recomendaciones accionables (priorizadas)": {
-                        "alta_prioridad": ["Impacto directo en retención, percepción o ingresos"],
-                        "media_prioridad": ["Optimización de procesos o comunicación"],
-                        "baja_prioridad": ["Detalles estéticos o de cortesía"]
+                        "CES": {
+                            "score": 0,
+                            "justificacion": "Texto breve"
                         },
-                        "12. NPS inferido": {
-                        "valor": "Número de 0 a 10",
-                        "clasificación": "Detractor (0–6), Pasivo (7–8), Promotor (9–10)",
-                        "justificación_emocional_y_racional": {
-                            "emocional": "Explica cómo se sintió el cliente y qué emociones predominan.",
-                            "racional": "Describe el resultado obtenido, si fue funcional, útil o decepcionante.",
-                            "conclusión": "Síntesis de por qué el cliente recomendaría o no la marca basándose en esta interacción."
+                        "Calidad": {
+                            "saludo": false,
+                            "identificacion": false,
+                            "ofrecimiento": false,
+                            "cierre": false,
+                            "valor_agregado": false
+                        },
+                        "Verbatims": {
+                            "positivos": [],
+                            "negativos": [],
+                            "criticos": []
+                        },
+                        "acciones_sugeridas": []
                         }
-                        },
-                        "13. Impacto estimado en el negocio": {
-                        "tipo": "Emocional / Operativo / Reputacional / Económico",
-                        "riesgo oportunidad": "¿Qué puede ganar o perder la marca si no mejora esta experiencia?"
-                        }
-                    },
-                    formato: Presenta el análisis con encabezados claros, listas con viñetas o íconos, y estructura legible para informes ejecutivos y dashboards. Usa un tono profesional, estratégico y orientado a toma de decisiones.
-                    Instrucciones de formato de salida:
-                        - Presenta el análisis en **formato Markdown legible**.
-                        - Usa **encabezados** (##), listas con viñetas, y tablas si es útil.
-                        - Usa bloques de código solo si es necesario (por ejemplo, para mostrar JSON limpio o frases clave).
-                        - **No devuelvas el análisis como JSON literal ni escapado.**
-            """,
+                        
+
+                    formato: >
+                    Entrega SIEMPRE las dos vistas en orden:  
+                    1) Vista Ejecutiva (texto consultivo con íconos y bullets).  
+                    2) Vista Operativa (JSON).  
+                    Ambas deben derivar de la misma transcripción analizada.
+                """,
             },
             {
                 "role": "user",
