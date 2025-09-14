@@ -12,7 +12,10 @@ from fastapi.concurrency import run_in_threadpool
 
 from app.core.db import get_db
 from app.models.evaluation_analysis_model import EvaluationAnalysisBase
-from app.services.evaluation_analysis_services import create_evaluation_analysis
+from app.services.evaluation_analysis_services import (
+    create_evaluation_analysis,
+    split_analysis,
+)
 from app.services.cloudflare_rs_services import r2_upload
 from app.services.cloudflare_stream_services import (
     enable_download,
@@ -104,8 +107,13 @@ async def handle_stream_to_audio(
         print(f"📝 Transcripción completada:\n{audio_result}...")
 
         print("💾 Guardando análisis de evaluación...")
+
+        executive_view, operative_view = split_analysis(audio_result)
+
         evaluation_analysis = EvaluationAnalysisBase(
-            evaluation_id=evaluation_id, analysis=audio_result
+            evaluation_id=evaluation_id,
+            executive_view=executive_view,
+            operative_view=operative_view,
         )
 
         await create_evaluation_analysis(session, evaluation_analysis)

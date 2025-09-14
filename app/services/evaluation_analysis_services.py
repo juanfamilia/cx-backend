@@ -1,4 +1,6 @@
 from datetime import datetime
+import json
+import re
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -54,3 +56,27 @@ async def soft_delete_evaluation_analysis(
     await session.refresh(db_evaluation_analysis)
 
     return db_evaluation_analysis
+
+
+def split_analysis(response: str):
+    # Dividir por los títulos
+    match = re.split(
+        r"# -------------------\n# 2. Vista Operativa.*\n# -------------------\n",
+        response,
+        maxsplit=1,
+    )
+    if len(match) == 2:
+        executive = match[0].strip()
+        operative = match[1].strip()
+
+        # Si el bloque operativo viene con ```json ... ``` lo limpiamos
+        operative = re.sub(r"^```json|```$", "", operative, flags=re.MULTILINE).strip()
+
+        # Opcional: validar JSON
+        try:
+            json.loads(operative)
+        except Exception:
+            pass  # o loggear el error
+
+        return executive, operative
+    return response, None
