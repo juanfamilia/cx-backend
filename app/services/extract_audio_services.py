@@ -112,6 +112,7 @@ async def handle_stream_to_audio(
 
         evaluation_analysis = EvaluationAnalysisBase(
             evaluation_id=evaluation_id,
+            analysis=audio_result,
             executive_view=executive_view,
             operative_view=operative_view,
         )
