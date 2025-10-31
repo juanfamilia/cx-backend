@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.models.campaign_user_model import CampaignUser
     from app.models.evaluation_model import Evaluation
     from app.models.notification_model import Notification
+    from app.models.dashboard_config_model import DashboardConfig
 
 
 class GenderEnum(str, Enum):
@@ -105,6 +106,9 @@ class User(UserBase, table=True):
     )
     campaign_goals_evaluators: List["CampaignGoalsEvaluator"] = Relationship(
         back_populates="evaluator", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    dashboard_configs: List["DashboardConfig"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
     )
 
 

@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from app.models.user_model import User
     from app.models.payment_model import Payment
     from app.models.campaign_model import Campaign
+    from app.models.prompt_manager_model import PromptManager
 
 
 class CompanyBase(SQLModel):
@@ -41,6 +42,7 @@ class Company(CompanyBase, table=True):
     employees: list["User"] = Relationship(back_populates="company")
     payments: list["Payment"] = Relationship(back_populates="company")
     campaigns: list["Campaign"] = Relationship(back_populates="company")
+    prompts: list["PromptManager"] = Relationship(back_populates="company")
 
 
 class CompanyPublic(CompanyBase):

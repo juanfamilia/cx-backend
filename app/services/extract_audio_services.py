@@ -9,6 +9,7 @@ import httpx
 from moviepy import VideoFileClip
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.concurrency import run_in_threadpool
+from sqlmodel import select
 
 from app.core.db import get_db
 from app.models.evaluation_analysis_model import EvaluationAnalysisBase
@@ -117,7 +118,55 @@ async def handle_stream_to_audio(
             operative_view=operative_view,
         )
 
-        await create_evaluation_analysis(session, evaluation_analysis)
+        db_analysis = await create_evaluation_analysis(session, evaluation_analysis)
+        
+        # 🧠 INTELLIGENCE ENGINE: Auto-generate insights and tags
+        try:
+            from app.services.intelligence_services import (
+                generate_insights_from_analysis,
+                auto_tag_evaluation,
+                check_alert_thresholds
+            )
+            from app.models.evaluation_model import Evaluation
+            from app.models.campaign_model import Campaign
+            
+            # Get evaluation to retrieve company_id
+            eval_query = (
+                select(Evaluation)
+                .where(Evaluation.id == evaluation_id)
+            )
+            eval_result = await session.execute(eval_query)
+            evaluation = eval_result.scalars().first()
+            
+            if evaluation:
+                # Get company_id from campaign
+                campaign_query = select(Campaign).where(Campaign.id == evaluation.campaigns_id)
+                campaign_result = await session.execute(campaign_query)
+                campaign = campaign_result.scalars().first()
+                
+                if campaign:
+                    company_id = campaign.company_id
+                    
+                    print("🔍 Generando insights automáticos...")
+                    insights = await generate_insights_from_analysis(
+                        session, evaluation_id, db_analysis, company_id
+                    )
+                    print(f"✅ {len(insights)} insights generados")
+                    
+                    print("🏷️ Auto-etiquetando evaluación...")
+                    tags = await auto_tag_evaluation(
+                        session, evaluation_id, db_analysis
+                    )
+                    print(f"✅ {len(tags)} etiquetas aplicadas")
+                    
+                    print("🚨 Verificando alertas...")
+                    alerts = await check_alert_thresholds(
+                        session, evaluation_id, db_analysis, company_id
+                    )
+                    print(f"✅ {len(alerts)} alertas generadas")
+        except Exception as intel_error:
+            print(f"⚠️ Error en intelligence engine (no crítico): {intel_error}")
+            # Continue even if intelligence fails
 
         return "✅ Transcripción completada y guardada."
 
