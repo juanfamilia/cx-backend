@@ -9,6 +9,7 @@ from app.models.dashboard_config_model import (
     DashboardConfigPublic,
     DashboardConfigsPublic,
     WidgetDefinition,
+    WidgetDefinitionBase,
     WidgetDefinitionPublic,
     WidgetDefinitionsPublic,
 )
