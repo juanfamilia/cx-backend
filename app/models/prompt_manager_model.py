@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
-from typing import TYPE_CHECKING
+from sqlalchemy import JSON
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.models.company_model import Company
@@ -16,9 +17,9 @@ class PromptManagerBase(SQLModel):
     )
     system_prompt: str = Field(description="System prompt for AI analysis")
     is_active: bool = Field(default=True, description="Whether this prompt is currently active")
-    metadata: dict | None = Field(
+    metadata: dict[str, Any] | None = Field(
         default=None,
-        sa_column_kwargs={"type_": "JSONB"},
+        sa_column=Column(JSON),
         description="Additional configuration (temperature, max_tokens, etc.)"
     )
 
@@ -34,7 +35,7 @@ class PromptManagerUpdate(SQLModel):
     prompt_type: str | None = None
     system_prompt: str | None = None
     is_active: bool | None = None
-    metadata: dict | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class PromptManager(PromptManagerBase, table=True):

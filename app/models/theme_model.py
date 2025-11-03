@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
-from typing import TYPE_CHECKING
+from sqlalchemy import JSON
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.models.company_model import Company
@@ -44,9 +45,9 @@ class CompanyThemeBase(SQLModel):
     )
     
     # Features Toggle
-    features_config: dict | None = Field(
+    features_config: dict[str, Any] | None = Field(
         default=None,
-        sa_column_kwargs={"type_": "JSONB"},
+        sa_column=Column(JSON),
         description="Feature flags and custom config"
     )
     
@@ -74,7 +75,7 @@ class CompanyThemeUpdate(SQLModel):
     sidebar_background: str | None = None
     header_background: str | None = None
     custom_css: str | None = None
-    features_config: dict | None = None
+    features_config: dict[str, Any] | None = None
     is_active: bool | None = None
 
 

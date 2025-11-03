@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
-from typing import TYPE_CHECKING
+from sqlalchemy import JSON
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.models.user_model import User
@@ -9,8 +10,8 @@ if TYPE_CHECKING:
 class DashboardConfigBase(SQLModel):
     """Base model for user dashboard configuration"""
     user_id: int = Field(foreign_key="users.id")
-    layout_config: dict = Field(
-        sa_column_kwargs={"type_": "JSONB"},
+    layout_config: dict[str, Any] = Field(
+        sa_column=Column(JSON),
         description="JSON configuration for dashboard layout"
     )
     is_default: bool = Field(default=False, description="Whether this is the default layout")
@@ -24,7 +25,7 @@ class DashboardConfigCreate(DashboardConfigBase):
 
 class DashboardConfigUpdate(SQLModel):
     """Schema for updating dashboard configuration"""
-    layout_config: dict | None = None
+    layout_config: dict[str, Any] | None = None
     is_default: bool | None = None
     config_name: str | None = None
 
@@ -65,13 +66,13 @@ class WidgetDefinitionBase(SQLModel):
     widget_name: str = Field(description="Display name for the widget")
     description: str = Field(description="What this widget displays")
     data_source: str = Field(description="API endpoint or data source identifier")
-    default_config: dict | None = Field(
+    default_config: dict[str, Any] | None = Field(
         default=None,
-        sa_column_kwargs={"type_": "JSONB"},
+        sa_column=Column(JSON),
         description="Default configuration for this widget type"
     )
-    available_for_roles: list = Field(
-        sa_column_kwargs={"type_": "JSONB"},
+    available_for_roles: list[int] = Field(
+        sa_column=Column(JSON),
         description="List of role IDs that can use this widget"
     )
     category: str = Field(default="general", description="Widget category (metrics, charts, lists, etc.)")

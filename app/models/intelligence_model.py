@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
-from typing import TYPE_CHECKING
+from sqlalchemy import JSON
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from app.models.company_model import Company
@@ -20,14 +21,14 @@ class InsightBase(SQLModel):
     )
     title: str = Field(max_length=200, description="Brief insight title")
     description: str = Field(description="Detailed insight description")
-    metrics: dict | None = Field(
+    metrics: dict[str, Any] | None = Field(
         default=None,
-        sa_column_kwargs={"type_": "JSONB"},
+        sa_column=Column(JSON),
         description="Related metrics (IOC, IRD, CES, NPS, etc.)"
     )
-    suggested_actions: list | None = Field(
+    suggested_actions: list[str] | None = Field(
         default=None,
-        sa_column_kwargs={"type_": "JSONB"},
+        sa_column=Column(JSON),
         description="List of suggested actions"
     )
     is_read: bool = Field(default=False, description="Whether insight has been viewed")
@@ -209,9 +210,9 @@ class TrendBase(SQLModel):
         default=None,
         description="Trend: improving, declining, stable"
     )
-    metadata: dict | None = Field(
+    metadata: dict[str, Any] | None = Field(
         default=None,
-        sa_column_kwargs={"type_": "JSONB"},
+        sa_column=Column(JSON),
         description="Additional trend data"
     )
 
