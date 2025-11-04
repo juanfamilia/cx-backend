@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.routes import (
     auth_router,
+    widget_router,
     campaign_assigment_users_router,
     campaign_assigment_zones_router,
     campaign_assignment_router,
@@ -28,6 +29,7 @@ from app.routes import (
 
 api_router = APIRouter()
 
+api_router.include_router(widget_router.router)
 api_router.include_router(auth_router.router)
 api_router.include_router(user_router.router)
 api_router.include_router(company_router.router)
