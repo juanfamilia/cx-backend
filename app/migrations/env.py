@@ -6,25 +6,23 @@ from sqlmodel import SQLModel
 
 # Import ALL models to ensure they're registered with SQLModel.metadata
 from app.models import (
-    user_model,
-    company_model,
-    payment_model,
-    zone_model,
-    user_zone_model,
-    video_model,
-    survey_model,
-    survey_forms_model,
+    campaign_goals_evaluator_model,
+    campaign_goals_progress_model,
     campaign_model,
     campaign_user_model,
     campaign_zone_model,
+    company_model,
+    evaluation_analysis_model,
     evaluation_model,
     notification_model,
-    evaluation_analysis_model,
-    campaign_goals_evaluator_model,
-    dashboard_config_model,
-    intelligence_model,
-    prompt_manager_model,
-    theme_model,
+    payment_model,
+    survey_forms_model,
+    survey_model,
+    user_evaluation_summary_model,
+    user_model,
+    user_zone_model,
+    video_model,
+    zone_model,
 )
 
 config = context.config
