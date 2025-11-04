@@ -27,37 +27,24 @@ from app.models import (
     theme_model,
 )
 
-# Alembic Config object
 config = context.config
 
-# Interpret the config file for Python logging
 if config.config_file_name:
     fileConfig(config.config_file_name)
 
-# Target metadata for autogenerate
 target_metadata = SQLModel.metadata
-
 
 def get_url():
     """Get database URL from environment variable, converting asyncpg to psycopg2 for sync operations."""
     postgres_uri = os.getenv("POSTGRES_URI")
     if not postgres_uri:
         raise ValueError("POSTGRES_URI environment variable is not set")
-    
-    # Convert async driver to sync driver for Alembic
     if "postgresql+asyncpg://" in postgres_uri:
         postgres_uri = postgres_uri.replace("postgresql+asyncpg://", "postgresql://")
-    
     return postgres_uri
 
-
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
-
-    This configures the context with just a URL and not an Engine,
-    though an Engine is acceptable here as well. By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-    """
+    """Run migrations in 'offline' mode."""
     url = get_url()
     context.configure(
         url=url,
@@ -67,28 +54,18 @@ def run_migrations_offline() -> None:
         compare_type=True,
         compare_server_default=True,
     )
-
     with context.begin_transaction():
         context.run_migrations()
 
-
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine and associate a connection with the context.
-    We use SYNCHRONOUS engine with psycopg2 (not asyncpg) for Alembic migrations.
-    """
-    # Override sqlalchemy.url with environment variable
+    """Run migrations in 'online' mode (recommended)."""
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_url()
-    
-    # Create synchronous engine for migrations
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",
-        poolclass=pool.NullPool,  # Don't pool connections for migrations
+        poolclass=pool.NullPool,
     )
-
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
@@ -96,10 +73,8 @@ def run_migrations_online() -> None:
             compare_type=True,
             compare_server_default=True,
         )
-
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
