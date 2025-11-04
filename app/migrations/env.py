@@ -23,6 +23,7 @@ from app.models import (
     user_zone_model,
     video_model,
     zone_model,
+    widget_model,
 )
 
 config = context.config
