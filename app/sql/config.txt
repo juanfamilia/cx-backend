@@ -1,0 +1,81 @@
+-- 1. Crear un usuario por empresa
+-- Ejemplo: empresa con ID = 5
+CREATE ROLE empresa5_user LOGIN PASSWORD 'clave_segura';
+
+-- Asignar un parámetro fijo (la empresa de ese usuario)
+ALTER ROLE empresa5_user SET app.current_company_id = '5';
+
+-- 2. Darle permisos de solo lectura
+GRANT CONNECT ON DATABASE tu_basedatos TO empresa5_user;
+GRANT USAGE ON SCHEMA public TO empresa5_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO empresa5_user;
+
+-- 3. Activar RLS en las tablas con company_id
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+          AND EXISTS (
+              SELECT 1
+              FROM information_schema.columns
+              WHERE table_name = tablename
+                AND column_name = 'company_id'
+          )
+    LOOP
+        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', r.tablename);
+        EXECUTE format(
+            'CREATE POLICY company_policy_%I ON public.%I
+             FOR SELECT
+             USING (company_id = current_setting(''app.current_company_id'')::int);',
+            r.tablename, r.tablename
+        );
+    END LOOP;
+END $$;
+
+-- 4. Activar RLS en las tablas que solo tienen user_id
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+          AND EXISTS (
+              SELECT 1
+              FROM information_schema.columns
+              WHERE table_name = tablename
+                AND column_name = 'user_id'
+          )
+    LOOP
+        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY;', r.tablename);
+        EXECUTE format(
+            'CREATE POLICY user_company_policy_%I ON public.%I
+             FOR SELECT
+             USING (
+                EXISTS (
+                    SELECT 1
+                    FROM users u
+                    WHERE u.id = %I.user_id
+                      AND u.company_id = current_setting(''app.current_company_id'')::int
+                )
+             );',
+            r.tablename, r.tablename, r.tablename
+        );
+    END LOOP;
+END $$;
+
+-- 5. Probar
+-- Si entras como empresa5_user, automáticamente solo verá datos de company_id = 5
+
+
+CREATE ROLE empresa7_user LOGIN PASSWORD 'otra_clave';
+ALTER ROLE empresa7_user SET app.current_company_id = '7';
+GRANT CONNECT ON DATABASE tu_basedatos TO empresa7_user;
+GRANT USAGE ON SCHEMA public TO empresa7_user;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO empresa7_user;
+

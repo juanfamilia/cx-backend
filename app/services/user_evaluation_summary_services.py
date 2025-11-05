@@ -1,6 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from app.models.charts_campaign_views import (
+    CampaignGoalsCoverage,
+    CampaignGoalsWeeklyProgress,
+)
 from app.models.user_evaluation_summary_model import (
     CompanyUserEvaluation,
     ManagerSummary,
@@ -10,9 +14,7 @@ from app.models.user_evaluation_summary_model import (
 from app.utils.exeptions import NotFoundException
 
 
-async def get_user_evaluation_summary(
-    session: AsyncSession, user_id: int
-) -> UserEvaluationSummary:
+async def get_user_evaluation_summary(session: AsyncSession, user_id: int) -> dict:
 
     statement = select(UserEvaluationSummary).where(
         UserEvaluationSummary.user_id == user_id
@@ -20,10 +22,23 @@ async def get_user_evaluation_summary(
     result = await session.scalars(statement)
     summary = result.first()
 
-    if not summary:
-        raise NotFoundException("Summary not found")
+    query_weekly = select(CampaignGoalsWeeklyProgress).where(
+        CampaignGoalsWeeklyProgress.evaluator_id == user_id
+    )
+    result_weekly = await session.scalars(query_weekly)
+    weekly_summary = result_weekly.first()
 
-    return summary
+    query_coverage = select(CampaignGoalsCoverage).where(
+        CampaignGoalsCoverage.evaluator_id == user_id
+    )
+    result_coverage = await session.scalars(query_coverage)
+    coverage_summary = result_coverage.first()
+
+    return {
+        "summary": summary,
+        "weekly_progress": weekly_summary,
+        "coverage": coverage_summary,
+    }
 
 
 async def get_company_users_evaluations(

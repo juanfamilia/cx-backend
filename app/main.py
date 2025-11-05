@@ -4,11 +4,14 @@ from app.routes.main import api_router
 from app.core.config import settings
 
 # config
-app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+if settings.PROJECT_MODE == "prod":
+    app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+else:
+    app = FastAPI()
 
 app.title = settings.PROJECT_NAME
 
-origins = ["https://cx.sieteic.com", "http://localhost:4200"]
+origins = ["https://cx.sieteic.com"]
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
