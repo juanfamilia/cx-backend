@@ -32,7 +32,7 @@ async def get_user_evaluation_summary(session: AsyncSession, user_id: int) -> di
         CampaignGoalsCoverage.evaluator_id == user_id
     )
     result_coverage = await session.scalars(query_coverage)
-    coverage_summary = result_coverage.first()
+    coverage_summary = result_coverage.all()
 
     return {
         "summary": summary,
