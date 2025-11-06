@@ -4,7 +4,11 @@ from app.routes.main import api_router
 from app.core.config import settings
 
 # config
-app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+app = FastAPI(
+    docs_url="/docs",           # Swagger UI en /docs
+    redoc_url="/redoc",         # ReDoc en /redoc (opcional)
+    openapi_url="/openapi.json" # Esquema OpenAPI
+)
 
 app.title = settings.PROJECT_NAME
 
