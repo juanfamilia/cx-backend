@@ -11,7 +11,7 @@ else:
 
 app.title = settings.PROJECT_NAME
 
-origins = ["https://cx.sieteic.com"]
+origins = ["https://cx.sieteic.com", "http://localhost:8000"]
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
