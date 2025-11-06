@@ -20,39 +20,35 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 campaign_goals_weekly_progress = """
-CREATE OR REPLACE VIEW campaign_goals_weekly_progress AS
+CREATE OR REPLACE VIEW public.campaign_goals_weekly_progress AS
 WITH week_days AS (
-    SELECT 
-        (DATE_TRUNC('week', CURRENT_DATE) + i * INTERVAL '1 day')::date AS day_date
-    FROM generate_series(0, 6) AS s(i)
-)
-SELECT
-    cge.campaign_id,
-    c.name AS campaign_name,
+  SELECT (date_trunc('week', CURRENT_DATE) + s.i * interval '1 day')::date AS day_date
+  FROM generate_series(0, 6) s(i)
+),
+daily_reports AS (
+  SELECT
     cge.evaluator_id,
-    TO_CHAR(wd.day_date, 'Day') AS day_name,
     wd.day_date,
-    cge.goal AS goal_weekly,
-    ROUND(cge.goal / 7.0, 2) AS daily_goal,
+    to_char(wd.day_date, 'Day') AS day_name,
+    SUM(COALESCE(cge.goal, 0)) AS goal_weekly,
+    ROUND(SUM(COALESCE(cge.goal, 0))::numeric / 7.0, 2) AS daily_goal,
     COUNT(ev.id) AS reported_today
-FROM campaign_goals_evaluators cge
-JOIN campaigns c ON c.id = cge.campaign_id
-CROSS JOIN week_days wd
-LEFT JOIN evaluations ev 
+  FROM campaign_goals_evaluators cge
+  JOIN campaigns c ON c.id = cge.campaign_id
+  CROSS JOIN week_days wd
+  LEFT JOIN evaluations ev
     ON ev.campaigns_id = c.id
    AND ev.user_id = cge.evaluator_id
    AND ev.deleted_at IS NULL
    AND ev.status = 'APROVED'
    AND ev.created_at::date = wd.day_date
-GROUP BY
-    cge.campaign_id,
-    c.name,
-    cge.evaluator_id,
-    wd.day_date,
-    cge.goal
-ORDER BY
-    cge.evaluator_id,
-    wd.day_date;    
+  WHERE CURRENT_DATE BETWEEN c.date_start AND c.date_end
+  GROUP BY cge.evaluator_id, wd.day_date
+)
+SELECT *
+FROM daily_reports
+ORDER BY evaluator_id, day_date;
+
 """
 
 campaign_goals_coverage = """
