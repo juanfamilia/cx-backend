@@ -26,7 +26,7 @@ async def get_user_evaluation_summary(session: AsyncSession, user_id: int) -> di
         CampaignGoalsWeeklyProgress.evaluator_id == user_id
     )
     result_weekly = await session.scalars(query_weekly)
-    weekly_summary = result_weekly.first()
+    weekly_summary = result_weekly.all()
 
     query_coverage = select(CampaignGoalsCoverage).where(
         CampaignGoalsCoverage.evaluator_id == user_id
