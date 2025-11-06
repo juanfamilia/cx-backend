@@ -118,7 +118,7 @@ pillow==11.3.0
     #   moviepy
 proglog==0.1.12
     # via moviepy
-psycopg2-binary==2.9.12
+psycopg2-binary==2.9.11
     # via vitacare-backend (pyproject.toml)
 pydantic==2.12.3
     # via
