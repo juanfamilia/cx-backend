@@ -6,7 +6,7 @@ from sqlmodel import Field, SQLModel
 class CampaignGoalsWeeklyProgress(SQLModel, table=True):
     __tablename__ = "campaign_goals_weekly_progress"
     evaluator_id: int = Field(primary_key=True)
-    day_date: date
+    day_date: date = Field(primary_key=True)
     day_name: str
     goal_weekly: float
     daily_goal: float
