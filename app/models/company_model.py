@@ -2,15 +2,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
-
 from app.types.pagination import Pagination
+from app.models.theme_model import CompanyTheme  # <-- AGREGA ESTA IMPORTACIÓN
 
 if TYPE_CHECKING:
     from app.models.user_model import User
     from app.models.payment_model import Payment
     from app.models.campaign_model import Campaign
     from app.models.prompt_manager_model import PromptManager
-
 
 class CompanyBase(SQLModel):
     name: str
@@ -20,7 +19,6 @@ class CompanyBase(SQLModel):
     state: str
     country: str = "DO"
 
-
 class CompanyUpdate(SQLModel):
     name: str | None = Field(default=None)
     phone: str | None = Field(default=None)
@@ -28,7 +26,6 @@ class CompanyUpdate(SQLModel):
     address: str | None = Field(default=None)
     state: str | None = Field(default=None)
     country: str | None = Field(default=None)
-
 
 class Company(CompanyBase, table=True):
     __tablename__ = "companies"
@@ -43,14 +40,13 @@ class Company(CompanyBase, table=True):
     payments: list["Payment"] = Relationship(back_populates="company")
     campaigns: list["Campaign"] = Relationship(back_populates="company")
     prompts: list["PromptManager"] = Relationship(back_populates="company")
-
+    theme: CompanyTheme | None = Relationship(back_populates="company")  # <-- AGREGA ESTA LÍNEA
 
 class CompanyPublic(CompanyBase):
     id: int
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
-
 
 class CompaniesPublic(BaseModel):
     data: List[CompanyPublic]
