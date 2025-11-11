@@ -12,7 +12,12 @@ app = FastAPI(
 
 app.title = settings.PROJECT_NAME
 
-origins = ["https://cx.sieteic.com", "http://localhost:4200","https://cx-frontend-xreh-dp6ypbut5.vercel.app","*"]
+origins = [
+    "https://cx-frontend-xreh-6kl4mz4fi.vercel.app",  # Tu Vercel
+    "https://cx.sieteic.com",                          # Tu dominio
+    "http://localhost:4200",                           # Desarrollo local
+]
+
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
