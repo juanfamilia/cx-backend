@@ -3,13 +3,14 @@ from typing import TYPE_CHECKING, List
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 from app.types.pagination import Pagination
-from app.models.theme_model import CompanyTheme  # <-- AGREGA ESTA IMPORTACIÓN
+from app.models.theme_model import CompanyTheme
 
 if TYPE_CHECKING:
     from app.models.user_model import User
     from app.models.payment_model import Payment
     from app.models.campaign_model import Campaign
     from app.models.prompt_manager_model import PromptManager
+    from app.models.widget_model import Widget
 
 class CompanyBase(SQLModel):
     name: str
@@ -40,7 +41,8 @@ class Company(CompanyBase, table=True):
     payments: list["Payment"] = Relationship(back_populates="company")
     campaigns: list["Campaign"] = Relationship(back_populates="company")
     prompts: list["PromptManager"] = Relationship(back_populates="company")
-    theme: CompanyTheme | None = Relationship(back_populates="company")  # <-- AGREGA ESTA LÍNEA
+    theme: CompanyTheme | None = Relationship(back_populates="company")
+    widgets: list["Widget"] = Relationship(back_populates="company")  # ⬅️ AGREGAR ESTA LÍNEA
 
 class CompanyPublic(CompanyBase):
     id: int
