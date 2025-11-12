@@ -11,7 +11,10 @@ else:
 
 app.title = settings.PROJECT_NAME
 
-origins = ["https://cx.sieteic.com"]
+if settings.PROJECT_MODE == "prod":
+    origins = ["https://cx.sieteic.com", "https://shiny-potato-vjqwqw59wp5hx9w5-4200.app.github.dev"]
+else:
+    origins = ["https://cx.sieteic.com", "http://localhost:4200"]
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
