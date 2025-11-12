@@ -1,0 +1,9 @@
+.env.example
+.gitignore
+.python-version
+alembic.ini
+app
+models_list.txt
+pyproject.toml
+readme.md
+uv.lock
