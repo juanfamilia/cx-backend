@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from app.models.evaluation_model import Evaluation
     from app.models.notification_model import Notification
     from app.models.dashboard_config_model import DashboardConfig
+    from app.models.widget_model import UserDashboardWidget
+    from app.models.onboarding_model import OnboardingStatus
 
 
 class GenderEnum(str, Enum):
@@ -109,6 +111,12 @@ class User(UserBase, table=True):
     )
     dashboard_configs: List["DashboardConfig"] = Relationship(
         back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    dashboard_widgets: List["UserDashboardWidget"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    onboarding_status: Optional["OnboardingStatus"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"lazy": "noload", "uselist": False}
     )
 
 
