@@ -12,11 +12,7 @@ app = FastAPI(
 
 app.title = settings.PROJECT_NAME
 
-origins = [
-    "https://cxfrontend-kk8s121io-siete-inteligencia-creativas-projects.vercel.app",               # Tu Vercel
-    "https://cx.sieteic.com",                                                                      # Tu dominio
-    "http://localhost:4200"                                                                        # Desarrollo local
-    
+origins = ["*"                                                              
 ]
 
 
@@ -25,7 +21,7 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
