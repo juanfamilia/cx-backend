@@ -13,9 +13,9 @@ app = FastAPI(
 app.title = settings.PROJECT_NAME
 
 origins = [
-    "https://cx-frontend123.vercel.app",               # Tu Vercel
-    "https://cx.sieteic.com",                          # Tu dominio
-    "http://localhost:4200"                            # Desarrollo local
+    "https://cxfrontend-kk8s121io-siete-inteligencia-creativas-projects.vercel.app",               # Tu Vercel
+    "https://cx.sieteic.com",                                                                      # Tu dominio
+    "http://localhost:4200"                                                                        # Desarrollo local
     
 ]
 
