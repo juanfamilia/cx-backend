@@ -134,3 +134,4 @@ class UsersPublic(BaseModel):
 
 
 from app.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator
+from app.models.onboarding_model import OnboardingStatus
