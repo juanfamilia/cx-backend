@@ -66,7 +66,7 @@ async def create_form(
     session: AsyncSession = Depends(get_db),
 ) -> SurveyForm:
 
-    if request.state.user.role != 1:
+    if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="create a survey form")
 
     surveyForm = await create_survey_form(session, request.state.user.company_id, data)
