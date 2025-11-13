@@ -71,7 +71,7 @@ async def create(
     session: AsyncSession = Depends(get_db),
 ) -> CampaignPublic:
 
-    if request.state.user.role != 1:
+    if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="create a campaign")
 
     campaign_create.company_id = request.state.user.company_id
