@@ -64,3 +64,6 @@ class OnboardingStatusPublic(SQLModel):
     progress_percentage: int
     is_completed: bool
     next_step: str | None  # Siguiente step sugerido
+    
+from app.models.user_model import User
+
