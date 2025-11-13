@@ -11,6 +11,9 @@ from app.models.user_evaluation_summary_model import (
     SuperadminSummary,
     UserEvaluationSummary,
 )
+from app.models.company_campaign_analysis import (
+    CompanyCampaignAnalysis,
+)
 from app.utils.exeptions import NotFoundException
 
 
@@ -41,32 +44,43 @@ async def get_user_evaluation_summary(session: AsyncSession, user_id: int) -> di
     }
 
 
-async def get_company_users_evaluations(
-    session: AsyncSession, company_id: int
-) -> CompanyUserEvaluation:
+async def get_company_users_evaluations(session: AsyncSession, company_id: int) -> dict:
 
-    statement = select(CompanyUserEvaluation).where(
+    queryCompanyUser = select(CompanyUserEvaluation).where(
         CompanyUserEvaluation.company_id == company_id
     )
-    result = await session.scalars(statement)
+    result = await session.scalars(queryCompanyUser)
     summary = result.first()
 
-    if not summary:
-        raise NotFoundException("Data not found")
+    queryCompanyAnalysis = select(CompanyCampaignAnalysis).where(
+        CompanyUserEvaluation.company_id == company_id
+    )
+    result_analysis = await session.scalars(queryCompanyAnalysis)
+    analysis_summary = result_analysis.all()
 
-    return summary
+    return {"summary": summary, "analysis": analysis_summary}
 
 
-async def get_manager_summary(session: AsyncSession, company_id: int) -> ManagerSummary:
+async def get_manager_summary(
+    session: AsyncSession, company_id: int, user_id: int
+) -> ManagerSummary:
 
     statement = select(ManagerSummary).where(ManagerSummary.company_id == company_id)
     result = await session.scalars(statement)
     summary = result.first()
 
-    if not summary:
-        raise NotFoundException("Data not found")
+    custom_query = """
+    SELECT *
+    FROM company_campaign_analysis_agg cca
+    JOIN campaign_zones cz ON cz.campaign_id = cca.campaign_id
+    JOIN user_zones uz ON uz.zone_id = cz.zone_id
+    WHERE uz.user_id = :user_id
+      AND cz.deleted_at IS NULL
+      AND uz.deleted_at IS NULL
+    """
+    result_analysis = await session.execute(custom_query, {"user_id": user_id}).all()
 
-    return summary
+    return {"summary": summary, "analysis": result_analysis}
 
 
 async def get_superadmin_summary(session: AsyncSession) -> SuperadminSummary:

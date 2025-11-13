@@ -15,9 +15,11 @@ class CampaignGoalsWeeklyProgress(SQLModel, table=True):
 
 class CampaignGoalsCoverage(SQLModel, table=True):
     __tablename__ = "campaign_goals_coverage"
-    campaign_id: int
-    campaign_name: str
+
+    campaign_id: int = Field(primary_key=True)
     evaluator_id: int = Field(primary_key=True)
+
+    campaign_name: str
     goal_weekly: float
     reported_total: int
     coverage_percent: float

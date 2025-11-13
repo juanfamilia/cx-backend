@@ -2,7 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel
-from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
+from sqlmodel import Column, DateTime, Field, Integer, Relationship, SQLModel, func
+from sqlalchemy.dialects.postgresql import ARRAY
 
 
 from app.models.campaign_model import Campaign, CampaignPublic
@@ -32,6 +33,9 @@ class EvaluationBase(SQLModel):
     location: Optional[str] = Field(nullable=True, default=None)
     evaluated_collaborator: str = Field(nullable=True)
     status: StatusEnum = Field(default=StatusEnum.SEND)
+    visited_zones: List[int] = Field(
+        sa_column=Column(ARRAY(Integer), nullable=True), default_factory=list
+    )
 
 
 class Evaluation(EvaluationBase, table=True):

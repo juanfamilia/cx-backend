@@ -24,6 +24,7 @@ CREATE OR REPLACE VIEW public.campaign_goals_weekly_progress AS
 WITH week_days AS (
   SELECT (date_trunc('week', CURRENT_DATE) + s.i * interval '1 day')::date AS day_date
   FROM generate_series(0, 6) s(i)
+  WHERE EXTRACT(ISODOW FROM (date_trunc('week', CURRENT_DATE) + s.i * interval '1 day')) < 6
 ),
 daily_reports AS (
   SELECT
@@ -31,7 +32,7 @@ daily_reports AS (
     wd.day_date,
     to_char(wd.day_date, 'Day') AS day_name,
     SUM(COALESCE(cge.goal, 0)) AS goal_weekly,
-    ROUND(SUM(COALESCE(cge.goal, 0))::numeric / 7.0, 2) AS daily_goal,
+    ROUND(SUM(COALESCE(cge.goal, 0))::numeric / 5.0, 2) AS daily_goal,
     COUNT(ev.id) AS reported_today
   FROM campaign_goals_evaluators cge
   JOIN campaigns c ON c.id = cge.campaign_id
@@ -48,7 +49,6 @@ daily_reports AS (
 SELECT *
 FROM daily_reports
 ORDER BY evaluator_id, day_date;
-
 """
 
 campaign_goals_coverage = """
@@ -68,6 +68,7 @@ LEFT JOIN evaluations ev
    AND ev.deleted_at IS NULL
    AND ev.status = 'APROVED'
    AND DATE_TRUNC('week', ev.created_at) = DATE_TRUNC('week', CURRENT_DATE)
+   AND EXTRACT(ISODOW FROM ev.created_at) < 6   -- solo lunes a viernes
 GROUP BY
     cge.campaign_id, c.name, cge.evaluator_id, cge.goal;
 """

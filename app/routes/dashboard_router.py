@@ -39,7 +39,7 @@ async def get_dashboard(
 
         case 2:
             manager_summary = await get_manager_summary(
-                session, request.state.user.company_id
+                session, request.state.user.company_id, request.state.user.id
             )
 
             return manager_summary
