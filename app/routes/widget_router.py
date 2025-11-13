@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.widget_model import Widget, WidgetBase
+from app.models.widget_model import Widget, WidgetBase,WidgetCreate
 from app.core.db import get_db as get_session
 
 router = APIRouter()
@@ -13,7 +13,7 @@ async def test_widget():
 
 # Endpoint para crear un widget
 @router.post("/widgets/", response_model=Widget)
-async def create_widget(widget: WidgetBase, session: AsyncSession = Depends(get_session)):
+async def create_widget(widget: WidgetCreate, session: AsyncSession = Depends(get_session)):
     db_widget = Widget.from_orm(widget)
     session.add(db_widget)
     await session.commit()
