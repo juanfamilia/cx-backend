@@ -1,3 +1,5 @@
+# app/services/survey_forms_services.py (modificar create_survey_form y update_survey_form)
+
 from datetime import datetime
 from typing import Optional
 from fastapi import Query
@@ -17,74 +19,40 @@ from app.models.survey_model import (
     SurveyAspect,
 )
 from app.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException
+from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
+# ... (otros métodos no mostrados) ...
 
-async def get_forms_by_company(
-    session: AsyncSession,
-    company_id: int,
-    offset: int = 0,
-    limit: int = Query(default=10, le=50),
-    filter: Optional[str] = None,
-    search: Optional[str] = None,
-) -> SurveyFormsPublic:
-
-    query = (
-        select(SurveyForm, func.count().over().label("total"))
-        .join(Company, SurveyForm.company_id == Company.id, isouter=True)
-        .where(SurveyForm.company_id == company_id, SurveyForm.deleted_at == None)
-        .order_by(SurveyForm.id)
-        .offset(offset)
-        .limit(limit)
-    )
-
-    if filter and search:
-        match filter:
-            case "title":
-                query = query.where(SurveyForm.title.ilike(f"%{search}%"))
-
-            case "company":
-                query = query.where(Company.name.ilike(f"%{search}%"))
-
-    result = await session.execute(query)
-    db_forms = result.unique().all()
-
-    if not db_forms:
-        raise NotFoundException("Forms not found")
-
-    forms = [row[0] for row in db_forms]
-    total = db_forms[0][1] if db_forms else 0
-    pagination = Pagination(first=offset, rows=limit, total=total)
-
-    return SurveyFormsPublic(data=forms, pagination=pagination)
-
-
-async def get_form_by_id(
-    session: AsyncSession, form_id: int, company_id: int
-) -> SurveyFormPublic:
-
-    query = (
-        select(SurveyForm)
-        .options(selectinload(SurveyForm.sections).selectinload(SurveySection.aspects))
-        .where(
-            SurveyForm.id == form_id,
-            SurveyForm.company_id == company_id,
-            SurveyForm.deleted_at == None,
-        )
-    )
-
-    result = await session.execute(query)
-    db_forms = result.unique().scalar_one_or_none()
-
-    if not db_forms:
-        raise NotFoundException("Survey form not found")
-
-    return db_forms
-
+async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
+    """
+    For each section in form, set each aspect.maximum_score = section.maximum_score / n_aspects
+    and persist those changes (overwriting any manual aspect.maximum_score).
+    """
+    # load sections and aspects
+    q = select(SurveySection).where(SurveySection.form_id == form.id, SurveySection.deleted_at == None)
+    res = await session.execute(q)
+    sections = res.scalars().all()
+    for s in sections:
+        q2 = select(SurveyAspect).where(SurveyAspect.section_id == s.id, SurveyAspect.deleted_at == None).order_by(SurveyAspect.order)
+        r2 = await session.execute(q2)
+        aspects = r2.scalars().all()
+        n = len(aspects)
+        if n == 0:
+            continue
+        per = float(s.maximum_score) / n
+        for asp in aspects:
+            asp.maximum_score = int(per) if per.is_integer() else per
+            session.add(asp)
+    # no commit here; caller will commit
 
 async def create_survey_form(
     session: AsyncSession, company_id: int, data: SurveyFormsCreate
 ) -> SurveyForm:
+
+    # Validate sum of section maximums == 100
+    total_sections = sum([sec.maximum_score for sec in data.sections])
+    if abs(total_sections - 100.0) > 1e-6:
+        raise PermissionDeniedException("The sum of section maximum_score must be 100")
 
     form = SurveyForm(title=data.title, company_id=company_id)
     session.add(form)
@@ -103,11 +71,15 @@ async def create_survey_form(
         for aspect in section.aspects:
             db_aspect = SurveyAspect(
                 description=aspect.description,
+                type=aspect.type,
                 maximum_score=aspect.maximum_score,
                 order=aspect.order,
                 section_id=db_section.id,
             )
             session.add(db_aspect)
+
+    # distribute linear weights and persist
+    await _distribute_aspect_weights(session, form)
 
     await session.commit()
     await session.refresh(form)
@@ -133,6 +105,11 @@ async def update_survey_form(
     if not form:
         raise NotFoundException("Form not found")
 
+    # Validate sum of section maximums == 100
+    total_sections = sum([sec.maximum_score for sec in data.sections])
+    if abs(total_sections - 100.0) > 1e-6:
+        raise PermissionDeniedException("The sum of section maximum_score must be 100")
+
     # Actualizar título
     form.title = data.title
 
@@ -145,6 +122,7 @@ async def update_survey_form(
         )
     )
     await session.execute(delete(SurveySection).where(SurveySection.form_id == form_id))
+    await session.flush()
 
     # Agregar nuevas secciones y aspectos
     for section in data.sections:
@@ -160,24 +138,16 @@ async def update_survey_form(
         for aspect in section.aspects:
             db_aspect = SurveyAspect(
                 description=aspect.description,
+                type=aspect.type,
                 maximum_score=aspect.maximum_score,
                 order=aspect.order,
                 section_id=db_section.id,
             )
             session.add(db_aspect)
 
+    # recalculate aspect weights (lineal) and persist
+    await _distribute_aspect_weights(session, form)
+
     await session.commit()
     await session.refresh(form)
     return form
-
-
-async def soft_delete_form(
-    session: AsyncSession, form_id: int, company_id: int
-) -> SurveyForm:
-    db_form = await get_form_by_id(session, form_id, company_id)
-    db_form.deleted_at = datetime.now()
-
-    await session.commit()
-    await session.refresh(db_form)
-
-    return db_form
