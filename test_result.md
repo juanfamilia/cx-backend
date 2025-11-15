@@ -188,6 +188,9 @@ backend:
         - working: false
           agent: "testing"
           comment: "CRITICAL: Prompt manager endpoints missing - /api/v1/prompts (GET/POST) return 404. No prompt management system implemented."
+        - working: false
+          agent: "testing"
+          comment: "COMPREHENSIVE TEST CONFIRMED: All prompt manager endpoints return 404 - GET /v1/prompts/, GET /v1/prompts/active, POST /v1/prompts/. No prompt management system exists."
 
   - task: "Phase 4 - Theme Endpoints"
     implemented: false
