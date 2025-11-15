@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-15T21:18:10.662985",
+  "timestamp": "2025-11-15T21:40:33.969914",
   "base_url": "https://siete-cx-deploy.preview.emergentagent.com/api",
   "tests": {
     "GET /": {
@@ -13,10 +13,24 @@
     "GET /status": {
       "status_code": 200,
       "success": true,
-      "response_data": [],
+      "response_data": [
+        {
+          "id": "02c01c74-2cb7-43a6-86de-341f6eb41781",
+          "client_name": "test_client",
+          "timestamp": "2025-11-15T21:18:19.358074Z"
+        }
+      ],
       "error": null
     },
-    "POST /v1/auth/register": {
+    "POST /v1/company/": {
+      "status_code": 404,
+      "success": false,
+      "response_data": {
+        "detail": "Not Found"
+      },
+      "error": null
+    },
+    "POST /v1/users/": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -32,7 +46,7 @@
       },
       "error": null
     },
-    "GET /v1/users/me": {
+    "GET /v1/dashboard-config/widgets": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -40,7 +54,7 @@
       },
       "error": null
     },
-    "POST /v1/companies": {
+    "GET /v1/dashboard-config/": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -48,7 +62,7 @@
       },
       "error": null
     },
-    "GET /v1/companies": {
+    "GET /v1/dashboard-config/default": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -56,23 +70,7 @@
       },
       "error": null
     },
-    "GET /v1/dashboards/widgets": {
-      "status_code": 404,
-      "success": false,
-      "response_data": {
-        "detail": "Not Found"
-      },
-      "error": null
-    },
-    "GET /v1/dashboards/configs": {
-      "status_code": 404,
-      "success": false,
-      "response_data": {
-        "detail": "Not Found"
-      },
-      "error": null
-    },
-    "POST /v1/dashboards/configs": {
+    "POST /v1/dashboard-config/": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -81,6 +79,14 @@
       "error": null
     },
     "GET /v1/intelligence/insights": {
+      "status_code": 404,
+      "success": false,
+      "response_data": {
+        "detail": "Not Found"
+      },
+      "error": null
+    },
+    "GET /v1/intelligence/insights/summary": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -104,7 +110,7 @@
       },
       "error": null
     },
-    "GET /v1/prompts": {
+    "GET /v1/prompts/": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -112,7 +118,7 @@
       },
       "error": null
     },
-    "POST /v1/prompts": {
+    "GET /v1/prompts/active": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -120,7 +126,7 @@
       },
       "error": null
     },
-    "GET /v1/themes": {
+    "POST /v1/prompts/": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -128,7 +134,23 @@
       },
       "error": null
     },
-    "PUT /v1/themes": {
+    "GET /v1/theme/": {
+      "status_code": 404,
+      "success": false,
+      "response_data": {
+        "detail": "Not Found"
+      },
+      "error": null
+    },
+    "PUT /v1/theme/": {
+      "status_code": 404,
+      "success": false,
+      "response_data": {
+        "detail": "Not Found"
+      },
+      "error": null
+    },
+    "GET /v1/theme/css": {
       "status_code": 404,
       "success": false,
       "response_data": {
@@ -138,8 +160,8 @@
     }
   },
   "summary": {
-    "total": 17,
+    "total": 19,
     "passed": 2,
-    "failed": 15
+    "failed": 17
   }
 }
