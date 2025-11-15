@@ -1,4 +1,5 @@
 # app/services/evaluation_services.py
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -19,9 +20,9 @@ from app.utils.exeptions import NotFoundException
 from app.services.scoring_services import calculate_evaluation_scores, ScoringError
 
 
-# ---------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------
+# =========================================================
+# HELPERS
+# =========================================================
 
 async def get_evaluation(session: AsyncSession, evaluation_id: int) -> Evaluation:
     q = select(Evaluation).where(
@@ -30,8 +31,10 @@ async def get_evaluation(session: AsyncSession, evaluation_id: int) -> Evaluatio
     )
     res = await session.execute(q)
     evaluation = res.scalars().first()
+
     if not evaluation:
         raise NotFoundException("Evaluation not found")
+
     return evaluation
 
 
@@ -42,14 +45,16 @@ async def get_evaluation_answer(session: AsyncSession, answer_id: int) -> Evalua
     )
     res = await session.execute(q)
     ans = res.scalars().first()
+
     if not ans:
         raise NotFoundException("Evaluation answer not found")
+
     return ans
 
 
-# ---------------------------------------------------------
-# STATUS CHANGE (this was missing)
-# ---------------------------------------------------------
+# =========================================================
+# STATUS CHANGE
+# =========================================================
 
 async def change_evaluation_status(
     session: AsyncSession,
@@ -68,22 +73,22 @@ async def change_evaluation_status(
     return evaluation
 
 
-# ---------------------------------------------------------
-# CREATE
-# ---------------------------------------------------------
+# =========================================================
+# CREATE EVALUATION
+# =========================================================
 
 async def create_evaluation(
     session: AsyncSession, evaluation: EvaluationCreate
 ) -> Evaluation:
 
-    # Create evaluation record (basic info first)
+    # Create evaluation header
     db_evaluation = Evaluation(
         **evaluation.model_dump(exclude={"evaluation_answers"})
     )
     session.add(db_evaluation)
-    await session.flush()  # obtain ID
+    await session.flush()  # Obtain generated ID
 
-    # Build answers for scoring
+    # Prepare payload for scoring
     answers_payload = [
         {
             "aspect_id": ans.aspect_id,
@@ -104,7 +109,7 @@ async def create_evaluation(
     except ScoringError:
         raise
 
-    # Save answers with recorded scoring metadata
+    # Save each answer with scoring metadata
     for ans in answers_payload:
         aspect_id = ans["aspect_id"]
 
@@ -112,13 +117,13 @@ async def create_evaluation(
         aspect_max = 0.0
         section_max = 0.0
 
-        # find aspect inside scoring structure
-        for _, sdata in scoring["sections"].items():
-            if aspect_id in sdata["aspects"]:
-                aspdata = sdata["aspects"][aspect_id]
-                awarded = float(aspdata["awarded"])
-                aspect_max = float(aspdata["aspect_max"])
-                section_max = float(sdata["section_max"])
+        # Locate aspect inside scoring tree
+        for section_data in scoring["sections"].values():
+            if aspect_id in section_data["aspects"]:
+                aspect_data = section_data["aspects"][aspect_id]
+                awarded = float(aspect_data["awarded"])
+                aspect_max = float(aspect_data["aspect_max"])
+                section_max = float(section_data["section_max"])
                 break
 
         db_answer = EvaluationAnswer(
@@ -131,7 +136,6 @@ async def create_evaluation(
             recorded_points_awarded=awarded,
             recorded_section_max=section_max,
         )
-
         session.add(db_answer)
 
     # Totals
@@ -144,9 +148,9 @@ async def create_evaluation(
     return db_evaluation
 
 
-# ---------------------------------------------------------
-# UPDATE
-# ---------------------------------------------------------
+# =========================================================
+# UPDATE EVALUATION
+# =========================================================
 
 async def update_evaluation(
     session: AsyncSession,
@@ -156,30 +160,26 @@ async def update_evaluation(
 
     db_evaluation = await get_evaluation(session, evaluation_id)
 
-    # Merge evaluation header info
-    evaluation_update.status = (
-        getattr(evaluation_update, "status", None)
-        or db_evaluation.status
-    )
-
+    # PATCH-like header update
     evaluation_data = evaluation_update.model_dump(
         exclude={"evaluation_answers"},
         exclude_unset=True
     )
-
     db_evaluation.sqlmodel_update(evaluation_data)
     session.add(db_evaluation)
     await session.flush()
 
-    # If answers provided → update answers and recalc
+    # If answers included, update and rescore
     if evaluation_update.evaluation_answers:
 
         answers_payload = []
 
+        # Update each answer individually
         for ans in evaluation_update.evaluation_answers:
             db_ans = await get_evaluation_answer(session, ans.id)
-            upd = ans.model_dump(exclude_unset=True)
-            db_ans.sqlmodel_update(upd)
+
+            update_data = ans.model_dump(exclude_unset=True)
+            db_ans.sqlmodel_update(update_data)
             session.add(db_ans)
 
             answers_payload.append({
@@ -203,15 +203,13 @@ async def update_evaluation(
         for ans_payload in answers_payload:
             aspect_id = ans_payload["aspect_id"]
 
-            awarded = 0.0
-            aspect_max = 0.0
-            section_max = 0.0
+            awarded = aspect_max = section_max = 0.0
 
-            for _, sdata in scoring["sections"].items():
+            for sdata in scoring["sections"].values():
                 if aspect_id in sdata["aspects"]:
-                    aspdata = sdata["aspects"][aspect_id]
-                    awarded = float(aspdata["awarded"])
-                    aspect_max = float(aspdata["aspect_max"])
+                    asp = sdata["aspects"][aspect_id]
+                    awarded = float(asp["awarded"])
+                    aspect_max = float(asp["aspect_max"])
                     section_max = float(sdata["section_max"])
                     break
 
@@ -229,7 +227,7 @@ async def update_evaluation(
                 db_ans.recorded_section_max = section_max
                 session.add(db_ans)
 
-        # Recalculate totals
+        # Update totals
         db_evaluation.total_score = float(scoring["total_awarded"])
         db_evaluation.percentage_score = float(scoring["percentage"])
 
@@ -239,9 +237,9 @@ async def update_evaluation(
     return db_evaluation
 
 
-# ---------------------------------------------------------
-# DELETE (soft)
-# ---------------------------------------------------------
+# =========================================================
+# SOFT DELETE
+# =========================================================
 
 async def soft_delete_evaluation(session: AsyncSession, evaluation_id: int):
     db_eval = await get_evaluation(session, evaluation_id)
