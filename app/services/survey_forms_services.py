@@ -35,7 +35,6 @@ async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
     Para cada sección en el formulario, distribuye aspect.maximum_score = section.maximum_score / n_aspects.
     Persiste (sobrescribe cualquier valor previo).
     """
-    # cargar secciones y aspectos
     q = select(SurveySection).where(SurveySection.form_id == form.id, SurveySection.deleted_at == None)
     res = await session.execute(q)
     sections = res.scalars().all()
@@ -55,10 +54,23 @@ async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
 async def create_survey_form(
     session: AsyncSession, company_id: int, data: SurveyFormsCreate
 ) -> SurveyForm:
-    """Crea un formulario, valida el total, y distribuye pesos."""
+    """Crea un formulario, valida el total y que cada sección no sea excedida por la suma de sus aspectos."""
     total_sections = sum(sec.maximum_score for sec in data.sections)
     if abs(total_sections - 100.0) > 1e-6:
         raise PermissionDeniedException("The sum of section maximum_score must be 100")
+
+    # Validación de suma de aspectos en cada sección
+    for section in data.sections:
+        aspectos_total = 0
+        for aspect in section.aspects:
+            if aspect.type == "yesno":
+                aspectos_total += 5  # Cambia 5 al valor fijo de tu sí/no si es diferente
+            else:
+                aspectos_total += aspect.maximum_score
+        if aspectos_total > section.maximum_score:
+            raise PermissionDeniedException(
+                f"La sumatoria de puntos en la sección '{section.name}' excede el máximo permitido ({section.maximum_score}). Suma actual: {aspectos_total}."
+            )
 
     async with transaction(session):
         form = SurveyForm(title=data.title, company_id=company_id)
@@ -95,7 +107,24 @@ async def update_survey_form(
     company_id: int,
     data: SurveyFormsCreate,
 ) -> SurveyForm:
-    """Actualiza un formulario y sus secciones/aspectos."""
+    """Actualiza un formulario y sus secciones/aspectos, validando reglas y mostrando advertencia en mensaje si aplica."""
+    total_sections = sum(sec.maximum_score for sec in data.sections)
+    if abs(total_sections - 100.0) > 1e-6:
+        raise PermissionDeniedException("The sum of section maximum_score must be 100")
+
+    # Validación de suma de aspectos en cada sección
+    for section in data.sections:
+        aspectos_total = 0
+        for aspect in section.aspects:
+            if aspect.type == "yesno":
+                aspectos_total += 5  # Cambia 5 al valor fijo de tu sí/no si es diferente
+            else:
+                aspectos_total += aspect.maximum_score
+        if aspectos_total > section.maximum_score:
+            raise PermissionDeniedException(
+                f"La sumatoria de puntos en la sección '{section.name}' excede el máximo permitido ({section.maximum_score}). Suma actual: {aspectos_total}. Ten en cuenta que estos cambios no impactan puntajes ya guardados."
+            )
+
     async with transaction(session):
         result = await session.execute(
             select(SurveyForm).where(
@@ -107,10 +136,6 @@ async def update_survey_form(
         form = result.scalar_one_or_none()
         if not form:
             raise NotFoundException("Form not found")
-
-        total_sections = sum(sec.maximum_score for sec in data.sections)
-        if abs(total_sections - 100.0) > 1e-6:
-            raise PermissionDeniedException("The sum of section maximum_score must be 100")
 
         form.title = data.title
 
