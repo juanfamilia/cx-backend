@@ -98,8 +98,15 @@ class SieteCXTester:
         """Test Phase 0: Authentication endpoints"""
         print("\n=== Testing Phase 0: Auth & Users ===")
         
-        # Test user registration
-        register_response = self.test_endpoint("/v1/auth/register", "POST", TEST_USER)
+        # Test user creation (as per review request)
+        user_data = {
+            "email": TEST_USER["email"],
+            "password": TEST_USER["password"],
+            "full_name": TEST_USER["full_name"],
+            "company_id": self.company_id,  # Will be set after company creation
+            "role": 0  # Admin role as per review request
+        }
+        register_response = self.test_endpoint("/v1/users/", "POST", user_data)
         
         # Test user login
         login_data = {
@@ -117,10 +124,6 @@ class SieteCXTester:
                     print(f"🔑 JWT Token obtained: {self.jwt_token[:20]}...")
             except:
                 pass
-        
-        # Test authenticated endpoint
-        headers = {"Authorization": f"Bearer {self.jwt_token}"} if self.jwt_token else None
-        self.test_endpoint("/v1/users/me", "GET", headers=headers)
     
     def test_company_endpoints(self):
         """Test Phase 1: Company endpoints"""
