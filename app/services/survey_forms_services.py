@@ -151,3 +151,13 @@ async def update_survey_form(
     await session.commit()
     await session.refresh(form)
     return form
+async def get_form_by_id(session: AsyncSession, form_id: int, company_id: int) -> SurveyForm | None:
+    result = await session.execute(
+        select(SurveyForm).where(
+            SurveyForm.id == form_id,
+            SurveyForm.company_id == company_id,
+            SurveyForm.deleted_at == None
+        )
+    )
+    return result.scalar_one_or_none()
+
