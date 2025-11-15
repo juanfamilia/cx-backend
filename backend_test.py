@@ -189,16 +189,19 @@ class SieteCXTester:
         
         headers = {"Authorization": f"Bearer {self.jwt_token}"} if self.jwt_token else None
         
-        # List prompts
-        self.test_endpoint("/v1/prompts", "GET", headers=headers)
+        # List prompts (as per review request)
+        self.test_endpoint("/v1/prompts/", "GET", headers=headers)
+        
+        # Get active prompts
+        self.test_endpoint("/v1/prompts/active", "GET", headers=headers)
         
         # Create prompt
         prompt_data = {
-            "name": "Test Prompt",
-            "content": "This is a test prompt for AI processing",
-            "category": "general"
+            "name": "Test Prompt AI",
+            "content": "This is a test prompt for AI processing in Siete CX",
+            "category": "customer_service"
         }
-        self.test_endpoint("/v1/prompts", "POST", prompt_data, headers)
+        self.test_endpoint("/v1/prompts/", "POST", prompt_data, headers)
     
     def test_theme_endpoints(self):
         """Test Phase 4: Theme endpoints"""
