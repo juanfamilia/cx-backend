@@ -80,7 +80,7 @@ async def create(
     session: AsyncSession = Depends(get_db),
 ):
 
-    if request.state.user.role != 1:
+    if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="create a user zone")
 
     save_user_zones = await create_zone_users(session, data)

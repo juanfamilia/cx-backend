@@ -80,7 +80,7 @@ async def assign_users(
     data: createCampaignUser,
     session: AsyncSession = Depends(get_db),
 ):
-    if request.state.user.role != 1:
+    if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="assign users to campaign")
 
     await assign_users_to_campaign(session, data.campaign_id, data.user_ids)

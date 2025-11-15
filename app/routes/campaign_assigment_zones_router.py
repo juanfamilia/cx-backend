@@ -79,7 +79,7 @@ async def assign_zones(
     data: createCampaignZone,
     session: AsyncSession = Depends(get_db),
 ):
-    if request.state.user.role != 1:
+    if request.state.user.role not in [0,1]:
         raise PermissionDeniedException(custom_message="assign zones to campaign")
 
     await assign_zones_to_campaign(session, data.campaign_id, data.zone_ids)
