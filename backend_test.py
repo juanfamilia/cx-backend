@@ -14,16 +14,16 @@ BACKEND_URL = "https://siete-cx-deploy.preview.emergentagent.com/api"
 
 # Test data as specified in review request
 TEST_COMPANY = {
-    "name": "Test Company",
-    "subdomain": "testco", 
-    "contact_email": "test@testco.com"
+    "name": "Test Company AI",
+    "subdomain": "testai",
+    "contact_email": "test@testai.com"
 }
 
 TEST_USER = {
-    "email": "admin@testco.com",
+    "email": "admin@testai.com",
     "password": "Admin123!",
-    "full_name": "Test Admin",
-    "role": "admin"
+    "full_name": "Admin Test AI",
+    "role": 0  # Admin role as per review request
 }
 
 class SieteCXTester:
