@@ -46,30 +46,19 @@ async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
             asp.maximum_score = int(per) if per.is_integer() else per
             session.add(asp)
 
-async def _validate_and_distribute_section_aspects(section, reflexive_exceptions=True):
-    # Suponiendo types: 'NUMBER' para score, 'BOOLEAN' para yes/no
-    number_sum = sum(aspect.maximum_score for aspect in section.aspects if aspect.type == "NUMBER")
-    boolean_count = sum(1 for aspect in section.aspects if aspect.type == "BOOLEAN")
+async def _validate_and_distribute_section_aspects(section):
+    number_sum = sum(a.maximum_score for a in section.aspects if a.type == "NUMBER")
+    boolean_count = sum(1 for a in section.aspects if a.type == "BOOLEAN")
     restante = section.maximum_score - number_sum
-    
-    if restante < 0:
-        raise PermissionDeniedException(
-            f"La suma de los aspectos de tipo Número ({number_sum}) excede el máximo de la sección '{section.name}' ({section.maximum_score}). Revisa los valores."
-        )
-    
-    # Asignación automática
     if boolean_count > 0:
+        if restante <= 0:
+            raise PermissionDeniedException(
+                f"En la sección '{section.name}', la suma de los puntos de los aspectos tipo NUMBER ({number_sum}) es igual o mayor que el máximo de la sección ({section.maximum_score}). No quedan puntos para los aspectos tipo Sí/No. Redistribuye los puntajes para que todos los aspectos sean evaluables."
+            )
         boolean_value = restante / boolean_count
-        for aspect in section.aspects:
-            if aspect.type == "BOOLEAN":
-                aspect.maximum_score = boolean_value
-
-    total_aspects = sum(aspect.maximum_score for aspect in section.aspects)
-    
-    if abs(total_aspects - section.maximum_score) > 1e-6 and reflexive_exceptions:
-        raise PermissionDeniedException(
-            f"La suma de los puntos asignados a los aspectos de la sección '{section.name}' ({total_aspects}) no coincide con el máximo ({section.maximum_score}). ¿Deseas que el sistema distribuya automáticamente el puntaje restante entre los aspectos tipo Sí/No, o prefieres corregir manualmente los valores?"
-        )
+        for a in section.aspects:
+            if a.type == "BOOLEAN":
+                a.maximum_score = boolean_value
 
 async def create_survey_form(
     session: AsyncSession, company_id: int, data: SurveyFormsCreate
@@ -78,9 +67,8 @@ async def create_survey_form(
     if abs(total_sections - 100.0) > 1e-6:
         raise PermissionDeniedException("The sum of section maximum_score must be 100")
 
-    # Validar y distribuir aspectos por sección
     for section in data.sections:
-        await _validate_and_distribute_section_aspects(section)
+        _validate_and_distribute_section_aspects(section)
 
     async with transaction(session):
         form = SurveyForm(title=data.title, company_id=company_id)
@@ -122,7 +110,7 @@ async def update_survey_form(
         raise PermissionDeniedException("The sum of section maximum_score must be 100")
 
     for section in data.sections:
-        await _validate_and_distribute_section_aspects(section)
+        _validate_and_distribute_section_aspects(section)
 
     async with transaction(session):
         result = await session.execute(
