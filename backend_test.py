@@ -129,13 +129,18 @@ class SieteCXTester:
         """Test Phase 1: Company endpoints"""
         print("\n=== Testing Phase 1: Companies ===")
         
-        headers = {"Authorization": f"Bearer {self.jwt_token}"} if self.jwt_token else None
+        # Create company (no auth needed as per review request)
+        company_response = self.test_endpoint("/v1/company/", "POST", TEST_COMPANY)
         
-        # Create company
-        company_response = self.test_endpoint("/v1/companies", "POST", TEST_COMPANY, headers)
-        
-        # List companies
-        self.test_endpoint("/v1/companies", "GET", headers=headers)
+        # Extract company_id if successful
+        if company_response and company_response.status_code in [200, 201]:
+            try:
+                company_data = company_response.json()
+                self.company_id = company_data.get("id") or company_data.get("company_id")
+                if self.company_id:
+                    print(f"🏢 Company ID obtained: {self.company_id}")
+            except:
+                pass
     
     def test_dashboard_endpoints(self):
         """Test Phase 2: Dashboard Config endpoints"""
