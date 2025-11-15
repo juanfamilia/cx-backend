@@ -148,11 +148,14 @@ class SieteCXTester:
         
         headers = {"Authorization": f"Bearer {self.jwt_token}"} if self.jwt_token else None
         
-        # Test dashboard widgets
-        self.test_endpoint("/v1/dashboards/widgets", "GET", headers=headers)
+        # Test dashboard widgets (as per review request)
+        self.test_endpoint("/v1/dashboard-config/widgets", "GET", headers=headers)
         
         # Test dashboard configs
-        self.test_endpoint("/v1/dashboards/configs", "GET", headers=headers)
+        self.test_endpoint("/v1/dashboard-config/", "GET", headers=headers)
+        
+        # Test default dashboard layout
+        self.test_endpoint("/v1/dashboard-config/default", "GET", headers=headers)
         
         # Create dashboard config
         dashboard_config = {
@@ -160,7 +163,7 @@ class SieteCXTester:
             "widgets": ["widget1", "widget2"],
             "theme": "default"
         }
-        self.test_endpoint("/v1/dashboards/configs", "POST", dashboard_config, headers)
+        self.test_endpoint("/v1/dashboard-config/", "POST", dashboard_config, headers)
     
     def test_intelligence_endpoints(self):
         """Test Phase 3: Intelligence endpoints"""
