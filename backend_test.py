@@ -209,16 +209,19 @@ class SieteCXTester:
         
         headers = {"Authorization": f"Bearer {self.jwt_token}"} if self.jwt_token else None
         
-        # Get themes
-        self.test_endpoint("/v1/themes", "GET", headers=headers)
+        # Get themes (as per review request)
+        self.test_endpoint("/v1/theme/", "GET", headers=headers)
         
-        # Update theme
+        # Update theme colors
         theme_data = {
             "primary_color": "#007bff",
             "secondary_color": "#6c757d",
-            "logo_url": "https://example.com/logo.png"
+            "accent_color": "#28a745"
         }
-        self.test_endpoint("/v1/themes", "PUT", theme_data, headers)
+        self.test_endpoint("/v1/theme/", "PUT", theme_data, headers)
+        
+        # Get theme CSS
+        self.test_endpoint("/v1/theme/css", "GET", headers=headers)
     
     def run_all_tests(self):
         """Run all test suites"""
