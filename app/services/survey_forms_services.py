@@ -31,10 +31,6 @@ async def transaction(session):
         raise e
 
 async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
-    """
-    Para cada sección en el formulario, distribuye aspect.maximum_score = section.maximum_score / n_aspects.
-    Persiste (sobrescribe cualquier valor previo).
-    """
     q = select(SurveySection).where(SurveySection.form_id == form.id, SurveySection.deleted_at == None)
     res = await session.execute(q)
     sections = res.scalars().all()
@@ -49,33 +45,47 @@ async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
         for asp in aspects:
             asp.maximum_score = int(per) if per.is_integer() else per
             session.add(asp)
-    # el caller hace commit
+
+async def _validate_and_distribute_section_aspects(section, reflexive_exceptions=True):
+    # Suponiendo types: 'NUMBER' para score, 'BOOLEAN' para yes/no
+    number_sum = sum(aspect.maximum_score for aspect in section.aspects if aspect.type == "NUMBER")
+    boolean_count = sum(1 for aspect in section.aspects if aspect.type == "BOOLEAN")
+    restante = section.maximum_score - number_sum
+    
+    if restante < 0:
+        raise PermissionDeniedException(
+            f"La suma de los aspectos de tipo Número ({number_sum}) excede el máximo de la sección '{section.name}' ({section.maximum_score}). Revisa los valores."
+        )
+    
+    # Asignación automática
+    if boolean_count > 0:
+        boolean_value = restante / boolean_count
+        for aspect in section.aspects:
+            if aspect.type == "BOOLEAN":
+                aspect.maximum_score = boolean_value
+
+    total_aspects = sum(aspect.maximum_score for aspect in section.aspects)
+    
+    if abs(total_aspects - section.maximum_score) > 1e-6 and reflexive_exceptions:
+        raise PermissionDeniedException(
+            f"La suma de los puntos asignados a los aspectos de la sección '{section.name}' ({total_aspects}) no coincide con el máximo ({section.maximum_score}). ¿Deseas que el sistema distribuya automáticamente el puntaje restante entre los aspectos tipo Sí/No, o prefieres corregir manualmente los valores?"
+        )
 
 async def create_survey_form(
     session: AsyncSession, company_id: int, data: SurveyFormsCreate
 ) -> SurveyForm:
-    """Crea un formulario, valida el total y que cada sección no sea excedida por la suma de sus aspectos."""
     total_sections = sum(sec.maximum_score for sec in data.sections)
     if abs(total_sections - 100.0) > 1e-6:
         raise PermissionDeniedException("The sum of section maximum_score must be 100")
 
-    # Validación de suma de aspectos en cada sección
+    # Validar y distribuir aspectos por sección
     for section in data.sections:
-        aspectos_total = 0
-        for aspect in section.aspects:
-            if aspect.type == "yesno":
-                aspectos_total += 5  # Cambia 5 al valor fijo de tu sí/no si es diferente
-            else:
-                aspectos_total += aspect.maximum_score
-        if aspectos_total > section.maximum_score:
-            raise PermissionDeniedException(
-                f"La sumatoria de puntos en la sección '{section.name}' excede el máximo permitido ({section.maximum_score}). Suma actual: {aspectos_total}."
-            )
+        await _validate_and_distribute_section_aspects(section)
 
     async with transaction(session):
         form = SurveyForm(title=data.title, company_id=company_id)
         session.add(form)
-        await session.flush()  # obtener form.id
+        await session.flush()
 
         for section in data.sections:
             db_section = SurveySection(
@@ -107,23 +117,12 @@ async def update_survey_form(
     company_id: int,
     data: SurveyFormsCreate,
 ) -> SurveyForm:
-    """Actualiza un formulario y sus secciones/aspectos, validando reglas y mostrando advertencia en mensaje si aplica."""
     total_sections = sum(sec.maximum_score for sec in data.sections)
     if abs(total_sections - 100.0) > 1e-6:
         raise PermissionDeniedException("The sum of section maximum_score must be 100")
 
-    # Validación de suma de aspectos en cada sección
     for section in data.sections:
-        aspectos_total = 0
-        for aspect in section.aspects:
-            if aspect.type == "yesno":
-                aspectos_total += 5  # Cambia 5 al valor fijo de tu sí/no si es diferente
-            else:
-                aspectos_total += aspect.maximum_score
-        if aspectos_total > section.maximum_score:
-            raise PermissionDeniedException(
-                f"La sumatoria de puntos en la sección '{section.name}' excede el máximo permitido ({section.maximum_score}). Suma actual: {aspectos_total}. Ten en cuenta que estos cambios no impactan puntajes ya guardados."
-            )
+        await _validate_and_distribute_section_aspects(section)
 
     async with transaction(session):
         result = await session.execute(
@@ -139,7 +138,6 @@ async def update_survey_form(
 
         form.title = data.title
 
-        # Elimina secciones/aspectos previos
         await session.execute(
             delete(SurveyAspect).where(
                 SurveyAspect.section_id.in_(
@@ -150,7 +148,6 @@ async def update_survey_form(
         await session.execute(delete(SurveySection).where(SurveySection.form_id == form_id))
         await session.flush()
 
-        # Añade nuevos
         for section in data.sections:
             db_section = SurveySection(
                 name=section.name,
@@ -207,7 +204,6 @@ async def get_forms_by_company(
     forms = result.scalars().all()
     return SurveyFormsPublic(items=forms, total=len(forms))
 
-# Opcional: Soft delete para forms
 async def soft_delete_form(session: AsyncSession, form_id: int):
     result = await session.execute(
         select(SurveyForm).where(SurveyForm.id == form_id, SurveyForm.deleted_at == None)
