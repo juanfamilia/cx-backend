@@ -143,6 +143,9 @@ backend:
         - working: false
           agent: "testing"
           comment: "CRITICAL: Company endpoints missing - /api/v1/companies (GET/POST) return 404. No company management system implemented."
+        - working: false
+          agent: "testing"
+          comment: "COMPREHENSIVE TEST CONFIRMED: POST /v1/company/ returns 404. Company creation endpoint as specified in review request does not exist. Cannot create test company for subsequent user creation."
 
   - task: "Phase 2 - Dashboard Config Endpoints"
     implemented: false
