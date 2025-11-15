@@ -1,153 +1,85 @@
-import datetime
-from typing import Optional
+# app/services/evaluation_services.py (fragmentos relevantes)
+from datetime import datetime
+from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import and_, func, or_, select
-from sqlalchemy.orm import selectinload
-
-from app.models.campaign_model import Campaign
+from sqlmodel import select
 from app.models.evaluation_model import (
     Evaluation,
     EvaluationAnswer,
     EvaluationCreate,
     EvaluationPublic,
     EvaluationUpdate,
-    EvaluationsPublic,
-    StatusChangeRequest,
-    StatusEnum,
+    EvaluationAnswerBase,
+    EvaluationAnswerUpdate,
 )
-from app.models.notification_model import NotificationBase
-from app.models.survey_forms_model import SurveyForm
-from app.models.survey_model import SurveySection
-from app.models.user_model import User
-from app.services.notification_services import create_notification
-from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
+from app.services.scoring_services import calculate_evaluation_scores, ScoringError
 
-
-async def get_evaluations(
-    session: AsyncSession,
-    offset: int,
-    limit: int,
-    filter: Optional[str] = None,
-    search: Optional[str] = None,
-    company_id: Optional[int] = None,
-    user_id: Optional[int] = None,
-) -> EvaluationsPublic:
-
-    query = (
-        select(Evaluation, func.count().over().label("total"))
-        .join(Campaign, Evaluation.campaigns_id == Campaign.id, isouter=True)
-        .join(User, Evaluation.user_id == User.id, isouter=True)
-        .options(selectinload(Evaluation.campaign), selectinload(Evaluation.user))
-        .where(Evaluation.deleted_at == None)
-    )
-
-    if company_id is not None:
-        query = query.where(Campaign.company_id == company_id)
-
-    if user_id is not None:
-        query = query.where(
-            Evaluation.user_id == user_id, Evaluation.status == StatusEnum.EDIT
-        )
-
-    if filter and search:
-        match filter:
-            case "campaign":
-                query = query.where(Campaign.name.ilike(f"%{search}%"))
-
-            case "evaluator":
-                names = search.split()
-                if len(names) == 1:
-                    query = query.where(
-                        or_(
-                            User.first_name.ilike(f"%{names[0]}%"),
-                            User.last_name.ilike(f"%{names[0]}%"),
-                        )
-                    )
-                else:
-                    query = query.where(
-                        and_(
-                            User.first_name.ilike(f"%{names[0]}%"),
-                            User.last_name.ilike(f"%{' '.join(names[1:])}%"),
-                        )
-                    )
-
-    query = query.order_by(Evaluation.id).offset(offset).limit(limit)
-
-    result = await session.execute(query)
-    db_evaluations = result.unique().all()
-
-    if not db_evaluations:
-        raise NotFoundException("Evaluations not found")
-
-    evaluations = [row[0] for row in db_evaluations]
-    total = db_evaluations[0][1] if db_evaluations else 0
-    pagination = Pagination(first=offset, rows=limit, total=total)
-
-    return EvaluationsPublic(data=evaluations, pagination=pagination)
-
-
-async def get_evaluation(session: AsyncSession, evaluation_id: int) -> EvaluationPublic:
-
-    query = (
-        select(Evaluation)
-        .where(Evaluation.id == evaluation_id, Evaluation.deleted_at == None)
-        .options(
-            selectinload(Evaluation.evaluation_answers),
-            selectinload(Evaluation.video),
-            selectinload(Evaluation.campaign)
-            .selectinload(Campaign.survey)
-            .selectinload(SurveyForm.sections)
-            .selectinload(SurveySection.aspects),
-        )
-    )
-
-    result = await session.execute(query)
-    db_evaluation = result.scalars().first()
-
-    if not db_evaluation:
-        raise NotFoundException("Evaluation not found")
-
-    return db_evaluation
-
-
-async def get_evaluation_answer(
-    session: AsyncSession, evaluation_answer_id: int
-) -> EvaluationAnswer:
-    query = select(EvaluationAnswer).where(
-        EvaluationAnswer.id == evaluation_answer_id,
-        EvaluationAnswer.deleted_at == None,
-    )
-
-    result = await session.execute(query)
-    db_evaluation_answer = result.scalars().first()
-
-    if not db_evaluation_answer:
-        raise NotFoundException("Evaluation answer not found")
-
-    return db_evaluation_answer
-
+# ... otros imports / funciones ...
 
 async def create_evaluation(
     session: AsyncSession, evaluation: EvaluationCreate
 ) -> Evaluation:
 
+    # Create evaluation record first (status etc.). We'll fill scores after computing.
     db_evaluation = Evaluation(**evaluation.model_dump(exclude={"evaluation_answers"}))
-
     session.add(db_evaluation)
+    await session.flush()  # get db_evaluation.id
+
+    # Build answers list as dicts for scoring
+    answers_payload = []
+    for answer in evaluation.evaluation_answers:
+        answers_payload.append({
+            "aspect_id": answer.aspect_id,
+            "value_number": answer.value_number,
+            "value_boolean": answer.value_boolean,
+            "comment": answer.comment,
+        })
+
+    # Calculate scoring using campaign -> form mapping
+    try:
+        scoring = await calculate_evaluation_scores(session, db_evaluation.campaigns_id, answers_payload)
+    except ScoringError as e:
+        # rollback? we can raise to be handled by router global except
+        raise
+
+    # Persist answers with recorded fields
+    # We expect evaluation_answers table to have columns: recorded_aspect_max, recorded_points_awarded, recorded_section_max
+    for ans in answers_payload:
+        aspect_id = ans["aspect_id"]
+        # look up computed values
+        # find which section contains the aspect in scoring
+        awarded = 0.0
+        aspect_max = 0.0
+        section_max = 0.0
+        for sid, sdata in scoring["sections"].items():
+            if aspect_id in sdata["aspects"]:
+                aspdata = sdata["aspects"][aspect_id]
+                awarded = float(aspdata["awarded"])
+                aspect_max = float(aspdata["aspect_max"])
+                section_max = float(sdata["section_max"])
+                break
+
+        db_answer = EvaluationAnswer(
+            evaluation_id=db_evaluation.id,
+            aspect_id=aspect_id,
+            value_number=ans.get("value_number"),
+            value_boolean=ans.get("value_boolean"),
+            comment=ans.get("comment"),
+        )
+        # store the historical computed values in new columns (must be added via alembic)
+        setattr(db_answer, "recorded_aspect_max", aspect_max)
+        setattr(db_answer, "recorded_points_awarded", awarded)
+        setattr(db_answer, "recorded_section_max", section_max)
+
+        session.add(db_answer)
+
+    # Update evaluation totals
+    db_evaluation.total_score = float(scoring["total_awarded"])
+    db_evaluation.percentage_score = float(scoring["percentage"])
+
     await session.commit()
     await session.refresh(db_evaluation)
-
-    db_answers = []
-    for answer in evaluation.evaluation_answers:
-        db_answer = EvaluationAnswer(
-            **answer.model_dump(exclude={"evaluation_id"}),
-            evaluation_id=db_evaluation.id,
-        )
-        session.add(db_answer)
-        db_answers.append(db_answer)
-
-    await session.commit()
 
     return db_evaluation
 
@@ -157,60 +89,64 @@ async def update_evaluation(
 ) -> Evaluation:
     db_evaluation = await get_evaluation(session, evaluation_id)
 
-    evaluation_update.status = StatusEnum.UPDATED
-
-    evaluation_data = evaluation_update.model_dump(
-        exclude={"evaluation_answers"}, exclude_unset=True
-    )
-
+    # update fields
+    evaluation_update.status = getattr(evaluation_update, "status", db_evaluation.status or None) or db_evaluation.status
+    evaluation_data = evaluation_update.model_dump(exclude={"evaluation_answers"}, exclude_unset=True)
     db_evaluation.sqlmodel_update(evaluation_data)
     session.add(db_evaluation)
+    await session.flush()
 
+    # If evaluation_answers present -> update them
     if evaluation_update.evaluation_answers:
-        for answer in evaluation_update.evaluation_answers:
-            db_answer = await get_evaluation_answer(session, answer.id)
-            answer_data = answer.model_dump(exclude_unset=True)
+        # Build answers payload for scoring - either existing answers or new
+        answers_payload = []
+        for ans in evaluation_update.evaluation_answers:
+            # update existing answer model
+            db_ans = await get_evaluation_answer(session, ans.id)
+            # apply updates to db_ans
+            upd = ans.model_dump(exclude_unset=True)
+            db_ans.sqlmodel_update(upd)
+            session.add(db_ans)
+            answers_payload.append({
+                "aspect_id": db_ans.aspect_id,
+                "value_number": db_ans.value_number,
+                "value_boolean": db_ans.value_boolean,
+                "comment": db_ans.comment,
+            })
 
-            db_answer.sqlmodel_update(answer_data)
-            session.add(db_answer)
+        # Recalculate scoring
+        try:
+            scoring = await calculate_evaluation_scores(session, db_evaluation.campaigns_id, answers_payload)
+        except ScoringError:
+            raise
+
+        # Update recorded fields on answers
+        for ans_payload in answers_payload:
+            aspect_id = ans_payload["aspect_id"]
+            awarded = 0.0
+            aspect_max = 0.0
+            section_max = 0.0
+            for sid, sdata in scoring["sections"].items():
+                if aspect_id in sdata["aspects"]:
+                    aspdata = sdata["aspects"][aspect_id]
+                    awarded = float(aspdata["awarded"])
+                    aspect_max = float(aspdata["aspect_max"])
+                    section_max = float(sdata["section_max"])
+                    break
+            # find db answer
+            q = select(EvaluationAnswer).where(EvaluationAnswer.evaluation_id == db_evaluation.id, EvaluationAnswer.aspect_id == aspect_id, EvaluationAnswer.deleted_at == None)
+            res = await session.execute(q)
+            db_ans = res.scalars().first()
+            if db_ans:
+                setattr(db_ans, "recorded_aspect_max", aspect_max)
+                setattr(db_ans, "recorded_points_awarded", awarded)
+                setattr(db_ans, "recorded_section_max", section_max)
+                session.add(db_ans)
+
+        # Update evaluation totals
+        db_evaluation.total_score = float(scoring["total_awarded"])
+        db_evaluation.percentage_score = float(scoring["percentage"])
 
     await session.commit()
     await session.refresh(db_evaluation)
-
-    return db_evaluation
-
-
-async def change_evaluation_status(
-    session: AsyncSession, evaluation_id: int, status: StatusChangeRequest
-) -> EvaluationPublic:
-    db_evaluation = await get_evaluation(session, evaluation_id)
-
-    db_evaluation.status = status.status
-
-    session.add(db_evaluation)
-    await session.commit()
-    await session.refresh(db_evaluation)
-
-    notification = NotificationBase(
-        user_id=db_evaluation.user_id,
-        evaluation_id=db_evaluation.id,
-        status=status.status,
-        comment=status.comment,
-    )
-    await create_notification(session, notification)
-
-    return db_evaluation
-
-
-async def soft_delete_evaluation(
-    session: AsyncSession, evaluation_id: int
-) -> EvaluationPublic:
-    db_evaluation = await get_evaluation(session, evaluation_id)
-
-    db_evaluation.deleted_at = datetime.now()
-
-    session.add(db_evaluation)
-    await session.commit()
-    await session.refresh(db_evaluation)
-
     return db_evaluation
