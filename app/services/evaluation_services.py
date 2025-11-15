@@ -53,6 +53,52 @@ async def get_evaluation_answer(session: AsyncSession, answer_id: int) -> Evalua
 
 
 # =========================================================
+# GET LIST (get_evaluations)
+# =========================================================
+
+async def get_evaluations(
+    session: AsyncSession,
+    offset: int = 0,
+    limit: int = 10,
+    filter: Optional[str] = None,
+    search: Optional[str] = None,
+    company_id: Optional[int] = None,
+    user_id: Optional[int] = None,
+):
+    q = select(Evaluation).where(Evaluation.deleted_at.is_(None))
+
+    # Company filter
+    if company_id:
+        q = q.where(Evaluation.company_id == company_id)
+
+    # User filter (role 3)
+    if user_id:
+        q = q.where(Evaluation.user_id == user_id)
+
+    # Status filter
+    if filter:
+        q = q.where(Evaluation.status == filter)
+
+    # Simple search
+    if search:
+        search_term = f"%{search}%"
+        q = q.where(
+            Evaluation.location.ilike(search_term)
+            | Evaluation.evaluated_collaborator.ilike(search_term)
+        )
+
+    q = q.order_by(Evaluation.created_at.desc())
+    q = q.offset(offset).limit(limit)
+
+    res = await session.execute(q)
+    evaluations = res.scalars().all()
+
+    total = len(evaluations)
+
+    return {"items": evaluations, "total": total}
+
+
+# =========================================================
 # STATUS CHANGE
 # =========================================================
 
@@ -86,7 +132,7 @@ async def create_evaluation(
         **evaluation.model_dump(exclude={"evaluation_answers"})
     )
     session.add(db_evaluation)
-    await session.flush()  # Obtain generated ID
+    await session.flush()  # Obtain ID
 
     # Prepare payload for scoring
     answers_payload = [
@@ -117,7 +163,6 @@ async def create_evaluation(
         aspect_max = 0.0
         section_max = 0.0
 
-        # Locate aspect inside scoring tree
         for section_data in scoring["sections"].values():
             if aspect_id in section_data["aspects"]:
                 aspect_data = section_data["aspects"][aspect_id]
@@ -160,7 +205,6 @@ async def update_evaluation(
 
     db_evaluation = await get_evaluation(session, evaluation_id)
 
-    # PATCH-like header update
     evaluation_data = evaluation_update.model_dump(
         exclude={"evaluation_answers"},
         exclude_unset=True
@@ -169,12 +213,10 @@ async def update_evaluation(
     session.add(db_evaluation)
     await session.flush()
 
-    # If answers included, update and rescore
     if evaluation_update.evaluation_answers:
 
         answers_payload = []
 
-        # Update each answer individually
         for ans in evaluation_update.evaluation_answers:
             db_ans = await get_evaluation_answer(session, ans.id)
 
@@ -189,7 +231,6 @@ async def update_evaluation(
                 "comment": db_ans.comment,
             })
 
-        # Recalculate scoring
         try:
             scoring = await calculate_evaluation_scores(
                 session,
@@ -199,7 +240,6 @@ async def update_evaluation(
         except ScoringError:
             raise
 
-        # Update recorded scoring fields
         for ans_payload in answers_payload:
             aspect_id = ans_payload["aspect_id"]
 
@@ -227,7 +267,6 @@ async def update_evaluation(
                 db_ans.recorded_section_max = section_max
                 session.add(db_ans)
 
-        # Update totals
         db_evaluation.total_score = float(scoring["total_awarded"])
         db_evaluation.percentage_score = float(scoring["percentage"])
 
