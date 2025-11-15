@@ -160,4 +160,26 @@ async def get_form_by_id(session: AsyncSession, form_id: int, company_id: int) -
         )
     )
     return result.scalar_one_or_none()
+    
+async def get_forms_by_company(
+    session: AsyncSession,
+    company_id: int,
+    offset: int = 0,
+    limit: int = 10,
+    filter: Optional[str] = None,
+    search: Optional[str] = None
+) -> SurveyFormsPublic:
+    query = select(SurveyForm).where(
+        SurveyForm.company_id == company_id,
+        SurveyForm.deleted_at == None
+    )
+    if filter:
+        query = query.where(SurveyForm.status == filter)
+    if search:
+        search_term = f"%{search}%"
+        query = query.where(SurveyForm.title.ilike(search_term))
+    query = query.offset(offset).limit(limit)
+    result = await session.execute(query)
+    forms = result.scalars().all()
+    return SurveyFormsPublic(items=forms, total=len(forms))
 
