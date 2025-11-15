@@ -229,10 +229,10 @@ class SieteCXTester:
         print(f"📍 Base URL: {BACKEND_URL}")
         print("=" * 60)
         
-        # Test in the specified order
+        # Test in the specified order (as per review request)
         self.test_basic_endpoints()
-        self.test_auth_endpoints()
-        self.test_company_endpoints()
+        self.test_company_endpoints()  # Create company first
+        self.test_auth_endpoints()     # Then create user with company_id
         self.test_dashboard_endpoints()
         self.test_intelligence_endpoints()
         self.test_prompt_endpoints()
