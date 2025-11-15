@@ -183,7 +183,7 @@ async def get_forms_by_company(
     return SurveyFormsPublic(items=forms, total=len(forms))
 
 # Opcional: Soft delete para forms
-async def softdeleteform(session: AsyncSession, form_id: int):
+async def soft_delete_form(session: AsyncSession, form_id: int):
     result = await session.execute(
         select(SurveyForm).where(SurveyForm.id == form_id, SurveyForm.deleted_at == None)
     )
