@@ -171,8 +171,11 @@ class SieteCXTester:
         
         headers = {"Authorization": f"Bearer {self.jwt_token}"} if self.jwt_token else None
         
-        # Test intelligence insights
+        # Test intelligence insights (as per review request)
         self.test_endpoint("/v1/intelligence/insights", "GET", headers=headers)
+        
+        # Test intelligence insights summary
+        self.test_endpoint("/v1/intelligence/insights/summary", "GET", headers=headers)
         
         # Test intelligence trends
         self.test_endpoint("/v1/intelligence/trends", "GET", headers=headers)
