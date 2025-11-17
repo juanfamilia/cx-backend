@@ -12,18 +12,23 @@ app = FastAPI(
 
 app.title = settings.PROJECT_NAME
 
-origins = ["*"                                                              
+# CORS Configuration - Allow specific origins for production
+origins = [
+    "https://cxfrontendnew.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:4200",
+    "*"  # Fallback for development
 ]
-
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # app.middleware("http")(db_exception_handler)
