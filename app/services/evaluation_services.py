@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlmodel import select
 
 from app.models.evaluation_model import (
@@ -96,14 +97,26 @@ async def get_evaluations(
         )
 
     q = q.order_by(Evaluation.created_at.desc())
+    
+    # Get total count before pagination
+    count_query = select(func.count()).select_from(q.subquery())
+    total_result = await session.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # Apply pagination
     q = q.offset(offset).limit(limit)
 
     res = await session.execute(q)
     evaluations = res.scalars().all()
 
-    total = len(evaluations)
-
-    return {"items": evaluations, "total": total}
+    return {
+        "data": evaluations,
+        "pagination": {
+            "first": offset,
+            "rows": limit,
+            "total": total
+        }
+    }
 
 
 # =========================================================

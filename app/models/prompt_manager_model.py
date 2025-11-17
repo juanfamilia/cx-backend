@@ -12,10 +12,10 @@ class PromptManagerBase(SQLModel):
     description: str | None = Field(default=None, description="Description of the prompt")
     template: str = Field(description="Prompt template with variables")
     category: str = Field(max_length=100, description="Category of the prompt")
-    variables: dict[str, Any] | None = Field(
+    variables: Any = Field(
         default=None,
         sa_column=Column(JSON),
-        description="Variables used in the template"
+        description="Variables used in the template (can be dict or list)"
     )
     is_active: bool = Field(default=True, description="Whether this prompt is currently active")
     version: int = Field(default=1, description="Version number of the prompt")
@@ -31,7 +31,7 @@ class PromptManagerUpdate(SQLModel):
     description: str | None = None
     template: str | None = None
     category: str | None = None
-    variables: dict[str, Any] | None = None
+    variables: Any = None
     is_active: bool | None = None
     version: int | None = None
 
