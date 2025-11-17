@@ -30,12 +30,12 @@ async def get_prompt_by_id(
 
 
 async def get_active_prompt_for_company(
-    session: AsyncSession, company_id: int, prompt_type: str = "dual_analysis"
+    session: AsyncSession, company_id: int, category: str = "dual_analysis"
 ) -> PromptManagerPublic | None:
-    """Get the active prompt for a company by type"""
+    """Get the active prompt for a company by category"""
     query = select(PromptManager).where(
         PromptManager.company_id == company_id,
-        PromptManager.prompt_type == prompt_type,
+        PromptManager.category == category,
         PromptManager.is_active == True,
         
     )
@@ -81,12 +81,12 @@ async def create_prompt(
 ) -> PromptManagerPublic:
     """Create a new prompt"""
     
-    # If this prompt is active, deactivate other prompts of same type
+    # If this prompt is active, deactivate other prompts of same category
     if prompt_data.is_active:
         await deactivate_company_prompts(
             session, 
             prompt_data.company_id, 
-            prompt_data.prompt_type
+            prompt_data.category
         )
     
     db_prompt = PromptManager(**prompt_data.model_dump())
@@ -103,12 +103,12 @@ async def update_prompt(
     """Update an existing prompt"""
     db_prompt = await get_prompt_by_id(session, prompt_id)
     
-    # If activating this prompt, deactivate others of same type
+    # If activating this prompt, deactivate others of same category
     if prompt_data.is_active and not db_prompt.is_active:
         await deactivate_company_prompts(
             session,
             db_prompt.company_id,
-            db_prompt.prompt_type,
+            db_prompt.category,
             exclude_id=prompt_id
         )
     
@@ -126,13 +126,13 @@ async def update_prompt(
 async def deactivate_company_prompts(
     session: AsyncSession,
     company_id: int,
-    prompt_type: str,
+    category: str,
     exclude_id: int | None = None
 ):
-    """Deactivate all prompts of a type for a company (except one)"""
+    """Deactivate all prompts of a category for a company (except one)"""
     query = select(PromptManager).where(
         PromptManager.company_id == company_id,
-        PromptManager.prompt_type == prompt_type,
+        PromptManager.category == category,
         PromptManager.is_active == True,
         
     )
@@ -153,9 +153,9 @@ async def deactivate_company_prompts(
 async def soft_delete_prompt(
     session: AsyncSession, prompt_id: int
 ) -> PromptManagerPublic:
-    """Soft delete a prompt"""
+    """Soft delete a prompt by deactivating it (deleted_at field doesn't exist in schema)"""
     db_prompt = await get_prompt_by_id(session, prompt_id)
-    db_prompt.deleted_at = datetime.now()
+    db_prompt.is_active = False
     
     session.add(db_prompt)
     await session.commit()

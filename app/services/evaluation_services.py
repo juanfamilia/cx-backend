@@ -63,13 +63,21 @@ async def get_evaluations(
     filter: Optional[str] = None,
     search: Optional[str] = None,
     company_id: Optional[int] = None,
+    campaigns_id: Optional[int] = None,
     user_id: Optional[int] = None,
 ):
+    from app.models.campaign_model import Campaign
+    
     q = select(Evaluation).where(Evaluation.deleted_at.is_(None))
 
-    # Company filter
+    # Company filter (requires JOIN with campaigns table)
     if company_id:
-        q = q.where(Evaluation.company_id == company_id)
+        q = q.join(Campaign, Evaluation.campaigns_id == Campaign.id)
+        q = q.where(Campaign.company_id == company_id)
+
+    # Campaign filter (direct)
+    if campaigns_id:
+        q = q.where(Evaluation.campaigns_id == campaigns_id)
 
     # User filter (role 3)
     if user_id:

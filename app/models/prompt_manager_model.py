@@ -8,19 +8,18 @@ if TYPE_CHECKING:
 
 class PromptManagerBase(SQLModel):
     """Base model for AI prompt management per company"""
-    company_id: int = Field(foreign_key="companies.id")
-    prompt_name: str = Field(max_length=100, description="Name/identifier for the prompt")
-    prompt_type: str = Field(
-        default="dual_analysis",
-        description="Type: dual_analysis, executive_only, operative_only, custom"
-    )
-    system_prompt: str = Field(description="System prompt for AI analysis")
-    is_active: bool = Field(default=True, description="Whether this prompt is currently active")
-    prompt_metadata: dict[str, Any] | None = Field(
+    name: str = Field(max_length=255, description="Name of the prompt")
+    description: str | None = Field(default=None, description="Description of the prompt")
+    template: str = Field(description="Prompt template with variables")
+    category: str = Field(max_length=100, description="Category of the prompt")
+    variables: dict[str, Any] | None = Field(
         default=None,
         sa_column=Column(JSON),
-        description="Additional configuration (temperature, max_tokens, etc.)"
+        description="Variables used in the template"
     )
+    is_active: bool = Field(default=True, description="Whether this prompt is currently active")
+    version: int = Field(default=1, description="Version number of the prompt")
+    company_id: int = Field(foreign_key="companies.id")
 
 class PromptManagerCreate(PromptManagerBase):
     """Schema for creating a new prompt"""
@@ -28,11 +27,13 @@ class PromptManagerCreate(PromptManagerBase):
 
 class PromptManagerUpdate(SQLModel):
     """Schema for updating an existing prompt"""
-    prompt_name: str | None = None
-    prompt_type: str | None = None
-    system_prompt: str | None = None
+    name: str | None = None
+    description: str | None = None
+    template: str | None = None
+    category: str | None = None
+    variables: dict[str, Any] | None = None
     is_active: bool | None = None
-    prompt_metadata: dict[str, Any] | None = None
+    version: int | None = None
 
 class PromptManager(PromptManagerBase, table=True):
     """Database table for prompt management"""
