@@ -36,7 +36,7 @@ class PromptManagerUpdate(SQLModel):
 
 class PromptManager(PromptManagerBase, table=True):
     """Database table for prompt management"""
-    __tablename__ = "prompt_managers"
+    __tablename__ = "prompts"
     id: int | None = Field(default=None, primary_key=True)
     created_at: datetime = Field(sa_column=Column(DateTime, default=func.now()))
     updated_at: datetime = Field(
