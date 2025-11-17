@@ -18,7 +18,7 @@ async def get_prompt_by_id(
     """Get a specific prompt by ID"""
     query = select(PromptManager).where(
         PromptManager.id == prompt_id,
-        PromptManager.deleted_at == None
+        
     )
     result = await session.execute(query)
     prompt = result.scalars().first()
@@ -37,7 +37,7 @@ async def get_active_prompt_for_company(
         PromptManager.company_id == company_id,
         PromptManager.prompt_type == prompt_type,
         PromptManager.is_active == True,
-        PromptManager.deleted_at == None
+        
     )
     result = await session.execute(query)
     prompt = result.scalars().first()
@@ -55,8 +55,7 @@ async def get_prompts_by_company(
     
     # Count query
     count_query = select(func.count(PromptManager.id)).where(
-        PromptManager.company_id == company_id,
-        PromptManager.deleted_at == None
+        PromptManager.company_id == company_id
     )
     count_result = await session.execute(count_query)
     total = count_result.scalar()
@@ -65,8 +64,7 @@ async def get_prompts_by_company(
     query = (
         select(PromptManager)
         .where(
-            PromptManager.company_id == company_id,
-            PromptManager.deleted_at == None
+            PromptManager.company_id == company_id
         )
         .offset(offset)
         .limit(limit)
@@ -136,7 +134,7 @@ async def deactivate_company_prompts(
         PromptManager.company_id == company_id,
         PromptManager.prompt_type == prompt_type,
         PromptManager.is_active == True,
-        PromptManager.deleted_at == None
+        
     )
     
     if exclude_id:

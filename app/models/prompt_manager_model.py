@@ -42,7 +42,7 @@ class PromptManager(PromptManagerBase, table=True):
     updated_at: datetime = Field(
         sa_column=Column(DateTime, default=func.now(), onupdate=func.now())
     )
-    deleted_at: datetime | None = Field(default=None)
+    # deleted_at removed - not in current DB schema
     company: "Company" = Relationship(
         back_populates="prompts", sa_relationship_kwargs={"lazy": "noload"}
     )
@@ -52,7 +52,6 @@ class PromptManagerPublic(PromptManagerBase):
     id: int
     created_at: datetime
     updated_at: datetime
-    deleted_at: datetime | None
 
 class PromptManagersPublic(SQLModel):
     """Paginated response for prompts"""
