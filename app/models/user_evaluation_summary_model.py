@@ -14,6 +14,10 @@ class UserEvaluationSummary(SQLModel, table=True):
 
 class CompanyUserEvaluation(SQLModel, table=True):
     __tablename__ = "company_users_evaluations"
+    
+    # Configuración para trabajar con VIEWs
+    __table_args__ = {'extend_existing': True}
+    
     company_id: int = Field(primary_key=True)
     gerentes: Optional[int]
     evaluadores: Optional[int]
