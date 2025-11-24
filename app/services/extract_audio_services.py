@@ -6,6 +6,7 @@ import time
 import uuid
 
 import httpx
+from app.services.sentiment_analysis_services import analyze_sentiment_text
 from moviepy import VideoFileClip
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.concurrency import run_in_threadpool
@@ -104,6 +105,9 @@ async def handle_stream_to_audio(
 
         print("🧠 Enviando audio...")
         audio_result = await run_in_threadpool(audio_analysis, audio_path)
+        sentiment = analyze_sentiment_text(audio_result if isinstance(audio_result, str) else str(audio_result))
+        
+        print("📊 Sentimiento del transcript:", sentiment)
 
         print(f"📝 Transcripción completada:\n{audio_result}...")
 
@@ -116,6 +120,7 @@ async def handle_stream_to_audio(
             analysis=audio_result,
             executive_view=executive_view,
             operative_view=operative_view,
+            sentiment=sentiment  # <-- campo extra si lo soporta tu modelo
         )
 
         db_analysis = await create_evaluation_analysis(session, evaluation_analysis)
