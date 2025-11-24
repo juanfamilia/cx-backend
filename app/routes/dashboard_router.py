@@ -35,7 +35,8 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", include_in_schema=True)
+@router.get("", include_in_schema=False)
 async def get_dashboard(
     request: Request,
     session: AsyncSession = Depends(get_db),

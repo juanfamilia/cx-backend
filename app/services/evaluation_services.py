@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from sqlmodel import select
 
 from app.models.evaluation_model import (
@@ -63,13 +64,21 @@ async def get_evaluations(
     filter: Optional[str] = None,
     search: Optional[str] = None,
     company_id: Optional[int] = None,
+    campaigns_id: Optional[int] = None,
     user_id: Optional[int] = None,
 ):
+    from app.models.campaign_model import Campaign
+    
     q = select(Evaluation).where(Evaluation.deleted_at.is_(None))
 
-    # Company filter
+    # Company filter (requires JOIN with campaigns table)
     if company_id:
-        q = q.where(Evaluation.company_id == company_id)
+        q = q.join(Campaign, Evaluation.campaigns_id == Campaign.id)
+        q = q.where(Campaign.company_id == company_id)
+
+    # Campaign filter (direct)
+    if campaigns_id:
+        q = q.where(Evaluation.campaigns_id == campaigns_id)
 
     # User filter (role 3)
     if user_id:
@@ -88,14 +97,26 @@ async def get_evaluations(
         )
 
     q = q.order_by(Evaluation.created_at.desc())
+    
+    # Get total count before pagination
+    count_query = select(func.count()).select_from(q.subquery())
+    total_result = await session.execute(count_query)
+    total = total_result.scalar() or 0
+    
+    # Apply pagination
     q = q.offset(offset).limit(limit)
 
     res = await session.execute(q)
     evaluations = res.scalars().all()
 
-    total = len(evaluations)
-
-    return {"items": evaluations, "total": total}
+    return {
+        "data": evaluations,
+        "pagination": {
+            "first": offset,
+            "rows": limit,
+            "total": total
+        }
+    }
 
 
 # =========================================================
