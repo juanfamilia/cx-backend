@@ -5,10 +5,10 @@ Test cases for user services
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user_model import UserCreate
-from app.models.company_model import CompanyCreate
-from app.services.users_services import create_user, get_user_by_email
-from app.services.company_services import create_company
+from shared.models.user_model import UserCreate
+from shared.models.company_model import CompanyCreate
+from shared.services.users_services import create_user, get_user_by_email
+from shared.services.company_services import create_company
 
 
 @pytest.mark.asyncio

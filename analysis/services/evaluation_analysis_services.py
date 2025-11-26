@@ -4,12 +4,12 @@ import re
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.models.evaluation_analysis_model import (
+from shared.models.evaluation_analysis_model import (
     EvaluationAnalysis,
     EvaluationAnalysisBase,
     EvaluationAnalysisPublic,
 )
-from app.utils.exeptions import NotFoundException
+from shared.utils.exeptions import NotFoundException
 
 
 async def get_evaluation_analysis(
