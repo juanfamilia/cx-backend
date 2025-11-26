@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, List
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.models.evaluation_model import Evaluation
+    from shared.models.evaluation_model import Evaluation
 
 
 class Video(SQLModel, table=True):

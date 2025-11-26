@@ -2,21 +2,21 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.user_zone_model import (
+from shared.core.db import get_db
+from shared.models.user_zone_model import (
     AssignZonesRequest,
     UserZonePublic,
     UserZonesPublic,
 )
-from app.services.user_zone_services import (
+from shared.services.user_zone_services import (
     create_zone_users,
     get_user_zone,
     get_users_zones,
     soft_delete_user_zone,
     update_user_zone,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

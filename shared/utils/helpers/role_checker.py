@@ -1,4 +1,4 @@
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.exeptions import PermissionDeniedException
 
 
 def check_role_creation_permissions(creator_role: int, new_user_role: int) -> None:

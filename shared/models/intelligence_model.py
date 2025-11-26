@@ -4,8 +4,8 @@ from sqlalchemy import JSON
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from app.models.company_model import Company
-    from app.models.evaluation_model import Evaluation
+    from shared.models.company_model import Company
+    from shared.models.evaluation_model import Evaluation
 
 class InsightBase(SQLModel):
     """Base model for automated insights"""

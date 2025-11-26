@@ -2,22 +2,22 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.campaign_model import (
+from shared.core.db import get_db
+from shared.models.campaign_model import (
     CampaignBase,
     CampaignPublic,
     CampaignUpdate,
     CampaignsPublic,
 )
-from app.services.campaign_services import (
+from shared.services.campaign_services import (
     create_campaign,
     get_campaign,
     get_campaigns,
     soft_delete_campaign,
     update_campaign,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

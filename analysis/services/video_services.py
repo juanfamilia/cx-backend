@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.video_model import Video
+from shared.models.video_model import Video
 from app.utils.exeptions import NotFoundException
 
 

@@ -1,0 +1,12 @@
+# Railway Configuration for Siete CX
+# This file configures deployment settings for both services
+
+[build]
+builder = "dockerfile"
+
+[deploy]
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+startCommand = ""  # Uses CMD from Dockerfile

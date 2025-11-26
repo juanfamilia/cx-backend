@@ -1,22 +1,22 @@
 from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.prompt_manager_model import (
+from shared.core.db import get_db
+from shared.models.prompt_manager_model import (
     PromptManagerCreate,
     PromptManagerUpdate,
     PromptManagerPublic,
     PromptManagersPublic,
 )
-from app.services.prompt_manager_services import (
+from shared.services.prompt_manager_services import (
     get_prompt_by_id,
     get_prompts_by_company,
     create_prompt,
     update_prompt,
     soft_delete_prompt,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

@@ -274,7 +274,7 @@ async def create_in_app_notification(
     
     This uses the existing notification_model
     """
-    from app.models.notification_model import Notification
+    from shared.models.notification_model import Notification
     from datetime import datetime
     
     notification = Notification(

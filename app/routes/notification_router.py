@@ -2,15 +2,15 @@ from typing import List
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.notification_model import NotificationPublic
-from app.services.notification_services import (
+from shared.core.db import get_db
+from shared.models.notification_model import NotificationPublic
+from shared.services.notification_services import (
     get_notification_count,
     get_notifications,
     mark_as_read,
     soft_delete_notification,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.deps import check_company_payment_status, get_auth_user
 
 
 router = APIRouter(

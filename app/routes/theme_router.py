@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.theme_model import (
+from shared.core.db import get_db
+from shared.models.theme_model import (
     CompanyThemeCreate,
     CompanyThemeUpdate,
     CompanyThemePublic,
 )
-from app.services.theme_services import (
+from shared.services.theme_services import (
     get_company_theme,
     get_or_create_default_theme,
     create_company_theme,
@@ -16,8 +16,8 @@ from app.services.theme_services import (
     get_theme_css,
     preview_theme,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

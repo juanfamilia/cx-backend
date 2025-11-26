@@ -2,22 +2,22 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.campaign_goals_evaluator_model import (
+from shared.core.db import get_db
+from shared.models.campaign_goals_evaluator_model import (
     CampaignGoalsEvaluatorBase,
     CampaignGoalsEvaluatorPublic,
     CampaignGoalsEvaluatorUpdate,
     CampaignGoalsEvaluatorsPublic,
 )
-from app.services.campaign_goals_evaluator_services import (
+from shared.services.campaign_goals_evaluator_services import (
     create_campaign_goals_evaluator,
     get_campaign_goals_evaluator,
     get_campaign_goals_evaluator_by_id,
     soft_delete_campaign_goals_evaluator,
     update_campaign_goals_evaluator,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

@@ -3,15 +3,15 @@ from fastapi import APIRouter, Depends, Request, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.user_model import (
+from shared.core.db import get_db
+from shared.models.user_model import (
     UserCreate,
     UserPublic,
     UserUpdate,
     UserUpdateMe,
     UsersPublic,
 )
-from app.services.users_services import (
+from shared.services.users_services import (
     create_user,
     get_user,
     get_user_by_zone,
@@ -21,9 +21,9 @@ from app.services.users_services import (
     update_user,
     update_user_me,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
-from app.utils.helpers.role_checker import check_role_creation_permissions
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
+from shared.utils.helpers.role_checker import check_role_creation_permissions
 
 router = APIRouter(
     prefix="/user",

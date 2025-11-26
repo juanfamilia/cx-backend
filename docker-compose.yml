@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: siete_cx
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cx-api:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_URI=postgresql+asyncpg://postgres:postgres@postgres:5432/siete_cx
+      - ANALYSIS_SERVICE_URL=http://cx-analysis:8001
+      - JWT_SECRET_KEY=dev-secret-key-change-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRE=1440
+      - PORT=8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cx-analysis:
+        condition: service_started
+    volumes:
+      - ./app:/app/app
+      - ./shared:/app/shared
+    command: >
+      sh -c "
+      alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+
+  cx-analysis:
+    build:
+      context: .
+      dockerfile: analysis/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your-openai-key-here}
+      - CLOUDFLARE_STREAM_KEY=${CLOUDFLARE_STREAM_KEY:-your-cf-key}
+      - PORT=8001
+    volumes:
+      - ./analysis:/app
+      - ./shared:/app/shared
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+volumes:
+  postgres_data:

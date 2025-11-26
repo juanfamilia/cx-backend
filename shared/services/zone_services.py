@@ -2,8 +2,8 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.models.user_zone_model import UserZone
-from app.models.zone_model import Zone, ZonePublic
+from shared.models.user_zone_model import UserZone
+from shared.models.zone_model import Zone, ZonePublic
 from app.utils.exeptions import NotFoundException
 
 

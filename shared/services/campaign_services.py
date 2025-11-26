@@ -5,16 +5,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func, select
 from sqlalchemy.orm import selectinload
 
-from app.models.campaign_model import (
+from shared.models.campaign_model import (
     Campaign,
     CampaignBase,
     CampaignPublic,
     CampaignUpdate,
     CampaignsPublic,
 )
-from app.models.survey_forms_model import SurveyForm
-from app.models.survey_model import SurveySection
-from app.types.pagination import Pagination
+from shared.models.survey_forms_model import SurveyForm
+from shared.models.survey_model import SurveySection
+from shared.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 
 

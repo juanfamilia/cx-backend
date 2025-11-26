@@ -3,11 +3,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from starlette.requests import Request
 
-from app.core.db import get_db
-from app.core.security import decode_token, decode_token_no_verify
-from app.models.user_model import UserPublic
-from app.services.payment_services import is_company_payment_valid
-from app.services.users_services import get_user_by_email
+from shared.core.db import get_db
+from shared.core.security import decode_token, decode_token_no_verify
+from shared.models.user_model import UserPublic
+from shared.services.payment_services import is_company_payment_valid
+from shared.services.users_services import get_user_by_email
 from sqlalchemy.ext.asyncio import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")

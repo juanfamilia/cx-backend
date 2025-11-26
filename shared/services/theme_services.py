@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.models.theme_model import (
+from shared.models.theme_model import (
     CompanyTheme,
     CompanyThemeCreate,
     CompanyThemeUpdate,

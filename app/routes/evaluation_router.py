@@ -12,8 +12,8 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-from app.core.db import get_db
-from app.models.evaluation_model import (
+from shared.core.db import get_db
+from shared.models.evaluation_model import (
     Evaluation,
     EvaluationAnswerBase,
     EvaluationAnswerUpdate,
@@ -24,9 +24,9 @@ from app.models.evaluation_model import (
     StatusChangeRequest,
     StatusEnum,
 )
-from app.models.video_model import Video
-from app.services.cloudflare_stream_services import get_video_url
-from app.services.evaluation_services import (
+from shared.models.video_model import Video
+from shared.services.cloudflare_stream_services import get_video_url
+from shared.services.evaluation_services import (
     change_evaluation_status,
     create_evaluation,
     get_evaluation,
@@ -34,13 +34,13 @@ from app.services.evaluation_services import (
     soft_delete_evaluation,
     update_evaluation,
 )
-from app.services.extract_audio_services import handle_stream_to_audio
-from app.services.video_services import (
+from shared.services.extract_audio_services import handle_stream_to_audio
+from shared.services.video_services import (
     create_video,
     update_video_status,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

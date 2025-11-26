@@ -5,18 +5,18 @@ from sqlmodel import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.company_model import Company
-from app.models.survey_forms_model import (
+from shared.models.company_model import Company
+from shared.models.survey_forms_model import (
     SurveyForm,
     SurveyFormPublic,
     SurveyFormsCreate,
     SurveyFormsPublic,
 )
-from app.models.survey_model import (
+from shared.models.survey_model import (
     SurveySection,
     SurveyAspect,
 )
-from app.types.pagination import Pagination
+from shared.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
 from contextlib import asynccontextmanager

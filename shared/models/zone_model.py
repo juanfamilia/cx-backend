@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from sqlmodel import Column, DateTime, Relationship, SQLModel, Field, func
 
 if TYPE_CHECKING:
-    from app.models.user_zone_model import UserZone
-    from app.models.campaign_zone_model import CampaignZone
+    from shared.models.user_zone_model import UserZone
+    from shared.models.campaign_zone_model import CampaignZone
 
 
 class ZoneBase(SQLModel):

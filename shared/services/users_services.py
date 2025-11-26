@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
 from app.core.security import get_password_hash
-from app.models.company_model import Company
-from app.models.user_model import (
+from shared.models.company_model import Company
+from shared.models.user_model import (
     User,
     UserCreate,
     UserPublic,
@@ -15,8 +15,8 @@ from app.models.user_model import (
     UserUpdateMe,
     UsersPublic,
 )
-from app.models.user_zone_model import UserZone
-from app.types.pagination import Pagination
+from shared.models.user_zone_model import UserZone
+from shared.types.pagination import Pagination
 from app.utils.exeptions import InvalidCredentialsException, NotFoundException
 
 

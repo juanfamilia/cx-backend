@@ -2,14 +2,14 @@ from fastapi import APIRouter, Depends, Request, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.services.user_evaluation_summary_services import (
+from shared.core.db import get_db
+from shared.services.user_evaluation_summary_services import (
     get_company_users_evaluations,
     get_manager_summary,
     get_superadmin_summary,
     get_user_evaluation_summary,
 )
-from app.services.dashboard_widgets_services import (
+from shared.services.dashboard_widgets_services import (
     get_nps_trend_data,
     get_status_breakdown_data,
     get_top_evaluators_data,
@@ -19,12 +19,12 @@ from app.services.dashboard_widgets_services import (
     get_evaluation_by_month_data,
     get_ioc_ird_ces_averages,
 )
-from app.services.export_services import (
+from shared.services.export_services import (
     export_dashboard_to_excel,
     generate_pdf_report,
     prepare_export_data,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.deps import check_company_payment_status, get_auth_user
 from datetime import datetime
 
 

@@ -5,17 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import and_, func, or_, select
 from sqlalchemy.orm import selectinload
 
-from app.models.campaign_goals_evaluator_model import (
+from shared.models.campaign_goals_evaluator_model import (
     CampaignGoalsEvaluator,
     CampaignGoalsEvaluatorBase,
     CampaignGoalsEvaluatorPublic,
     CampaignGoalsEvaluatorUpdate,
     CampaignGoalsEvaluatorsPublic,
 )
-from app.models.campaign_model import Campaign
-from app.models.user_model import User
-from app.services.campaign_services import get_campaign
-from app.types.pagination import Pagination
+from shared.models.campaign_model import Campaign
+from shared.models.user_model import User
+from shared.services.campaign_services import get_campaign
+from shared.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 
 

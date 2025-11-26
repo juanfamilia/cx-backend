@@ -5,15 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import String, func, select
 from sqlalchemy.orm import selectinload
 
-from app.models.company_model import Company
-from app.models.payment_model import (
+from shared.models.company_model import Company
+from shared.models.payment_model import (
     Payment,
     PaymentBase,
     PaymentPublic,
     PaymentUpdate,
     PaymentsPublic,
 )
-from app.types.pagination import Pagination
+from shared.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 
 

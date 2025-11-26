@@ -4,14 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func, select
 from sqlalchemy.orm import selectinload
 
-from app.models.evaluation_model import Evaluation, StatusEnum
-from app.models.notification_model import (
+from shared.models.evaluation_model import Evaluation, StatusEnum
+from shared.models.notification_model import (
     Notification,
     NotificationBase,
     NotificationPublic,
 )
-from app.models.user_model import User
-from app.models.user_zone_model import UserZone
+from shared.models.user_model import User
+from shared.models.user_zone_model import UserZone
 from app.utils.exeptions import NotFoundException
 
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.widget_model import Widget, WidgetBase,WidgetCreate
-from app.core.db import get_db as get_session
+from shared.models.widget_model import Widget, WidgetBase,WidgetCreate
+from shared.core.db import get_db as get_session
 
 router = APIRouter()
 

@@ -3,9 +3,9 @@ from typing import List
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
-from app.models.campaign_model import Campaign, CampaignPublic
-from app.models.user_model import User, UserPublic
-from app.types.pagination import Pagination
+from shared.models.campaign_model import Campaign, CampaignPublic
+from shared.models.user_model import User, UserPublic
+from shared.types.pagination import Pagination
 
 
 class CampaignUserBase(SQLModel):

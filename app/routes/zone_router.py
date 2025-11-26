@@ -1,10 +1,10 @@
 from typing import List
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db import get_db
-from app.models.zone_model import ZonePublic
-from app.services.zone_services import get_limit_zones, get_zone, get_zones
-from app.utils.deps import check_company_payment_status, get_auth_user
+from shared.core.db import get_db
+from shared.models.zone_model import ZonePublic
+from shared.services.zone_services import get_limit_zones, get_zone, get_zones
+from shared.utils.deps import check_company_payment_status, get_auth_user
 
 
 router = APIRouter(

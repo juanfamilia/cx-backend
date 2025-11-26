@@ -2,7 +2,7 @@ from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.models.campaign_goals_progress_model import CampaignGoalsProgress
+from shared.models.campaign_goals_progress_model import CampaignGoalsProgress
 from app.utils.exeptions import NotFoundException
 
 

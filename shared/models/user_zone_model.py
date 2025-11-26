@@ -4,9 +4,9 @@ from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 
-from app.models.user_model import User, UserPublic
-from app.models.zone_model import Zone
-from app.types.pagination import Pagination
+from shared.models.user_model import User, UserPublic
+from shared.models.zone_model import Zone
+from shared.types.pagination import Pagination
 
 
 class UserZoneBase(SQLModel):

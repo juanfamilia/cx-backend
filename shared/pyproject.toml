@@ -1,0 +1,20 @@
+[project]
+name = "siete-cx-shared"
+version = "0.1.0"
+description = "Shared models, services, and utilities for Siete CX"
+requires-python = ">=3.10"
+dependencies = [
+    "sqlmodel>=0.0.24",
+    "sqlalchemy>=2.0.41",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.7.0",
+    "passlib>=1.7.4",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shared*"]

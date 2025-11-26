@@ -5,15 +5,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func, select, update
 from sqlalchemy.orm import selectinload
 
-from app.models.user_model import User
-from app.models.user_zone_model import (
+from shared.models.user_model import User
+from shared.models.user_zone_model import (
     AssignZonesRequest,
     UserZone,
     UserZonePublic,
     UserZonesPublic,
 )
-from app.models.zone_model import Zone
-from app.types.pagination import Pagination
+from shared.models.zone_model import Zone
+from shared.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 
 

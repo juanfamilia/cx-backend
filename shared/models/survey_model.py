@@ -6,8 +6,8 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 
 if TYPE_CHECKING:
-    from app.models.evaluation_model import EvaluationAnswer
-    from app.models.survey_forms_model import SurveyForm
+    from shared.models.evaluation_model import EvaluationAnswer
+    from shared.models.survey_forms_model import SurveyForm
 
 
 class AspectTypeEnum(str, Enum):

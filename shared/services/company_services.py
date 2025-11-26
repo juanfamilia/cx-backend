@@ -4,14 +4,14 @@ from fastapi import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func, select
 
-from app.models.company_model import (
+from shared.models.company_model import (
     CompaniesPublic,
     Company,
     CompanyBase,
     CompanyPublic,
     CompanyUpdate,
 )
-from app.types.pagination import Pagination
+from shared.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException
 
 

@@ -8,11 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
 from typing import Any
 
-from app.models.evaluation_model import Evaluation, StatusEnum
-from app.models.evaluation_analysis_model import EvaluationAnalysis
-from app.models.campaign_model import Campaign
-from app.models.user_model import User
-from app.models.company_model import Company
+from shared.models.evaluation_model import Evaluation, StatusEnum
+from shared.models.evaluation_analysis_model import EvaluationAnalysis
+from shared.models.campaign_model import Campaign
+from shared.models.user_model import User
+from shared.models.company_model import Company
 import json
 
 

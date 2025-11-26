@@ -3,8 +3,8 @@ import httpx
 from fastapi import APIRouter, Depends, Header, Response
 from pydantic import BaseModel
 
-from app.core.config import settings
-from app.utils.deps import get_auth_user
+from shared.core.config import settings
+from shared.utils.deps import get_auth_user
 
 
 router = APIRouter(

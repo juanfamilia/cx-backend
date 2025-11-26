@@ -5,15 +5,15 @@ from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 
-from app.models.campaign_model import Campaign, CampaignPublic
-from app.models.survey_model import SurveyAspect, SurveyAspectPublic
-from app.models.user_model import User, UserPublic
-from app.models.video_model import Video
-from app.types.pagination import Pagination
+from shared.models.campaign_model import Campaign, CampaignPublic
+from shared.models.survey_model import SurveyAspect, SurveyAspectPublic
+from shared.models.user_model import User, UserPublic
+from shared.models.video_model import Video
+from shared.types.pagination import Pagination
 
 if TYPE_CHECKING:
-    from app.models.notification_model import Notification
-    from app.models.evaluation_analysis_model import EvaluationAnalysis
+    from shared.models.notification_model import Notification
+    from shared.models.evaluation_analysis_model import EvaluationAnalysis
 
 
 class StatusEnum(str, Enum):

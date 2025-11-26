@@ -2,9 +2,9 @@
 from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from app.models.survey_forms_model import SurveyForm
-from app.models.survey_model import SurveySection, SurveyAspect
-from app.models.campaign_model import Campaign
+from shared.models.survey_forms_model import SurveyForm
+from shared.models.survey_model import SurveySection, SurveyAspect
+from shared.models.campaign_model import Campaign
 
 class ScoringError(Exception):
     pass

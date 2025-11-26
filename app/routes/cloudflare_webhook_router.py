@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.services.cloudflare_stream_services import get_video_url
+from shared.services.cloudflare_stream_services import get_video_url
 
 
 router = APIRouter(

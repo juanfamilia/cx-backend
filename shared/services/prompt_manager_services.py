@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
 
-from app.models.prompt_manager_model import (
+from shared.models.prompt_manager_model import (
     PromptManager,
     PromptManagerCreate,
     PromptManagerUpdate,

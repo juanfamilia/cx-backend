@@ -4,18 +4,18 @@ from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Relationship, SQLModel, Field, Column, DateTime, func
 
-from app.models.company_model import Company
-from app.types.pagination import Pagination
+from shared.models.company_model import Company
+from shared.types.pagination import Pagination
 
 
 if TYPE_CHECKING:
-    from app.models.user_zone_model import UserZone
-    from app.models.campaign_user_model import CampaignUser
-    from app.models.evaluation_model import Evaluation
-    from app.models.notification_model import Notification
-    from app.models.dashboard_config_model import DashboardConfig
-    from app.models.widget_model import UserDashboardWidget
-    from app.models.onboarding_model import OnboardingStatus
+    from shared.models.user_zone_model import UserZone
+    from shared.models.campaign_user_model import CampaignUser
+    from shared.models.evaluation_model import Evaluation
+    from shared.models.notification_model import Notification
+    from shared.models.dashboard_config_model import DashboardConfig
+    from shared.models.widget_model import UserDashboardWidget
+    from shared.models.onboarding_model import OnboardingStatus
 
 
 class GenderEnum(str, Enum):
@@ -133,5 +133,5 @@ class UsersPublic(BaseModel):
     pagination: Pagination
 
 
-from app.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator
-from app.models.onboarding_model import OnboardingStatus
+from shared.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator
+from shared.models.onboarding_model import OnboardingStatus

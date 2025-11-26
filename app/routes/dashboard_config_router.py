@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.dashboard_config_model import (
+from shared.core.db import get_db
+from shared.models.dashboard_config_model import (
     DashboardConfigCreate,
     DashboardConfigUpdate,
     DashboardConfigPublic,
     DashboardConfigsPublic,
     WidgetDefinitionsPublic,
 )
-from app.services.dashboard_config_services import (
+from shared.services.dashboard_config_services import (
     get_user_dashboard_configs,
     get_default_dashboard_config,
     get_dashboard_config_by_id,
@@ -19,8 +19,8 @@ from app.services.dashboard_config_services import (
     get_available_widgets,
     get_default_layout_for_role,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

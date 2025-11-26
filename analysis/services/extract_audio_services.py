@@ -6,25 +6,25 @@ import time
 import uuid
 
 import httpx
-from app.services.sentiment_analysis_services import analyze_sentiment_text
+from shared.services.sentiment_analysis_services import analyze_sentiment_text
 from moviepy import VideoFileClip
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.concurrency import run_in_threadpool
 from sqlmodel import select
 
-from app.core.db import get_db
-from app.models.evaluation_analysis_model import EvaluationAnalysisBase
-from app.services.evaluation_analysis_services import (
+from shared.core.db import get_db
+from shared.models.evaluation_analysis_model import EvaluationAnalysisBase
+from shared.services.evaluation_analysis_services import (
     create_evaluation_analysis,
     split_analysis,
 )
-from app.services.cloudflare_rs_services import r2_upload
-from app.services.cloudflare_stream_services import (
+from shared.services.cloudflare_rs_services import r2_upload
+from shared.services.cloudflare_stream_services import (
     enable_download,
     get_download_status,
     wait_until_ready_to_stream,
 )
-from app.services.openai_services import audio_analysis
+from shared.services.openai_services import audio_analysis
 
 
 async def download_video(url: str, ruta_destino: str):
@@ -127,13 +127,13 @@ async def handle_stream_to_audio(
         
         # 🧠 INTELLIGENCE ENGINE: Auto-generate insights and tags
         try:
-            from app.services.intelligence_services import (
+            from shared.services.intelligence_services import (
                 generate_insights_from_analysis,
                 auto_tag_evaluation,
                 check_alert_thresholds
             )
-            from app.models.evaluation_model import Evaluation
-            from app.models.campaign_model import Campaign
+            from shared.models.evaluation_model import Evaluation
+            from shared.models.campaign_model import Campaign
             
             # Get evaluation to retrieve company_id
             eval_query = (

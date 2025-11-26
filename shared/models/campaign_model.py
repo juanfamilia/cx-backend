@@ -5,14 +5,14 @@ from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 if TYPE_CHECKING:
-    from app.models.campaign_user_model import CampaignUser
-    from app.models.campaign_zone_model import CampaignZone
-    from app.models.evaluation_model import Evaluation
-    from app.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator
+    from shared.models.campaign_user_model import CampaignUser
+    from shared.models.campaign_zone_model import CampaignZone
+    from shared.models.evaluation_model import Evaluation
+    from shared.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator
 
-from app.models.company_model import Company
-from app.models.survey_forms_model import SurveyForm, SurveyFormPublic
-from app.types.pagination import Pagination
+from shared.models.company_model import Company
+from shared.models.survey_forms_model import SurveyForm, SurveyFormPublic
+from shared.types.pagination import Pagination
 
 
 class ChannelType(str, Enum):

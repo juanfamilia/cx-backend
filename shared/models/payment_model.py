@@ -3,8 +3,8 @@ from typing import List
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
-from app.models.company_model import Company
-from app.types.pagination import Pagination
+from shared.models.company_model import Company
+from shared.types.pagination import Pagination
 
 
 class PaymentBase(SQLModel):

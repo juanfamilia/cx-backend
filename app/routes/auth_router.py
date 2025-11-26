@@ -4,16 +4,16 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.core.security import (
+from shared.core.db import get_db
+from shared.core.security import (
     create_access_token,
     verify_password,
 )
-from app.core.config import settings
-from app.models.user_model import UserPublic
-from app.services.users_services import get_user_by_email
-from app.utils.deps import check_company_payment_status
-from app.utils.exeptions import (
+from shared.core.config import settings
+from shared.models.user_model import UserPublic
+from shared.services.users_services import get_user_by_email
+from shared.utils.deps import check_company_payment_status
+from shared.utils.exeptions import (
     DisabledException,
     InvalidCredentialsException,
 )

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from sqlmodel import select
 
-from app.models.evaluation_model import (
+from shared.models.evaluation_model import (
     Evaluation,
     EvaluationAnswer,
     EvaluationCreate,
@@ -18,7 +18,7 @@ from app.models.evaluation_model import (
     StatusChangeRequest,
 )
 from app.utils.exeptions import NotFoundException
-from app.services.scoring_services import calculate_evaluation_scores, ScoringError
+from shared.services.scoring_services import calculate_evaluation_scores, ScoringError
 
 
 # =========================================================
@@ -67,7 +67,7 @@ async def get_evaluations(
     campaigns_id: Optional[int] = None,
     user_id: Optional[int] = None,
 ):
-    from app.models.campaign_model import Campaign
+    from shared.models.campaign_model import Campaign
     
     q = select(Evaluation).where(Evaluation.deleted_at.is_(None))
 

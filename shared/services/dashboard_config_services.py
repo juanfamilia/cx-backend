@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
 
-from app.models.dashboard_config_model import (
+from shared.models.dashboard_config_model import (
     DashboardConfig,
     DashboardConfigCreate,
     DashboardConfigUpdate,

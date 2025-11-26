@@ -3,9 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta
 from sqlmodel import select, func
 
-from app.core.db import get_db
-from app.models.intelligence_model import Insight, InsightsPublic
-from app.services.intelligence_services import get_insights_for_company, mark_insight_as_read
+from shared.core.db import get_db
+from shared.models.intelligence_model import Insight, InsightsPublic
+from shared.services.intelligence_services import get_insights_for_company, mark_insight_as_read
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 

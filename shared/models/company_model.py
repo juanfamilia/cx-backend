@@ -2,15 +2,15 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
-from app.types.pagination import Pagination
-from app.models.theme_model import CompanyTheme
+from shared.types.pagination import Pagination
+from shared.models.theme_model import CompanyTheme
 
 if TYPE_CHECKING:
-    from app.models.user_model import User
-    from app.models.payment_model import Payment
-    from app.models.campaign_model import Campaign
-    from app.models.prompt_manager_model import PromptManager
-    from app.models.widget_model import Widget
+    from shared.models.user_model import User
+    from shared.models.payment_model import Payment
+    from shared.models.campaign_model import Campaign
+    from shared.models.prompt_manager_model import PromptManager
+    from shared.models.widget_model import Widget
 
 class CompanyBase(SQLModel):
     name: str

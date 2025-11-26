@@ -1,5 +1,5 @@
 from openai import OpenAI
-from app.core.config import settings
+from shared.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -199,7 +199,7 @@ async def audio_analysis_with_company_prompt(
         company_id: Company ID to fetch custom prompt
         session: Database session
     """
-    from app.services.prompt_manager_services import get_active_prompt_for_company
+    from shared.services.prompt_manager_services import get_active_prompt_for_company
     
     # Try to get company's active prompt
     custom_prompt_obj = await get_active_prompt_for_company(

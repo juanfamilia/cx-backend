@@ -9,7 +9,7 @@ from sqlmodel import select, func
 import json
 from typing import Any
 
-from app.models.intelligence_model import (
+from shared.models.intelligence_model import (
     Insight,
     InsightCreate,
     InsightPublic,
@@ -26,9 +26,9 @@ from app.models.intelligence_model import (
     TrendPublic,
     TrendsPublic,
 )
-from app.models.evaluation_analysis_model import EvaluationAnalysis
-from app.models.evaluation_model import Evaluation
-from app.models.campaign_model import Campaign
+from shared.models.evaluation_analysis_model import EvaluationAnalysis
+from shared.models.evaluation_model import Evaluation
+from shared.models.campaign_model import Campaign
 from app.utils.exeptions import NotFoundException
 
 

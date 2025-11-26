@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.evaluation_analysis_model import EvaluationAnalysisPublic
-from app.services.evaluation_analysis_services import get_evaluation_analysis
+from shared.core.db import get_db
+from shared.models.evaluation_analysis_model import EvaluationAnalysisPublic
+from shared.services.evaluation_analysis_services import get_evaluation_analysis
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 

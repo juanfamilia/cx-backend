@@ -4,10 +4,10 @@ from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 if TYPE_CHECKING:
-    from app.models.campaign_model import Campaign
+    from shared.models.campaign_model import Campaign
 
-from app.types.pagination import Pagination
-from app.models.survey_model import (
+from shared.types.pagination import Pagination
+from shared.models.survey_model import (
     SurveySection,
     SurveySectionCreate,
     SurveySectionPublic,

@@ -4,7 +4,7 @@ from sqlalchemy import JSON
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from app.models.user_model import User
+    from shared.models.user_model import User
 
 
 class DashboardConfigBase(SQLModel):

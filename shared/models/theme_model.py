@@ -4,7 +4,7 @@ from sqlalchemy import JSON
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from app.models.company_model import Company
+    from shared.models.company_model import Company
 
 
 class CompanyThemeBase(SQLModel):

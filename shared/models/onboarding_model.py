@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from sqlmodel import Field, Relationship, SQLModel, Column, DateTime, func, ARRAY, String
 
 if TYPE_CHECKING:
-    from app.models.user_model import User
+    from shared.models.user_model import User
 
 class OnboardingStep(str, Enum):
     """Steps del proceso de onboarding"""
@@ -65,5 +65,5 @@ class OnboardingStatusPublic(SQLModel):
     is_completed: bool
     next_step: str | None  # Siguiente step sugerido
     
-from app.models.user_model import User
+from shared.models.user_model import User
 

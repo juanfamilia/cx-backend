@@ -1,8 +1,8 @@
 from datetime import datetime
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
-from app.models.evaluation_model import Evaluation, EvaluationPublic, StatusEnum
-from app.models.user_model import User, UserPublic
+from shared.models.evaluation_model import Evaluation, EvaluationPublic, StatusEnum
+from shared.models.user_model import User, UserPublic
 
 
 class NotificationBase(SQLModel):

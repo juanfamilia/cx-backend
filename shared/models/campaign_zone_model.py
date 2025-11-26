@@ -3,10 +3,10 @@ from typing import List
 from pydantic import BaseModel
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
-from app.models.campaign_model import Campaign, CampaignPublic
-from app.models.campaign_user_model import CampaignUserPublic
-from app.models.zone_model import Zone, ZonePublic
-from app.types.pagination import Pagination
+from shared.models.campaign_model import Campaign, CampaignPublic
+from shared.models.campaign_user_model import CampaignUserPublic
+from shared.models.zone_model import Zone, ZonePublic
+from shared.types.pagination import Pagination
 
 
 class CampaignZoneBase(SQLModel):

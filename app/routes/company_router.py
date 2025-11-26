@@ -2,22 +2,22 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.company_model import (
+from shared.core.db import get_db
+from shared.models.company_model import (
     CompaniesPublic,
     CompanyBase,
     CompanyPublic,
     CompanyUpdate,
 )
-from app.services.company_services import (
+from shared.services.company_services import (
     create_company,
     get_companies,
     get_company,
     soft_delete_company,
     update_company,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

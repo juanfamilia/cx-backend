@@ -2,22 +2,22 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.models.survey_forms_model import (
+from shared.core.db import get_db
+from shared.models.survey_forms_model import (
     SurveyForm,
     SurveyFormPublic,
     SurveyFormsCreate,
     SurveyFormsPublic,
 )
-from app.services.survey_forms_services import (
+from shared.services.survey_forms_services import (
     create_survey_form,
     get_form_by_id,
     get_forms_by_company,
     soft_delete_form,
     update_survey_form,
 )
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exeptions import PermissionDeniedException
 
 
 router = APIRouter(

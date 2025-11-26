@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, Any
 from sqlmodel import SQLModel, Field, Column, DateTime, JSON, Relationship, func
 
-from app.models.evaluation_model import Evaluation
+from shared.models.evaluation_model import Evaluation
 
 
 class EvaluationAnalysisBase(SQLModel):

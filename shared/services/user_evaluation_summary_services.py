@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.models.user_evaluation_summary_model import (
+from shared.models.user_evaluation_summary_model import (
     CompanyUserEvaluation,
     ManagerSummary,
     SuperadminSummary,
