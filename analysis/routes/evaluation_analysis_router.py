@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from shared.core.db import get_db
 from shared.models.evaluation_analysis_model import EvaluationAnalysisPublic
 from shared.services.evaluation_analysis_services import get_evaluation_analysis
-from app.utils.deps import check_company_payment_status, get_auth_user
-from app.utils.exeptions import PermissionDeniedException
+from shared.utils.deps import check_company_payment_status, get_auth_user
+from shared.utils.exceptions import PermissionDeniedException
 
 
 router = APIRouter(
