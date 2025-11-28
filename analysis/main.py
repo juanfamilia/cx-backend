@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from analysis.routes import intelligence_router, evaluation_analysis_router
+from routes import intelligence_router, evaluation_analysis_router
 
 app = FastAPI(
     title="Siete CX - Analysis Service",
