@@ -9,7 +9,7 @@ from shared.models.evaluation_analysis_model import (
     EvaluationAnalysisBase,
     EvaluationAnalysisPublic,
 )
-from shared.utils.exeptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_evaluation_analysis(
