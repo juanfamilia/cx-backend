@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
 
-from app.core.security import get_password_hash
+from shared.core.security import get_password_hash
 from shared.models.company_model import Company
 from shared.models.user_model import (
     User,
@@ -17,7 +17,7 @@ from shared.models.user_model import (
 )
 from shared.models.user_zone_model import UserZone
 from shared.types.pagination import Pagination
-from app.utils.exeptions import InvalidCredentialsException, NotFoundException
+from shared.utils.exceptions import InvalidCredentialsException, NotFoundException
 
 
 async def get_users(
