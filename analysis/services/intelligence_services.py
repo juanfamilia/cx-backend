@@ -29,7 +29,7 @@ from shared.models.intelligence_model import (
 from shared.models.evaluation_analysis_model import EvaluationAnalysis
 from shared.models.evaluation_model import Evaluation
 from shared.models.campaign_model import Campaign
-from app.utils.exeptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 # ===== INSIGHT GENERATION =====
