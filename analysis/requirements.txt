@@ -19,6 +19,14 @@ pydantic-settings==2.7.0
 python-dotenv==1.0.0
 httpx==0.28.0
 
+# Database (needed by shared.core.db)
 sqlalchemy[asyncio]==2.0.36
 asyncpg==0.30.0
 
+# Authentication & Security (needed by shared.core.security and shared.utils)
+PyJWT==2.10.1
+python-multipart==0.0.20
+passlib[bcrypt]==1.7.4
+
+# Email validation (needed by shared models)
+email-validator==2.2.0
