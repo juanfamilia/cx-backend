@@ -5,7 +5,7 @@ from sqlmodel import select, func
 
 from shared.core.db import get_db
 from shared.models.intelligence_model import Insight, InsightsPublic
-from shared.services.intelligence_services import get_insights_for_company, mark_insight_as_read
+from services.intelligence_services import get_insights_for_company, mark_insight_as_read
 from shared.utils.deps import check_company_payment_status, get_auth_user
 from shared.utils.exceptions import PermissionDeniedException
 
