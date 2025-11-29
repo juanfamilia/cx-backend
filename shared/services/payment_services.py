@@ -14,7 +14,7 @@ from shared.models.payment_model import (
     PaymentsPublic,
 )
 from shared.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_payments(
