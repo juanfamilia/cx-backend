@@ -8,7 +8,7 @@ from shared.models.user_model import User, UserCreate, UserUpdate, UserPublic
 from shared.models.company_model import Company, CompanyUpdate, CompanyPublic
 from shared.models.campaign_model import Campaign, CampaignUpdate, CampaignPublic
 from shared.models.evaluation_model import Evaluation, EvaluationCreate, EvaluationUpdate, EvaluationPublic
-from shared.models.evaluation_analysis_model import EvaluationAnalysis, EvaluationAnalysisCreate, EvaluationAnalysisPublic
+from shared.models.evaluation_analysis_model import EvaluationAnalysis, EvaluationAnalysisPublic
 from shared.models.zone_model import Zone, ZoneCreate, ZoneUpdate, ZonePublic
 from shared.models.survey_model import Survey, SurveyCreate, SurveyUpdate, SurveyPublic
 from shared.models.survey_forms_model import SurveyForm, SurveyFormCreate, SurveyFormUpdate, SurveyFormPublic
@@ -34,7 +34,7 @@ __all__ = [
     "Company",  "CompanyUpdate", "CompanyPublic",
     "Campaign", "CampaignUpdate", "CampaignPublic",
     "Evaluation", "EvaluationCreate", "EvaluationUpdate", "EvaluationPublic",
-    "EvaluationAnalysis", "EvaluationAnalysisCreate", "EvaluationAnalysisPublic",
+    "EvaluationAnalysis",  "EvaluationAnalysisPublic",
     "Zone", "ZoneCreate", "ZoneUpdate", "ZonePublic",
     "Survey", "SurveyCreate", "SurveyUpdate", "SurveyPublic",
     "SurveyForm", "SurveyFormCreate", "SurveyFormUpdate", "SurveyFormPublic",
