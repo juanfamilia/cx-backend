@@ -6,7 +6,7 @@ This allows Alembic to detect models and maintains backward compatibility
 # Import all models from shared
 from shared.models.user_model import User, UserCreate, UserUpdate, UserPublic
 from shared.models.company_model import Company, CompanyUpdate, CompanyPublic
-from shared.models.campaign_model import Campaign, CampaignCreate, CampaignUpdate, CampaignPublic
+from shared.models.campaign_model import Campaign, CampaignUpdate, CampaignPublic
 from shared.models.evaluation_model import Evaluation, EvaluationCreate, EvaluationUpdate, EvaluationPublic
 from shared.models.evaluation_analysis_model import EvaluationAnalysis, EvaluationAnalysisCreate, EvaluationAnalysisPublic
 from shared.models.zone_model import Zone, ZoneCreate, ZoneUpdate, ZonePublic
@@ -32,7 +32,7 @@ from shared.models.user_evaluation_summary_model import UserEvaluationSummary, U
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserPublic",
     "Company",  "CompanyUpdate", "CompanyPublic",
-    "Campaign", "CampaignCreate", "CampaignUpdate", "CampaignPublic",
+    "Campaign", "CampaignUpdate", "CampaignPublic",
     "Evaluation", "EvaluationCreate", "EvaluationUpdate", "EvaluationPublic",
     "EvaluationAnalysis", "EvaluationAnalysisCreate", "EvaluationAnalysisPublic",
     "Zone", "ZoneCreate", "ZoneUpdate", "ZonePublic",
