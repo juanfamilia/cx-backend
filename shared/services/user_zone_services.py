@@ -14,7 +14,7 @@ from shared.models.user_zone_model import (
 )
 from shared.models.zone_model import Zone
 from shared.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException
+from app.utils.exceptions import NotFoundException
 
 
 async def get_users_zones(
