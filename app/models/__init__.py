@@ -28,7 +28,7 @@ from shared.models.video_model import Video
 from shared.models.campaign_user_model import CampaignUser
 from shared.models.campaign_zone_model import CampaignZone
 from shared.models.user_zone_model import UserZone
-from shared.models.onboarding_model import Onboarding
+from shared.models.onboarding_model import OnboardingStatus
 from shared.models.campaign_goals_evaluator_model import CampaignGoalsEvaluator
 from shared.models.campaign_goals_progress_model import CampaignGoalsProgress
 from shared.models.user_evaluation_summary_model import UserEvaluationSummary
@@ -58,7 +58,7 @@ __all__ = [
     "CampaignUser",
     "CampaignZone",
     "UserZone",
-    "Onboarding",
+    "OnboardingStatus",
     "CampaignGoalsEvaluator",
     "CampaignGoalsProgress",
     "UserEvaluationSummary",
