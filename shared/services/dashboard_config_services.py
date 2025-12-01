@@ -13,7 +13,7 @@ from shared.models.dashboard_config_model import (
     WidgetDefinitionPublic,
     WidgetDefinitionsPublic,
 )
-from app.utils.exceptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 # Dashboard Configuration Services
