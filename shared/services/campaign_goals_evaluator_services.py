@@ -16,7 +16,7 @@ from shared.models.campaign_model import Campaign
 from shared.models.user_model import User
 from shared.services.campaign_services import get_campaign
 from shared.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException
+from app.utils.exceptions import NotFoundException
 
 
 async def get_campaign_goals_evaluator(
