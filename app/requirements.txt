@@ -29,3 +29,4 @@ twilio==9.5.0
 pandas==2.2.3
 pydantic-settings==2.7.0
 python-dotenv==1.0.0
+psycopg2-binary==2.9.10 # driver Postgres sync para Alembic
