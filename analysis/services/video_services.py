@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.models.video_model import Video
-from app.utils.exeptions import NotFoundException
+from app.utils.exceptions import NotFoundException
 
 
 async def create_video(session: AsyncSession, url: str, title: str) -> Video:
