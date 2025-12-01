@@ -21,7 +21,7 @@ from shared.models.user_model import User
 from shared.models.user_zone_model import UserZone
 from shared.models.zone_model import Zone
 from shared.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_assigments_by_user(
