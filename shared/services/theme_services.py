@@ -9,7 +9,7 @@ from shared.models.theme_model import (
     DEFAULT_THEME,
     generate_theme_css,
 )
-from app.utils.exceptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_company_theme(
