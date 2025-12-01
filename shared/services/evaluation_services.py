@@ -17,7 +17,7 @@ from shared.models.evaluation_model import (
     EvaluationAnswerUpdate,
     StatusChangeRequest,
 )
-from app.utils.exeptions import NotFoundException
+from app.utils.exceptions import NotFoundException
 from shared.services.scoring_services import calculate_evaluation_scores, ScoringError
 
 
