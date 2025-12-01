@@ -23,7 +23,6 @@ from shared.models.intelligence_model import (
     Trend,
 )
 from shared.models.prompt_manager_model import PromptManager
-from shared.models.theme_model import Theme
 from shared.models.widget_model import Widget
 from shared.models.video_model import Video
 from shared.models.campaign_user_model import CampaignUser
@@ -54,7 +53,6 @@ __all__ = [
     "AlertThreshold",
     "Trend",
     "PromptManager",
-    "Theme",
     "Widget",
     "Video",
     "CampaignUser",
