@@ -12,7 +12,7 @@ from shared.models.company_model import (
     CompanyUpdate,
 )
 from shared.types.pagination import Pagination
-from app.utils.exceptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_companies(
