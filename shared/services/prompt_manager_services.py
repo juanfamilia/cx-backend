@@ -9,7 +9,7 @@ from shared.models.prompt_manager_model import (
     PromptManagerPublic,
     PromptManagersPublic,
 )
-from app.utils.exceptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_prompt_by_id(
