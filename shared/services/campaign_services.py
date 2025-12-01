@@ -15,7 +15,7 @@ from shared.models.campaign_model import (
 from shared.models.survey_forms_model import SurveyForm
 from shared.models.survey_model import SurveySection
 from shared.types.pagination import Pagination
-from app.utils.exceptions import NotFoundException
+from ashared.utils.exceptions import NotFoundException
 
 
 async def get_campaigns(
