@@ -4,7 +4,7 @@ from sqlmodel import select
 
 from shared.models.user_zone_model import UserZone
 from shared.models.zone_model import Zone, ZonePublic
-from app.utils.exeptions import NotFoundException
+from app.utils.exceptions import NotFoundException
 
 
 async def get_zones(session: AsyncSession) -> List[ZonePublic]:
