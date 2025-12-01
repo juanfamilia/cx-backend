@@ -6,7 +6,7 @@ from jwt.exceptions import DecodeError
 from passlib.context import CryptContext
 
 from app.core.config import settings
-from app.utils.exceptions import InvalidTokenException
+from shared.utils.exceptions import InvalidTokenException
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
