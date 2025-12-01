@@ -43,12 +43,15 @@ if config.config_file_name:
 target_metadata = SQLModel.metadata
 
 def get_url():
-    """Get database URL from environment variable, converting asyncpg to psycopg2 for sync operations."""
-    postgres_uri = os.getenv("POSTGRES_URI")
+    """Get database URL from environment variables, converting asyncpg to psycopg2 for sync operations."""
+    postgres_uri = os.getenv("POSTGRES_URI") or os.getenv("DATABASE_URL")
+    print("DEBUG POSTGRES_URI raw:", postgres_uri)
     if not postgres_uri:
-        raise ValueError("POSTGRES_URI environment variable is not set")
+        raise ValueError("POSTGRES_URI or DATABASE_URL environment variable is not set")
+    postgres_uri = postgres_uri.strip().strip('"').strip("'")
     if "postgresql+asyncpg://" in postgres_uri:
         postgres_uri = postgres_uri.replace("postgresql+asyncpg://", "postgresql://")
+    print("DEBUG POSTGRES_URI final:", postgres_uri)
     return postgres_uri
 
 def run_migrations_offline() -> None:
