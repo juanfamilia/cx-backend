@@ -13,7 +13,7 @@ from shared.core.config import settings
 from shared.models.user_model import UserPublic
 from shared.services.users_services import get_user_by_email
 from shared.utils.deps import check_company_payment_status
-from shared.utils.exeptions import (
+from shared.utils.exceptions import (
     DisabledException,
     InvalidCredentialsException,
 )
