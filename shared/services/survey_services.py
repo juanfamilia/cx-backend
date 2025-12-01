@@ -4,7 +4,7 @@ from sqlmodel import select
 from sqlalchemy.orm import selectinload
 
 from shared.models.survey_model import SurveySection
-from app.utils.exeptions import NotFoundException
+from app.utils.exceptions import NotFoundException
 
 
 async def get_survey(session: AsyncSession) -> List[SurveySection]:
