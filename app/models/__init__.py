@@ -15,7 +15,13 @@ from shared.models.survey_forms_model import SurveyForm
 from shared.models.notification_model import Notification
 from shared.models.payment_model import Payment
 from shared.models.dashboard_config_model import DashboardConfig
-from shared.models.intelligence_model import Intelligence
+from shared.models.intelligence_model import (
+    Insight,
+    Tag,
+    EvaluationTag,
+    AlertThreshold,
+    Trend,
+)
 from shared.models.prompt_manager_model import PromptManager
 from shared.models.theme_model import Theme
 from shared.models.widget_model import Widget
@@ -42,7 +48,11 @@ __all__ = [
     "Notification",
     "Payment",
     "DashboardConfig",
-    "Intelligence",
+    "Insight",
+    "Tag",
+    "EvaluationTag",
+    "AlertThreshold",
+    "Trend",
     "PromptManager",
     "Theme",
     "Widget",
