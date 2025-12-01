@@ -7,7 +7,7 @@ from shared.models.user_evaluation_summary_model import (
     SuperadminSummary,
     UserEvaluationSummary,
 )
-from app.utils.exceptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_user_evaluation_summary(
