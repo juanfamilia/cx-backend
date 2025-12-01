@@ -10,7 +10,7 @@ from shared.models.campaign_model import Campaign
 from shared.models.evaluation_model import Evaluation
 from shared.models.evaluation_analysis_model import EvaluationAnalysis
 from shared.models.zone_model import Zone
-from shared.models.survey_model import Survey
+from shared.models.survey_model import SurveySection, SurveyAspect
 from shared.models.survey_forms_model import SurveyForm
 from shared.models.notification_model import Notification
 from shared.models.payment_model import Payment
@@ -36,7 +36,8 @@ __all__ = [
     "Evaluation",
     "EvaluationAnalysis",
     "Zone",
-    "Survey",
+    "SurveySection",
+    "SurveyAspect",
     "SurveyForm",
     "Notification",
     "Payment",
