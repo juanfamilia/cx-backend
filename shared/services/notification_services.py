@@ -12,7 +12,7 @@ from shared.models.notification_model import (
 )
 from shared.models.user_model import User
 from shared.models.user_zone_model import UserZone
-from app.utils.exceptions import NotFoundException
+from shared.utils.exceptions import NotFoundException
 
 
 async def get_notifications(
