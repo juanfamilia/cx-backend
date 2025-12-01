@@ -17,7 +17,7 @@ from shared.models.survey_model import (
     SurveyAspect,
 )
 from shared.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException, PermissionDeniedException
+from app.utils.exceptions import NotFoundException, PermissionDeniedException
 
 from contextlib import asynccontextmanager
 
