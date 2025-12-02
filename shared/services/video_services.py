@@ -1,11 +1,37 @@
-# shared/services/video_services.py
-import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
 
-ANALYSIS_BASE_URL = "http://siete-analysis.railway.internal"
+from shared.models.video_model import Video
+from app.utils.exceptions import NotFoundException
 
-async def handle_video_analysis(file_bytes: bytes) -> dict:
-    async with httpx.AsyncClient(timeout=60) as client:
-        files = {"file": ("video.mp4", file_bytes, "video/mp4")}
-        resp = await client.post(f"{ANALYSIS_BASE_URL}/video/analyze", files=files)
-        resp.raise_for_status()
-        return resp.json()
+
+async def create_video(session: AsyncSession, url: str, title: str) -> Video:
+
+    video = Video(url=url, title=title)
+
+    session.add(video)
+    await session.commit()
+    await session.refresh(video)
+
+    return video
+
+
+async def get_video(session: AsyncSession, video_id: str) -> Video:
+
+    video = await session.get(Video, video_id)
+
+    if not video:
+        raise NotFoundException("Video not found")
+
+    return video
+
+
+async def update_video_status(session: AsyncSession, video_id: int) -> Video:
+
+    # Buscar el video en la base de datos
+    video = await get_video(session, video_id)
+
+    video.status = "available"
+    await session.commit()
+    await session.refresh(video)
+
+    return video
