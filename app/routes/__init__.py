@@ -14,7 +14,6 @@ from .company_router import router as company_router
 from .dashboard_router import router as dashboard_router
 from .dashboard_config_router import router as dashboard_config_router
 from .evaluation_router import router as evaluation_router
-from .evaluation_analysis_router import router as evaluation_analysis_router  # solo si existe y define `router`
 from .intelligence_router import router as intelligence_router
 from .notification_router import router as notification_router
 from .payment_router import router as payment_router
@@ -24,3 +23,4 @@ from .theme_router import router as theme_router
 from .user_router import router as user_router
 from .user_zone_router import router as user_zone_router
 from .zone_router import router as zone_router
+
