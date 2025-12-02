@@ -13,7 +13,6 @@ from app.routes import (
     company_router,
     dashboard_router,
     dashboard_config_router,
-    evaluation_analysis_router,
     evaluation_router,
     intelligence_router,
     notification_router,
