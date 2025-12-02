@@ -22,7 +22,7 @@ from shared.services.users_services import (
     update_user_me,
 )
 from shared.utils.deps import check_company_payment_status, get_auth_user
-from shared.utils.exeptions import PermissionDeniedException
+from shared.utils.exceptions import PermissionDeniedException
 from shared.utils.helpers.role_checker import check_role_creation_permissions
 
 router = APIRouter(
