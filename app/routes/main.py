@@ -14,7 +14,7 @@ from app.routes import (
     dashboard_router,
     dashboard_config_router,
     evaluation_router,
-    evaluation_analysis_router,
+    #evaluation_analysis_router,
     notification_router,
     payment_router,
     prompt_manager_router,
@@ -45,7 +45,7 @@ api_router.include_router(dashboard_router.router)
 api_router.include_router(dashboard_config_router.router)
 api_router.include_router(cloudflare_router.router)
 api_router.include_router(cloudflare_webhook_router.router)
-api_router.include_router(evaluation_analysis_router.router)
+#api_router.include_router(evaluation_analysis_router.router)
 api_router.include_router(campaign_goals_evaluator_router.router)
 api_router.include_router(campaign_goals_progress_router.router)
 api_router.include_router(prompt_manager_router.router)
