@@ -14,10 +14,10 @@ app.title = settings.PROJECT_NAME
 
 # CORS Configuration - Allow specific origins for production
 origins = [
-    "https://cxfrontendnew.vercel.app",
+    "https://cx-frontendnew.vercel.app",
     "http://localhost:3000",
     "http://localhost:4200",
-    "*"  # Fallback for development
+    #"*"  # Fallback for development
 ]
 
 # app.add_middleware(HTTPSRedirectMiddleware)
