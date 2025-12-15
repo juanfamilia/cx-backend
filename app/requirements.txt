@@ -1,6 +1,7 @@
 # FastAPI & Web
 fastapi
 uvicorn[standard]
+python-multipart==0.0.9  # o la versión estable actual
 
 # ORM & Migrations
 alembic>=1.13,<2.0
