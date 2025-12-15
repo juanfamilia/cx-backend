@@ -1,20 +1,21 @@
 # FastAPI & Web
-fastapi==0.115.0
-uvicorn[standard]==0.32.0
-python-multipart==0.0.18
+fastapi
+uvicorn[standard]
 
-# Database
-sqlmodel==0.0.24
+# ORM & Migrations
+alembic>=1.13,<2.0
 sqlalchemy==2.0.41
+sqlmodel==0.0.24
+
+# Database drivers
 asyncpg==0.30.0
-alembic==1.15.0
+psycopg2-binary==2.9.10
 
 # Auth
 pyjwt==2.10.0
 passlib[bcrypt]==1.7.4
-bcrypt==4.2.0
 
-# HTTP Client (para llamar a /analysis)
+# HTTP Client
 httpx==0.28.0
 
 # Cloud Services
@@ -25,9 +26,8 @@ cloudflare==4.3.1
 sendgrid==6.11.0
 twilio==9.5.0
 
-# Utilities
-pandas==2.2.3
-pydantic-settings>=2.6.0
+# Config & Utilities
 pydantic>=2.10.0
+pydantic-settings>=2.6.1
 python-dotenv==1.0.0
-psycopg2-binary==2.9.10 # driver Postgres sync para Alembic
+pandas==2.2.3
