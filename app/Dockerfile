@@ -47,5 +47,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 EXPOSE 8000
 
 # Run migrations and start server
-CMD alembic upgrade head && \
+CMD python -m alembic upgrade head && \
     uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1
