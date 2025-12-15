@@ -1,5 +1,5 @@
 # Stage 1: Builder - Instalar dependencias
-FROM python:3.13-slim as builder
+FROM python:3.11-slim as builder
 
 WORKDIR /build
 
