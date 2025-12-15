@@ -17,7 +17,7 @@ COPY app/requirements.txt /build/
 RUN pip install --no-cache-dir --user -r /build/requirements.txt
 
 # Stage 2: Runtime - Imagen ligera sin compiladores
-FROM python:3.13-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
