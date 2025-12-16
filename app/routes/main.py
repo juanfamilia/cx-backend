@@ -18,7 +18,6 @@ from app.routes import (
     notification_router,
     payment_router,
     prompt_manager_router,
-    scheduled_jobs_router,
     survey_router,
     theme_router,
     user_router,
@@ -51,5 +50,4 @@ api_router.include_router(campaign_goals_evaluator_router)
 api_router.include_router(campaign_goals_progress_router)
 api_router.include_router(prompt_manager_router)
 api_router.include_router(intelligence_router)
-api_router.include_router(scheduled_jobs_router)
 api_router.include_router(theme_router)
