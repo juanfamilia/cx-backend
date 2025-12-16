@@ -223,14 +223,11 @@ async def get_forms_by_company(
     forms = result.scalars().all()
 
     return SurveyFormsPublic(
-        data={
-            "items": [SurveyFormPublic.model_validate(f) for f in forms],
-            "total": len(forms),
-        },
+        data=forms,  # List[SurveyForm]
         pagination=Pagination(
-        first=offset,   # índice inicial de la página
-        rows=limit,     # cantidad de registros por página
-        total=len(forms),
+            first=offset,
+            rows=limit,
+            total=len(forms),
         ),
     )
 
