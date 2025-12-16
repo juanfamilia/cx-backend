@@ -19,6 +19,10 @@ class CompanyBase(SQLModel):
     address: str
     state: str
     country: str = "DO"
+    # Integration settings
+    slack_webhook_url: str | None = Field(default=None)
+    webhook_url: str | None = Field(default=None)
+    webhook_secret: str | None = Field(default=None)
 
 class CompanyUpdate(SQLModel):
     name: str | None = Field(default=None)
@@ -27,6 +31,9 @@ class CompanyUpdate(SQLModel):
     address: str | None = Field(default=None)
     state: str | None = Field(default=None)
     country: str | None = Field(default=None)
+    slack_webhook_url: str | None = Field(default=None)
+    webhook_url: str | None = Field(default=None)
+    webhook_secret: str | None = Field(default=None)
 
 class Company(CompanyBase, table=True):
     __tablename__ = "companies"

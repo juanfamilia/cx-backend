@@ -169,6 +169,55 @@ async def handle_stream_to_audio(
                         session, evaluation_id, db_analysis, company_id
                     )
                     print(f"✅ {len(alerts)} alertas generadas")
+                    
+                    # 📧 NOTIFY CRITICAL INSIGHTS (Email + SMS)
+                    critical_insights = [i for i in insights if i.severity in ['critical', 'high']]
+                    if critical_insights or alerts:
+                        try:
+                            from shared.services.notification_integration_services import notification_orchestrator
+                            from shared.services.webhook_services import integration_orchestrator
+                            from shared.models.user_model import User
+                            
+                            # Get admin users from company to notify
+                            admin_query = select(User).where(
+                                User.company_id == company_id,
+                                User.role.in_([1, 2]),  # Admin and Manager
+                                User.deleted_at == None
+                            )
+                            admin_result = await session.execute(admin_query)
+                            admins = admin_result.scalars().all()
+                            
+                            for insight in critical_insights:
+                                # 📧 Email/SMS notifications to admins
+                                for admin in admins:
+                                    print(f"📧 Notificando insight crítico a {admin.email}...")
+                                    await notification_orchestrator.notify_critical_insight(
+                                        session=session,
+                                        user=admin,
+                                        insight_type=insight.insight_type,
+                                        severity=insight.severity,
+                                        title=insight.title,
+                                        description=insight.description,
+                                        evaluation_id=evaluation_id
+                                    )
+                                
+                                # 🔔 Slack + Webhooks
+                                print(f"🔔 Enviando webhooks para insight: {insight.title}")
+                                await integration_orchestrator.notify_critical_insight(
+                                    session=session,
+                                    company_id=company_id,
+                                    insight_type=insight.insight_type,
+                                    severity=insight.severity,
+                                    title=insight.title,
+                                    description=insight.description,
+                                    evaluation_id=evaluation_id,
+                                    suggested_actions=insight.suggested_actions
+                                )
+                            
+                            print(f"📧 {len(critical_insights)} notificaciones enviadas (email + webhooks)")
+                        except Exception as notify_error:
+                            print(f"⚠️ Error en notificaciones (no crítico): {notify_error}")
+                            
         except Exception as intel_error:
             print(f"⚠️ Error en intelligence engine (no crítico): {intel_error}")
             # Continue even if intelligence fails
