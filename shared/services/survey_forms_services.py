@@ -228,9 +228,9 @@ async def get_forms_by_company(
             "total": len(forms),
         },
         pagination=Pagination(
-            offset=offset,
-            limit=limit,
-            total=len(forms),
+        first=offset,   # índice inicial de la página
+        rows=limit,     # cantidad de registros por página
+        total=len(forms),
         ),
     )
 
