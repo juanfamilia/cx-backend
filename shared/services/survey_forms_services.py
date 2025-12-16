@@ -21,8 +21,9 @@ from shared.utils.exceptions import NotFoundException, PermissionDeniedException
 
 from contextlib import asynccontextmanager
 
+
 @asynccontextmanager
-async def transaction(session):
+async def transaction(session: AsyncSession):
     try:
         yield
         await session.commit()
@@ -30,12 +31,23 @@ async def transaction(session):
         await session.rollback()
         raise e
 
+
 async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
-    q = select(SurveySection).where(SurveySection.form_id == form.id, SurveySection.deleted_at == None)
+    q = select(SurveySection).where(
+        SurveySection.form_id == form.id,
+        SurveySection.deleted_at == None,
+    )
     res = await session.execute(q)
     sections = res.scalars().all()
     for s in sections:
-        q2 = select(SurveyAspect).where(SurveyAspect.section_id == s.id, SurveyAspect.deleted_at == None).order_by(SurveyAspect.order)
+        q2 = (
+            select(SurveyAspect)
+            .where(
+                SurveyAspect.section_id == s.id,
+                SurveyAspect.deleted_at == None,
+            )
+            .order_by(SurveyAspect.order)
+        )
         r2 = await session.execute(q2)
         aspects = r2.scalars().all()
         n = len(aspects)
@@ -45,6 +57,7 @@ async def _distribute_aspect_weights(session: AsyncSession, form: SurveyForm):
         for asp in aspects:
             asp.maximum_score = int(per) if per.is_integer() else per
             session.add(asp)
+
 
 async def _validate_and_distribute_section_aspects(section):
     number_sum = sum(a.maximum_score for a in section.aspects if a.type == "NUMBER")
@@ -60,15 +73,18 @@ async def _validate_and_distribute_section_aspects(section):
             if a.type == "BOOLEAN":
                 a.maximum_score = boolean_value
 
+
 async def create_survey_form(
     session: AsyncSession, company_id: int, data: SurveyFormsCreate
 ) -> SurveyForm:
     total_sections = sum(sec.maximum_score for sec in data.sections)
     if abs(total_sections - 100.0) > 1e-6:
-        raise PermissionDeniedException("The sum of section maximum_score must be 100")
+        raise PermissionDeniedException(
+            "The sum of section maximum_score must be 100"
+        )
 
     for section in data.sections:
-        _validate_and_distribute_section_aspects(section)
+        await _validate_and_distribute_section_aspects(section)
 
     async with transaction(session):
         form = SurveyForm(title=data.title, company_id=company_id)
@@ -99,6 +115,7 @@ async def create_survey_form(
         await session.refresh(form)
         return form
 
+
 async def update_survey_form(
     session: AsyncSession,
     form_id: int,
@@ -107,10 +124,12 @@ async def update_survey_form(
 ) -> SurveyForm:
     total_sections = sum(sec.maximum_score for sec in data.sections)
     if abs(total_sections - 100.0) > 1e-6:
-        raise PermissionDeniedException("The sum of section maximum_score must be 100")
+        raise PermissionDeniedException(
+            "The sum of section maximum_score must be 100"
+        )
 
     for section in data.sections:
-        _validate_and_distribute_section_aspects(section)
+        await _validate_and_distribute_section_aspects(section)
 
     async with transaction(session):
         result = await session.execute(
@@ -129,11 +148,15 @@ async def update_survey_form(
         await session.execute(
             delete(SurveyAspect).where(
                 SurveyAspect.section_id.in_(
-                    select(SurveySection.id).where(SurveySection.form_id == form_id)
+                    select(SurveySection.id).where(
+                        SurveySection.form_id == form_id
+                    )
                 )
             )
         )
-        await session.execute(delete(SurveySection).where(SurveySection.form_id == form_id))
+        await session.execute(
+            delete(SurveySection).where(SurveySection.form_id == form_id)
+        )
         await session.flush()
 
         for section in data.sections:
@@ -160,15 +183,19 @@ async def update_survey_form(
         await session.refresh(form)
         return form
 
-async def get_form_by_id(session: AsyncSession, form_id: int, company_id: int) -> SurveyForm | None:
+
+async def get_form_by_id(
+    session: AsyncSession, form_id: int, company_id: int
+) -> SurveyForm | None:
     result = await session.execute(
         select(SurveyForm).where(
             SurveyForm.id == form_id,
             SurveyForm.company_id == company_id,
-            SurveyForm.deleted_at == None
+            SurveyForm.deleted_at == None,
         )
     )
     return result.scalar_one_or_none()
+
 
 async def get_forms_by_company(
     session: AsyncSession,
@@ -176,25 +203,44 @@ async def get_forms_by_company(
     offset: int = 0,
     limit: int = 10,
     filter: Optional[str] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
 ) -> SurveyFormsPublic:
     query = select(SurveyForm).where(
         SurveyForm.company_id == company_id,
-        SurveyForm.deleted_at == None
+        SurveyForm.deleted_at == None,
     )
-    if filter:
-        query = query.where(SurveyForm.status == filter)
+
+    # De momento, no usamos 'filter' porque no hay campo seguro (status/is_active)
+    # if filter:
+    #     ...
+
     if search:
         search_term = f"%{search}%"
         query = query.where(SurveyForm.title.ilike(search_term))
+
     query = query.offset(offset).limit(limit)
     result = await session.execute(query)
     forms = result.scalars().all()
-    return SurveyFormsPublic(items=forms, total=len(forms))
+
+    return SurveyFormsPublic(
+        data={
+            "items": [SurveyFormPublic.model_validate(f) for f in forms],
+            "total": len(forms),
+        },
+        pagination=Pagination(
+            offset=offset,
+            limit=limit,
+            total=len(forms),
+        ),
+    )
+
 
 async def soft_delete_form(session: AsyncSession, form_id: int):
     result = await session.execute(
-        select(SurveyForm).where(SurveyForm.id == form_id, SurveyForm.deleted_at == None)
+        select(SurveyForm).where(
+            SurveyForm.id == form_id,
+            SurveyForm.deleted_at == None,
+        )
     )
     form = result.scalar_one_or_none()
     if not form:
