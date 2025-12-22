@@ -3,9 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from shared.models.user_zone_model import UserZone
-from shared.models.zone_model import Zone, ZonePublic
+from shared.models.zone_model import Zone, ZoneBase, ZonePublic
 from shared.utils.exceptions import NotFoundException
 
+async def create_zone(session: AsyncSession, data: ZoneBase, user) -> ZonePublic:
+    zone = Zone(**data.model_dump())
+    session.add(zone)
+    await session.commit()
+    await session.refresh(zone)
+    return zone
 
 async def get_zones(session: AsyncSession) -> List[ZonePublic]:
     query = select(Zone).where(Zone.deleted_at == None).order_by(Zone.id)
