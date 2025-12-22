@@ -52,7 +52,7 @@ def is_allowed_origin(origin: str) -> bool:
     if env_mode == "production":
         return origin == "https://cx-frontendnew.vercel.app"
     
-    wildcards = ["vercel.app", "emergentagent.com", "localhost"]
+    wildcards = ["vercel.app", "emergentagent.com", "localhost","siete-api-staging.up.railway.app"]
     return any(wildcard in origin for wildcard in wildcards)
 
 # Rutas
