@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from shared.models.evaluation_model import (
@@ -26,7 +27,9 @@ from shared.services.scoring_services import calculate_evaluation_scores, Scorin
 # =========================================================
 
 async def get_evaluation(session: AsyncSession, evaluation_id: int) -> Evaluation:
-    q = select(Evaluation).where(
+    q = select(Evaluation).options(
+        selectinload(Evaluation.campaign)
+    ).where(
         Evaluation.id == evaluation_id,
         Evaluation.deleted_at.is_(None)
     )
