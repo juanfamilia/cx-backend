@@ -40,4 +40,5 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     conn = op.get_bind()
+    # Solo borrar las zonas sembradas por esta migración
     conn.execute(text("DELETE FROM zones WHERE id IN (3,4,5);"))
