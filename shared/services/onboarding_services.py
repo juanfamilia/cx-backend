@@ -1,13 +1,15 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
 class OnboardingService:
 
-    def ensure_exists(user_id: int, company_id: int, session):
-        ...
-
-    def get_status(user_id: int, company_id: int, session):
-        ...
-
-    def complete_step(user_id: int, step: OnboardingStep, session):
-        ...
-
-    def complete_tour(user_id: int, tour: ProductTour, session):
-        ...
+    @staticmethod
+    async def ensure_exists(
+        user_id: int,
+        company_id: int,
+        session: AsyncSession,
+    ) -> None:
+        """
+        Garantiza que exista un estado de onboarding para el usuario.
+        Por ahora no hace nada.
+        """
+        return
