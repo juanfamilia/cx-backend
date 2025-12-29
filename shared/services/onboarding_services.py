@@ -1,3 +1,4 @@
+print("🟢 ensure_exists CALLED", user_id)
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
