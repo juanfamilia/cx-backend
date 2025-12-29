@@ -1,4 +1,3 @@
-print("🟢 ensure_exists CALLED", user_id)
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +13,7 @@ class OnboardingService:
         company_id: int,  # se recibe aunque el modelo aún no lo use
         session: AsyncSession,
     ) -> None:
+        print("🟢 ensure_exists CALLED", user_id)
         """
         Garantiza que exista un estado de onboarding para el usuario.
         Es idempotente: si existe, no hace nada.
