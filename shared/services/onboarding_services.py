@@ -14,6 +14,7 @@ class OnboardingService:
     """
     Servicio responsable del ciclo de vida del onboarding:
     - Garantizar existencia
+    - Exponer estado al frontend
     - Registrar progreso
     - Marcar finalización
     """
@@ -63,6 +64,35 @@ class OnboardingService:
         )
 
     # ─────────────────────────────
+    # CONSULTA DE ESTADO (FRONTEND)
+    # ─────────────────────────────
+    @staticmethod
+    async def get_status(
+        user_id: int,
+        session: AsyncSession,
+    ) -> dict:
+        onboarding = await session.get(OnboardingStatus, user_id)
+
+        if not onboarding:
+            logger.debug(
+                "get_status sin onboarding | user_id=%s",
+                user_id,
+            )
+            return {
+                "show_onboarding": False,
+                "progress_percentage": 0,
+                "completed_tours": [],
+                "is_completed": True,
+            }
+
+        return {
+            "show_onboarding": not onboarding.is_completed,
+            "progress_percentage": onboarding.progress_percentage,
+            "completed_tours": onboarding.tours_completed or [],
+            "is_completed": onboarding.is_completed,
+        }
+
+    # ─────────────────────────────
     # REGISTRO DE TOURS
     # ─────────────────────────────
     @staticmethod
@@ -109,6 +139,11 @@ class OnboardingService:
         onboarding = await session.get(OnboardingStatus, user_id)
 
         if not onboarding:
+            logger.warning(
+                "complete_step sin onboarding | user_id=%s step=%s",
+                user_id,
+                step,
+            )
             return
 
         if step not in onboarding.steps_completed:
@@ -120,14 +155,16 @@ class OnboardingService:
         await session.commit()
 
     # ─────────────────────────────
-    # CÁLCULO DE PROGRESO
+    # CÁLCULO DE PROGRESO (INTERNO)
     # ─────────────────────────────
     @staticmethod
-    async def _recalculate_progress(onboarding: OnboardingStatus) -> None:
+    async def _recalculate_progress(
+        onboarding: OnboardingStatus,
+    ) -> None:
         """
-        Regla simple (ajustable):
-        - Cada tour vale lo mismo
-        - Si todos los tours definidos están completos → onboarding completo
+        Regla simple y explícita:
+        - Cada tour tiene el mismo peso
+        - Si todos los tours están completos → onboarding completado
         """
 
         EXPECTED_TOURS = {
