@@ -1,7 +1,14 @@
+# shared/services/onboarding_services.py
+
+import logging
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from shared.models.onboarding_model import OnboardingStatus
+
+logger = logging.getLogger(__name__)
+logger.info("🔥 onboarding_services.py LOADED")
 
 
 class OnboardingService:
@@ -12,9 +19,9 @@ class OnboardingService:
         company_id: int,
         session: AsyncSession,
     ) -> None:
-        
-        print("🟢 ensure_exists CALLED", user_id)
-        
+
+        print("🔥 ensure_exists BODY ENTERED", user_id)
+
         # 1️⃣ Verificar si ya existe
         result = await session.execute(
             select(OnboardingStatus).where(
@@ -24,7 +31,10 @@ class OnboardingService:
         onboarding = result.scalar_one_or_none()
 
         if onboarding:
-            return  # ya existe, no hacer nada
+            print("🟡 onboarding ya existe", onboarding.id)
+            return
+
+        print("🟢 creando onboarding", user_id)
 
         # 2️⃣ Crear registro inicial
         onboarding = OnboardingStatus(
@@ -40,3 +50,5 @@ class OnboardingService:
 
         session.add(onboarding)
         await session.commit()
+
+        print("✅ onboarding creado y commit hecho")
