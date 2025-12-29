@@ -12,6 +12,9 @@ class OnboardingService:
         company_id: int,
         session: AsyncSession,
     ) -> None:
+        
+        print("🟢 ensure_exists CALLED", user_id)
+        
         # 1️⃣ Verificar si ya existe
         result = await session.execute(
             select(OnboardingStatus).where(
