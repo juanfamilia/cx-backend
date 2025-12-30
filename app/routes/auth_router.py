@@ -1,23 +1,3 @@
-from datetime import timedelta
-from typing import Annotated
-
-from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from shared.core.db import get_db
-from shared.core.security import create_access_token, verify_password
-from shared.core.config import settings
-from shared.models.user_model import UserPublic
-from shared.services.users_services import get_user_by_email
-from shared.services.onboarding_services import OnboardingService
-from shared.utils.deps import check_company_payment_status
-from shared.utils.exceptions import DisabledException, InvalidCredentialsException
-
-
-router = APIRouter(prefix="/auth", tags=["Auth"])
-
-
 @router.post("/login")
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -25,15 +5,19 @@ async def login(
 ):
     user = await get_user_by_email(session, form_data.username)
 
-    await check_company_payment_status(user, session)
-
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(
+        form_data.password,
+        user.hashed_password,
+    ):
         raise InvalidCredentialsException()
 
     if user.deleted_at:
         raise DisabledException("Usuario desactivado o eliminado")
 
-    # 🔹 Mejora: asegurar onboarding (no rompe login)
+    # Verificar pago SOLO si el usuario es válido
+    await check_company_payment_status(user, session)
+
+    # Asegurar onboarding (NO romper login si falla)
     try:
         await OnboardingService.ensure_exists(
             user_id=user.id,
@@ -41,6 +25,7 @@ async def login(
             session=session,
         )
     except Exception:
+        # Log silencioso aceptable en login
         pass
 
     public_user = UserPublic.model_validate(user)
