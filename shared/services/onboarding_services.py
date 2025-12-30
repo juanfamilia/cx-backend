@@ -1,5 +1,3 @@
-# shared/services/onboarding_services.py
-
 import logging
 from datetime import datetime
 from sqlalchemy import select
@@ -71,18 +69,23 @@ class OnboardingService:
         user_id: int,
         session: AsyncSession,
     ) -> dict:
-        onboarding = await session.get(OnboardingStatus, user_id)
+        result = await session.execute(
+            select(OnboardingStatus).where(
+                OnboardingStatus.user_id == user_id
+            )
+        )
+        onboarding = result.scalar_one_or_none()
 
         if not onboarding:
-            logger.debug(
+            logger.warning(
                 "get_status sin onboarding | user_id=%s",
                 user_id,
             )
             return {
-                "show_onboarding": False,
+                "show_onboarding": True,
                 "progress_percentage": 0,
                 "completed_tours": [],
-                "is_completed": True,
+                "is_completed": False,
             }
 
         return {
@@ -102,7 +105,12 @@ class OnboardingService:
         completion_type: str,  # completed | skipped
         session: AsyncSession,
     ) -> None:
-        onboarding = await session.get(OnboardingStatus, user_id)
+        result = await session.execute(
+            select(OnboardingStatus).where(
+                OnboardingStatus.user_id == user_id
+            )
+        )
+        onboarding = result.scalar_one_or_none()
 
         if not onboarding:
             logger.warning(
@@ -136,7 +144,12 @@ class OnboardingService:
         step: str,
         session: AsyncSession,
     ) -> None:
-        onboarding = await session.get(OnboardingStatus, user_id)
+        result = await session.execute(
+            select(OnboardingStatus).where(
+                OnboardingStatus.user_id == user_id
+            )
+        )
+        onboarding = result.scalar_one_or_none()
 
         if not onboarding:
             logger.warning(
@@ -161,12 +174,6 @@ class OnboardingService:
     async def _recalculate_progress(
         onboarding: OnboardingStatus,
     ) -> None:
-        """
-        Regla simple y explícita:
-        - Cada tour tiene el mismo peso
-        - Si todos los tours están completos → onboarding completado
-        """
-
         EXPECTED_TOURS = {
             "welcome",
             "dashboard",
