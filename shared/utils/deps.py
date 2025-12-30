@@ -58,3 +58,6 @@ async def check_company_payment_status(
         )
 
     return True
+
+# ✅ Alias oficial
+get_current_user = get_auth_user
