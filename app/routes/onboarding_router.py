@@ -28,21 +28,17 @@ async def get_onboarding_status(
     )
 
 
-@router.post(
-    "/tour",
-    status_code=status.HTTP_204_NO_CONTENT,
-)
-async def complete_tour(
+@router.post("/tour")
+async def complete_onboarding_tour(
     payload: CompleteTourRequest,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ):
-    """
-    Registra la finalización o salto de un tour de onboarding.
-    """
     await OnboardingService.complete_tour(
         user_id=current_user.id,
         tour=payload.tour,
         completion_type=payload.completion_type,
         session=session,
     )
+    return {"status": "ok"}
+
