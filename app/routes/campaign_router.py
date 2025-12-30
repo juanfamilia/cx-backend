@@ -21,7 +21,7 @@ from shared.utils.exceptions import PermissionDeniedException
 
 
 router = APIRouter(
-    prefix="/campaign",
+    prefix="/campaigns",
     tags=["Campaign"],
     dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )

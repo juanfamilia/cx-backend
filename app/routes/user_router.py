@@ -26,7 +26,7 @@ from shared.utils.exceptions import PermissionDeniedException
 from shared.utils.helpers.role_checker import check_role_creation_permissions
 
 router = APIRouter(
-    prefix="/user",
+    prefix="/users",
     tags=["User"],
     dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )

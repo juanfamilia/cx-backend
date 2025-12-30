@@ -14,7 +14,7 @@ from shared.utils.deps import check_company_payment_status, get_auth_user
 
 
 router = APIRouter(
-    prefix="/notification",
+    prefix="/notifications",
     tags=["Notification"],
     dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )

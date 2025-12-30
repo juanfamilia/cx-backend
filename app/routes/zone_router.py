@@ -8,7 +8,7 @@ from shared.utils.deps import check_company_payment_status, get_auth_user
 
 
 router = APIRouter(
-    prefix="/zone",
+    prefix="/zones",
     tags=["Zone"],
     dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )
