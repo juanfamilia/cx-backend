@@ -35,7 +35,7 @@ async def get_all(
     limit: int = Query(default=10, le=100),
     filter: Optional[str] = None,
     search: Optional[str] = None,
-) -> #CompaniesPublic:
+): 
 
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="retrieve companies")
