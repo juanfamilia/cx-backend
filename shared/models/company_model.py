@@ -12,6 +12,10 @@ if TYPE_CHECKING:
     from shared.models.prompt_manager_model import PromptManager
     from shared.models.widget_model import Widget
 
+
+# ==========================
+# BASE (uso interno / DB)
+# ==========================
 class CompanyBase(SQLModel):
     name: str
     phone: str
@@ -19,25 +23,37 @@ class CompanyBase(SQLModel):
     address: str
     state: str
     country: str = "DO"
-    # Integration settings
+
+    # Integraciones (persisten en DB)
     slack_webhook_url: str | None = Field(default=None)
     webhook_url: str | None = Field(default=None)
     webhook_secret: str | None = Field(default=None)
 
+
+# ==========================
+# UPDATE (PATCH / PUT)
+# ==========================
 class CompanyUpdate(SQLModel):
-    name: str | None = Field(default=None)
-    phone: str | None = Field(default=None)
-    email: str | None = Field(default=None)
-    address: str | None = Field(default=None)
-    state: str | None = Field(default=None)
-    country: str | None = Field(default=None)
-    slack_webhook_url: str | None = Field(default=None)
-    webhook_url: str | None = Field(default=None)
-    webhook_secret: str | None = Field(default=None)
+    name: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    address: str | None = None
+    state: str | None = None
+    country: str | None = None
 
+    # URLs sí, secret NO
+    slack_webhook_url: str | None = None
+    webhook_url: str | None = None
+
+
+# ==========================
+# DB TABLE
+# ==========================
 class Company(CompanyBase, table=True):
     __tablename__ = "companies"
+
     id: int | None = Field(default=None, primary_key=True)
+
     created_at: datetime = Field(sa_column=Column(DateTime, default=func.now()))
     updated_at: datetime = Field(
         sa_column=Column(DateTime, default=func.now(), onupdate=func.now())
@@ -49,14 +65,4 @@ class Company(CompanyBase, table=True):
     campaigns: list["Campaign"] = Relationship(back_populates="company")
     prompts: list["PromptManager"] = Relationship(back_populates="company")
     theme: CompanyTheme | None = Relationship(back_populates="company")
-    widgets: list["Widget"] = Relationship(back_populates="company")  # ⬅️ AGREGAR ESTA LÍNEA
-
-class CompanyPublic(CompanyBase):
-    id: int
-    created_at: datetime | None
-    updated_at: datetime | None
-    deleted_at: datetime | None
-
-class CompaniesPublic(BaseModel):
-    data: List[CompanyPublic]
-    pagination: Pagination
+    widgets: list["Widget"] = Relationship(back_populates="company")
