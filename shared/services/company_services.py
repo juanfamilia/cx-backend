@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import func, select
 
 from shared.models.company_model import (
-    CompaniesPublic,
+    #CompaniesPublic,
     Company,
     CompanyBase,
     CompanyPublic,
@@ -21,7 +21,7 @@ async def get_companies(
     limit: int = Query(default=10, le=50),
     filter: Optional[str] = None,
     search: Optional[str] = None,
-) -> CompaniesPublic:
+) :
 
     query = select(Company, func.count().over().label("total")).where(
         Company.deleted_at == None
