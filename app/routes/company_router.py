@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.core.db import get_db
 from shared.models.company_model import (
-    CompaniesPublic,
+    #CompaniesPublic,
     CompanyBase,
     CompanyPublic,
     CompanyUpdate,
@@ -35,7 +35,7 @@ async def get_all(
     limit: int = Query(default=10, le=100),
     filter: Optional[str] = None,
     search: Optional[str] = None,
-) -> CompaniesPublic:
+) -> #CompaniesPublic:
 
     if request.state.user.role != 0:
         raise PermissionDeniedException(custom_message="retrieve companies")
