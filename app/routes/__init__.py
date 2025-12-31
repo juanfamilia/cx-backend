@@ -24,6 +24,8 @@ from .theme_router import router as theme_router
 from .user_router import router as user_router
 from .user_zone_router import router as user_zone_router
 from .zone_router import router as zone_router
+from .scheduled_jobs_router import router as scheduled_jobs_router
+from .integration_test_router import router as integration_test_router
 
 
 

@@ -24,6 +24,8 @@ from app.routes import (
     user_router,
     user_zone_router,
     zone_router,
+    scheduled_jobs_router,
+    integration_test_router,
 )
 
 api_router = APIRouter()
@@ -53,3 +55,5 @@ api_router.include_router(campaign_goals_progress_router)
 api_router.include_router(prompt_manager_router)
 api_router.include_router(intelligence_router)
 api_router.include_router(theme_router)
+api_router.include_router(scheduled_jobs_router)
+api_router.include_router(integration_test_router)

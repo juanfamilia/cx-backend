@@ -16,7 +16,7 @@ class SlackService:
     """Slack webhook integration"""
     
     def __init__(self):
-        self.default_webhook_url = getattr(settings, 'SLACK_WEBHOOK_URL', None)
+        self.default_webhook_url = settings.SLACK_WEBHOOK_URL
     
     async def send_message(
         self,

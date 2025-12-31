@@ -5,7 +5,7 @@ Email (SendGrid) and SMS (Twilio) integrations
 
 import os
 from typing import Dict, List
-from app.core.config import settings
+from shared.core.config import settings
 
 
 # ===== EMAIL NOTIFICATIONS (SendGrid) =====
@@ -14,10 +14,9 @@ class EmailService:
     """SendGrid email service integration"""
     
     def __init__(self):
-        # Note: SendGrid API key should be in environment variables
-        self.api_key = os.getenv("SENDGRID_API_KEY", "")
-        self.from_email = os.getenv("SENDGRID_FROM_EMAIL", "noreply@sieteic.com")
-        self.from_name = os.getenv("SENDGRID_FROM_NAME", "Siete CX")
+        self.api_key = settings.SENDGRID_API_KEY
+        self.from_email = settings.SENDGRID_FROM_EMAIL
+        self.from_name = settings.SENDGRID_FROM_NAME
     
     async def send_email(
         self,
@@ -206,9 +205,9 @@ class SMSService:
     """Twilio SMS service integration"""
     
     def __init__(self):
-        self.account_sid = os.getenv("TWILIO_ACCOUNT_SID", "")
-        self.auth_token = os.getenv("TWILIO_AUTH_TOKEN", "")
-        self.from_number = os.getenv("TWILIO_FROM_NUMBER", "")
+        self.account_sid = settings.TWILIO_ACCOUNT_SID
+        self.auth_token = settings.TWILIO_AUTH_TOKEN
+        self.from_number = settings.TWILIO_FROM_NUMBER
     
     async def send_sms(
         self,

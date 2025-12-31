@@ -18,14 +18,35 @@ class Settings(BaseSettings):
     JWT_EXPIRE: int = 1440
     POSTGRES_URI: str = "postgresql+asyncpg://localhost/db"
     
-    # Optional settings (for staging/development)
+    # Cloudflare settings
     CLOUDFLARE_STREAM_KEY: Optional[str] = None
     CLOUDFLARE_ACCOUNT_ID: Optional[str] = None
     R2_ACCESS_KEY_ID: Optional[str] = None
     R2_SECRET_ACCESS_KEY: Optional[str] = None
     R2_BUCKET: Optional[str] = None
     R2_ENDPOINT_URL: Optional[str] = None
+    
+    # OpenAI settings
     OPENAI_API_KEY: Optional[str] = None
+    
+    # SendGrid Email settings
+    SENDGRID_API_KEY: Optional[str] = None
+    SENDGRID_FROM_EMAIL: str = "noreply@sieteic.com"
+    SENDGRID_FROM_NAME: str = "Siete CX"
+    
+    # Twilio SMS settings
+    TWILIO_ACCOUNT_SID: Optional[str] = None
+    TWILIO_AUTH_TOKEN: Optional[str] = None
+    TWILIO_FROM_NUMBER: Optional[str] = None
+    
+    # Slack Webhook settings (default for all companies)
+    SLACK_WEBHOOK_URL: Optional[str] = None
+    
+    # Scheduled Jobs / Cron settings
+    CRON_SECRET: str = "siete-cx-cron-secret-change-me"
+    
+    # Analysis Service URL (internal Railway network)
+    ANALYSIS_SERVICE_URL: str = "http://siete-analysis.railway.internal"
 
     @field_validator('POSTGRES_URI')
     @classmethod
