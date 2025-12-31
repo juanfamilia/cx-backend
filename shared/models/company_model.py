@@ -66,3 +66,22 @@ class Company(CompanyBase, table=True):
     prompts: list["PromptManager"] = Relationship(back_populates="company")
     theme: CompanyTheme | None = Relationship(back_populates="company")
     widgets: list["Widget"] = Relationship(back_populates="company")
+
+# ==========================
+# PUBLIC (API responses)
+# ==========================
+class CompanyPublic(BaseModel):
+    id: int
+    name: str
+    phone: str
+    email: str
+    address: str
+    state: str
+    country: str
+
+    slack_webhook_url: str | None = None
+    webhook_url: str | None = None
+
+    created_at: datetime | None
+    updated_at: datetime | None
+    deleted_at: datetime | None
