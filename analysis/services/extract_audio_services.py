@@ -222,6 +222,39 @@ async def handle_stream_to_audio(
             print(f"⚠️ Error en intelligence engine (no crítico): {intel_error}")
             # Continue even if intelligence fails
 
+        # 🎬 CLIP GENERATION: Extract video clips from verbatims
+        try:
+            from analysis.services.clip_generation_services import generate_clips_for_evaluation
+            
+            # Get company_id if not already available
+            if not evaluation or not campaign:
+                eval_query = select(Evaluation).where(Evaluation.id == evaluation_id)
+                eval_result = await session.execute(eval_query)
+                evaluation = eval_result.scalars().first()
+                
+                if evaluation:
+                    campaign_query = select(Campaign).where(Campaign.id == evaluation.campaigns_id)
+                    campaign_result = await session.execute(campaign_query)
+                    campaign = campaign_result.scalars().first()
+            
+            if campaign:
+                print("🎬 Iniciando generación de clips...")
+                clips = await generate_clips_for_evaluation(
+                    session=session,
+                    evaluation_id=evaluation_id,
+                    analysis=db_analysis,
+                    video_uid=video_uid,
+                    company_id=campaign.company_id
+                )
+                ready_clips = [c for c in clips if c.status.value == "ready"]
+                print(f"✅ {len(ready_clips)} clips generados exitosamente")
+            else:
+                print("⚠️ No se pudo obtener company_id para generación de clips")
+                
+        except Exception as clip_error:
+            print(f"⚠️ Error en generación de clips (no crítico): {clip_error}")
+            # Continue even if clip generation fails
+
         return "✅ Transcripción completada y guardada."
 
     except Exception as e:

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import intelligence_router, evaluation_analysis_router
+from routes import intelligence_router, evaluation_analysis_router, clip_router
 
 app = FastAPI(
     title="Siete CX - Analysis Service",
@@ -16,3 +16,4 @@ async def health_check():
 # Include routers
 app.include_router(intelligence_router.router, prefix="/api/v1")
 app.include_router(evaluation_analysis_router.router, prefix="/api/v1")
+app.include_router(clip_router.router, prefix="/api/v1")
