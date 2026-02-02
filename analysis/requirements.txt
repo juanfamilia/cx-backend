@@ -21,7 +21,7 @@ python-dotenv==1.0.0
 httpx==0.28.0
 
 # Database (needed by shared.core.db)
-sqlalchemy[asyncio]==2.0.36
+sqlalchemy[asyncio]==2.0.41
 asyncpg==0.30.0
 
 # Authentication & Security (needed by shared.core.security and shared.utils)
