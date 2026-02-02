@@ -224,7 +224,7 @@ async def handle_stream_to_audio(
 
         # 🎬 CLIP GENERATION: Extract video clips from verbatims
         try:
-            from analysis.services.clip_generation_services import generate_clips_for_evaluation
+            from services.clip_generation_services import generate_clips_for_evaluation
             
             # Get company_id if not already available
             if not evaluation or not campaign:

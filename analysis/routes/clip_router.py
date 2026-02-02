@@ -8,7 +8,7 @@ from shared.core.db import get_db
 from shared.models.clip_model import ClipPublic, ClipsPublic, ClipStatus
 from shared.utils.deps import check_company_payment_status, get_auth_user
 from shared.utils.exceptions import NotFoundException, PermissionDeniedException
-from analysis.services.clip_generation_services import (
+from services.clip_generation_services import (
     get_clips_for_evaluation,
     get_clip_by_id,
 )

@@ -1,7 +1,7 @@
 """Add clip and clip_config tables
 
 Revision ID: 20250202_add_clips_tables
-Revises: 20251117_phase_0_4_complete_tables
+Revises: f10d72303278
 Create Date: 2025-02-02
 
 """
@@ -13,7 +13,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = '20250202_add_clips_tables'
-down_revision: Union[str, None] = '20251117_phase_0_4_complete_tables'
+down_revision: Union[str, None] = 'f10d72303278'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
