@@ -26,6 +26,7 @@ from app.routes import (
     zone_router,
     scheduled_jobs_router,
     integration_test_router,
+    clips_proxy_router,
 )
 
 api_router = APIRouter()
@@ -57,3 +58,4 @@ api_router.include_router(intelligence_router)
 api_router.include_router(theme_router)
 api_router.include_router(scheduled_jobs_router)
 api_router.include_router(integration_test_router)
+api_router.include_router(clips_proxy_router)
