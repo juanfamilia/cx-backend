@@ -2,7 +2,7 @@ import asyncio
 import random
 from fastapi import logger
 import httpx
-from app.core.config import settings
+from core.config import settings
 
 
 # Construir URL de Cloudflare Stream
