@@ -6,6 +6,9 @@ from app.models.evaluation_model import Evaluation
 
 class EvaluationAnalysisBase(SQLModel):
     evaluation_id: int | None = Field(default=None, foreign_key="evaluations.id")
+
+    transcript_text: str | None = None
+    
     analysis: str
     executive_view: str | None
     operative_view: str | None
