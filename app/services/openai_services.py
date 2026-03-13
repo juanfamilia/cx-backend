@@ -10,7 +10,7 @@ def audio_analysis(audio_path: str):
         transcript_response = client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file,
-            response_format="text",
+            response_format="verbose_json",
             language="es",  # O "en", según el idioma del audio
         )
 
