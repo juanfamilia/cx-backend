@@ -1,20 +1,42 @@
 from openai import OpenAI
 from app.core.config import settings
+from typing import Tuple, List, Dict, Any
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
-def audio_analysis(audio_path: str):
+def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
+    """
+    Transcribe and analyze audio
+    
+    Returns:
+        Tuple of (analysis_text, segments_list, full_transcript_text)
+        - analysis_text: The GPT analysis result
+        - segments_list: List of {start, end, text} from Whisper
+        - full_transcript_text: Complete transcript as string
+    """
     # 1. Transcribir el audio
     with open(audio_path, "rb") as audio_file:
         transcript_response = client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file,
             response_format="verbose_json",
-            language="es",  # O "en", según el idioma del audio
+            language="es",
         )
 
-    transcription = transcript_response
+    # Extract segments from Whisper response
+    segments = []
+    if hasattr(transcript_response, 'segments') and transcript_response.segments:
+        for seg in transcript_response.segments:
+            segments.append({
+                'start': seg.get('start', seg.start) if hasattr(seg, 'start') else seg['start'],
+                'end': seg.get('end', seg.end) if hasattr(seg, 'end') else seg['end'],
+                'text': seg.get('text', seg.text) if hasattr(seg, 'text') else seg['text'],
+                'avg_logprob': seg.get('avg_logprob', getattr(seg, 'avg_logprob', None)),
+            })
+    
+    # Get full transcript text
+    full_transcript = transcript_response.text if hasattr(transcript_response, 'text') else str(transcript_response)
 
     # 2. Analizar la transcripción con GPT-4o
     response = client.chat.completions.create(
@@ -113,6 +135,14 @@ def audio_analysis(audio_path: str):
                         - Si IRD > 70 → "Revisar entrenamiento de cortesía en sucursal"
                         - Si IOC < 40 → "Capacitar en prospección de productos"
                         - Si CES > 60 → "Simplificar procesos de información"
+                        
+                        7. AI Extracted Fields (REQUIRED - add to JSON):
+                        - customer_emotion: string (e.g., "frustrado", "satisfecho", "neutral")
+                        - agent_emotion: string (e.g., "profesional", "apático", "amable")
+                        - problem_resolved: boolean
+                        - product_offered: boolean
+                        - nps_inferred: integer 0-10
+                        - greeting_detected: boolean
 
                         Estructura JSON obligatoria:
 
@@ -151,7 +181,15 @@ def audio_analysis(audio_path: str):
                             "negativos": [],
                             "criticos": []
                         },
-                        "acciones_sugeridas": []
+                        "acciones_sugeridas": [],
+                        "ai_extracted": {
+                            "customer_emotion": "string",
+                            "agent_emotion": "string", 
+                            "problem_resolved": false,
+                            "product_offered": false,
+                            "nps_inferred": 0,
+                            "greeting_detected": false
+                        }
                         }
                         
 
@@ -164,9 +202,11 @@ def audio_analysis(audio_path: str):
             },
             {
                 "role": "user",
-                "content": f"Este es el texto transcrito del audio:\n\n{transcription}",
+                "content": f"Este es el texto transcrito del audio:\n\n{full_transcript}",
             },
         ],
     )
 
-    return response.choices[0].message.content
+    analysis_result = response.choices[0].message.content
+    
+    return analysis_result, segments, full_transcript

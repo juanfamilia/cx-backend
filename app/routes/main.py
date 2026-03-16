@@ -19,6 +19,8 @@ from app.routes import (
     payment_router,
     user_zone_router,
     zone_router,
+    transcript_segment_router,
+    executive_router,
 )
 
 
@@ -43,3 +45,5 @@ api_router.include_router(cloudflare_webhook_router.router)
 api_router.include_router(evaluation_analysis_router.router)
 api_router.include_router(campaign_goals_evaluator_router.router)
 api_router.include_router(campaign_goals_progress_router.router)
+api_router.include_router(transcript_segment_router.router)
+api_router.include_router(executive_router.router)

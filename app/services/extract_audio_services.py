@@ -1,6 +1,8 @@
 import asyncio
+import json
 import os
 import random
+import re
 import tempfile
 import time
 import uuid
@@ -23,6 +25,7 @@ from app.services.cloudflare_stream_services import (
     wait_until_ready_to_stream,
 )
 from app.services.openai_services import audio_analysis
+from app.services.transcript_segment_services import create_transcript_segments
 
 
 async def download_video(url: str, ruta_destino: str):
@@ -70,7 +73,7 @@ async def handle_stream_to_audio(
 ):
     id_archivo = str(uuid.uuid4())
 
-    tmp_dir = tempfile.gettempdir()  # ✅ Asegura que /tmp exista
+    tmp_dir = tempfile.gettempdir()
 
     video_path = f"{tmp_dir}/{id_archivo}.mp4"
     audio_path = f"{tmp_dir}/{id_archivo}.mp3"
@@ -101,10 +104,16 @@ async def handle_stream_to_audio(
             r2_upload, archivo_local=audio_path, nombre_objetivo=r2_key
         )
 
-        print("🧠 Enviando audio...")
-        audio_result = await run_in_threadpool(audio_analysis, audio_path)
+        print("🧠 Enviando audio para análisis...")
+        audio_result, segments, full_transcript = await run_in_threadpool(audio_analysis, audio_path)
 
-        print(f"📝 Transcripción completada:\n{audio_result}...")
+        print(f"📝 Transcripción completada. {len(segments)} segmentos detectados.")
+
+        # Save transcript segments to database
+        if segments:
+            print("💾 Guardando segmentos de transcripción...")
+            await create_transcript_segments(session, evaluation_id, segments)
+            print(f"✅ {len(segments)} segmentos guardados.")
 
         print("💾 Guardando análisis de evaluación...")
 
@@ -119,10 +128,15 @@ async def handle_stream_to_audio(
 
         await create_evaluation_analysis(session, evaluation_analysis)
 
+        # Extract and update AI fields in evaluation
+        await update_evaluation_ai_fields(session, evaluation_id, operative_view, len(segments))
+
         return "✅ Transcripción completada y guardada."
 
     except Exception as e:
         print(f"❌ Error durante el proceso: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
     finally:
@@ -130,3 +144,74 @@ async def handle_stream_to_audio(
             if os.path.exists(f):
                 os.remove(f)
                 print(f"🗑️ Archivo temporal eliminado: {f}")
+
+
+async def update_evaluation_ai_fields(
+    session: AsyncSession,
+    evaluation_id: int,
+    operative_view: str,
+    segment_count: int
+):
+    """
+    Extract AI fields from operative view JSON and update the evaluation
+    """
+    from app.models.evaluation_model import Evaluation
+    
+    try:
+        # Try to parse the operative view as JSON
+        # The operative view might have markdown code blocks
+        json_match = re.search(r'```json\s*(.*?)\s*```', operative_view, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1)
+        else:
+            json_str = operative_view
+        
+        data = json.loads(json_str)
+        
+        # Get the evaluation
+        evaluation = await session.get(Evaluation, evaluation_id)
+        if not evaluation:
+            print(f"⚠️ Evaluation {evaluation_id} not found for AI field update")
+            return
+        
+        # Extract AI fields
+        ai_extracted = data.get('ai_extracted', {})
+        
+        # Update fields
+        if ai_extracted:
+            evaluation.customer_emotion = ai_extracted.get('customer_emotion')
+            evaluation.agent_emotion = ai_extracted.get('agent_emotion')
+            evaluation.problem_resolved = ai_extracted.get('problem_resolved')
+            evaluation.product_offered = ai_extracted.get('product_offered')
+            evaluation.nps_inferred = ai_extracted.get('nps_inferred')
+            evaluation.greeting_detected = ai_extracted.get('greeting_detected')
+        
+        # Extract CES and IRD scores
+        ces = data.get('CES', {})
+        ird = data.get('IRD', {})
+        
+        if ces:
+            evaluation.customer_effort_score = ces.get('score')
+        if ird:
+            evaluation.risk_of_churn = ird.get('score')
+        
+        # Calculate service quality from Calidad fields
+        calidad = data.get('Calidad', {})
+        if calidad:
+            quality_fields = ['saludo', 'identificacion', 'ofrecimiento', 'cierre', 'valor_agregado']
+            quality_count = sum(1 for f in quality_fields if calidad.get(f, False))
+            evaluation.service_quality_score = int((quality_count / len(quality_fields)) * 100)
+        
+        # Get duration from metadata if available
+        metadata = data.get('metadata', {})
+        if metadata and metadata.get('duracion_segundos'):
+            evaluation.interaction_duration = metadata.get('duracion_segundos')
+        
+        session.add(evaluation)
+        await session.commit()
+        print(f"✅ AI fields updated for evaluation {evaluation_id}")
+        
+    except json.JSONDecodeError as e:
+        print(f"⚠️ Could not parse operative view as JSON: {e}")
+    except Exception as e:
+        print(f"⚠️ Error updating AI fields: {e}")
