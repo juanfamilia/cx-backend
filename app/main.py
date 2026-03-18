@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from app.routes.main import api_router
 from app.core.config import settings
 
@@ -30,3 +31,9 @@ app.add_middleware(
 
 # Routing
 app.include_router(api_router, prefix=settings.API_URL)
+
+
+# Health check endpoint
+@app.get("/api/v1/health")
+async def health_check():
+    return JSONResponse(content={"status": "healthy", "service": "siete-cx-api"})
