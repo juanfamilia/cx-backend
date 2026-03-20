@@ -10,12 +10,15 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install uv
+RUN pip install --no-cache-dir uv
+
+# Copy dependency files
 COPY pyproject.toml ./
 COPY uv.lock ./
 
-RUN pip install --no-cache-dir uv && \
-    uv sync --frozen
+# Install dependencies using uv sync (creates .venv)
+RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY app/ ./app/
@@ -28,5 +31,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
-# Start command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start command using the venv python
+CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
