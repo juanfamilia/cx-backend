@@ -13,7 +13,9 @@ else:
 app.title = settings.PROJECT_NAME
 
 if settings.PROJECT_MODE == "prod":
-    origins = ["https://cx.sieteic.com"]
+    origins = [
+        "https://cx.sieteic.com",
+        "https://cx-frontendnew.vercel.app"]
 else:
     origins = [
         "https://cx.sieteic.com",
