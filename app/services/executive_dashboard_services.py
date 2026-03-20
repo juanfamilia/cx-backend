@@ -5,6 +5,7 @@ Aggregated metrics and analytics for executive insights
 from datetime import date
 from typing import List, Optional
 from pydantic import BaseModel
+from sqlalchemy import Integer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func, and_
 
@@ -58,6 +59,8 @@ async def get_executive_metrics(
     """
     Get aggregated executive metrics with optional filters
     """
+    from sqlalchemy.sql import case
+    
     # Build base query with company filter via campaign
     base_conditions = [
         Campaign.company_id == company_id,
@@ -82,10 +85,10 @@ async def get_executive_metrics(
             func.avg(Evaluation.nps_inferred).label('avg_nps'),
             func.avg(Evaluation.customer_effort_score).label('avg_ces'),
             func.avg(Evaluation.service_quality_score).label('avg_quality'),
-            func.sum(func.cast(Evaluation.greeting_detected, Integer)).label('greeting_count'),
-            func.sum(func.cast(Evaluation.product_offered, Integer)).label('offer_count'),
-            func.sum(func.cast(Evaluation.problem_resolved, Integer)).label('resolved_count'),
-            func.count(Evaluation.id).filter(Evaluation.risk_of_churn > 70).label('high_risk_count'),
+            func.sum(case((Evaluation.greeting_detected == True, 1), else_=0)).label('greeting_count'),
+            func.sum(case((Evaluation.product_offered == True, 1), else_=0)).label('offer_count'),
+            func.sum(case((Evaluation.problem_resolved == True, 1), else_=0)).label('resolved_count'),
+            func.sum(case((Evaluation.risk_of_churn > 70, 1), else_=0)).label('high_risk_count'),
         )
         .select_from(Evaluation)
         .join(Campaign, Evaluation.campaigns_id == Campaign.id)
@@ -171,7 +174,3 @@ async def get_executive_metrics(
             "end": end_date.isoformat() if end_date else None,
         }
     )
-
-
-# Import for type hints
-from sqlalchemy import Integer

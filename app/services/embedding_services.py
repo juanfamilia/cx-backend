@@ -4,11 +4,9 @@ Generate and search embeddings for semantic transcript search
 """
 import json
 from typing import List, Optional
-from openai import OpenAI
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.core.config import settings
 from app.models.transcript_segment_model import (
     TranscriptSegment,
     TranscriptSearchResult,
@@ -16,11 +14,16 @@ from app.models.transcript_segment_model import (
 )
 from app.models.evaluation_model import Evaluation
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
-
 # Using text-embedding-3-small for cost efficiency
 EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIMENSIONS = 1536
+
+
+def get_openai_client():
+    """Get OpenAI client lazily to avoid import-time errors"""
+    from openai import OpenAI
+    from app.core.config import settings
+    return OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 def generate_embedding(text: str) -> List[float]:
@@ -28,6 +31,7 @@ def generate_embedding(text: str) -> List[float]:
     Generate embedding for a text using OpenAI
     Uses text-embedding-3-small for cost efficiency
     """
+    client = get_openai_client()
     response = client.embeddings.create(
         model=EMBEDDING_MODEL,
         input=text,
