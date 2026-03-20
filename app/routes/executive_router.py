@@ -8,7 +8,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.core.security import CurrentUser, get_current_user
+from app.utils.deps import get_auth_user
+from app.models.user_model import UserPublic
 from app.services.executive_dashboard_services import (
     get_executive_metrics,
     ExecutiveDashboardResponse,
@@ -29,7 +30,7 @@ async def get_dashboard_metrics(
     end_date: Optional[date] = Query(None, description="End date filter"),
     interaction_type: Optional[str] = Query(None, description="Filter by interaction type"),
     session: AsyncSession = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Get executive dashboard metrics

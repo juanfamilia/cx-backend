@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
-from app.core.security import CurrentUser, get_current_user
+from app.utils.deps import get_auth_user
+from app.models.user_model import UserPublic
 from app.models.transcript_segment_model import (
     TranscriptSegmentsPublic,
     TranscriptSearchResponse,
@@ -32,7 +33,7 @@ router = APIRouter(
 async def get_evaluation_transcript(
     evaluation_id: int,
     session: AsyncSession = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Get all transcript segments for an evaluation
@@ -47,7 +48,7 @@ async def search_transcripts(
     branch_id: Optional[str] = None,
     limit: int = 50,
     session: AsyncSession = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Search transcript segments by text (keyword search)
@@ -75,7 +76,7 @@ async def semantic_search(
     q: str,
     limit: int = 20,
     session: AsyncSession = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Semantic search across transcript segments using embeddings
@@ -100,7 +101,7 @@ async def generate_evaluation_embeddings(
     evaluation_id: int,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Generate embeddings for all segments of an evaluation
