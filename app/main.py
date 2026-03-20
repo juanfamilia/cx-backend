@@ -15,7 +15,11 @@ app.title = settings.PROJECT_NAME
 if settings.PROJECT_MODE == "prod":
     origins = ["https://cx.sieteic.com"]
 else:
-    origins = ["https://cx.sieteic.com", "http://localhost:4200"]
+    origins = [
+        "https://cx.sieteic.com",
+        "https://cx-frontendnew.vercel.app",
+        "http://localhost:4200",
+    ]
 
 # app.add_middleware(HTTPSRedirectMiddleware)
 
