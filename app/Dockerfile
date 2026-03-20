@@ -19,7 +19,6 @@ RUN pip install --no-cache-dir uv && \
 
 # Copy application code
 COPY app/ ./app/
-COPY shared/ ./shared/
 COPY alembic.ini ./
 
 # Expose port
