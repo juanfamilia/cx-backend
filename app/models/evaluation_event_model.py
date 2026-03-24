@@ -53,3 +53,19 @@ class EvaluationEventPublic(EvaluationEventBase):
 class EvaluationEventsPublic(BaseModel):
     data: list[EvaluationEventPublic]
     total: int
+
+
+class EvaluationHighlightPublic(BaseModel):
+    event_id: int
+    event_type: EvaluationEventTypeEnum
+    label: str
+    start_seconds: float
+    end_seconds: float
+    severity: int
+    confidence: Optional[float] = None
+    evidence_text: Optional[str] = None
+
+
+class EvaluationHighlightsPublic(BaseModel):
+    data: list[EvaluationHighlightPublic]
+    total: int
