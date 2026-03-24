@@ -18,6 +18,11 @@ from app.services.evaluation_analysis_services import (
     create_evaluation_analysis,
     split_analysis,
 )
+from app.services.evaluation_event_services import (
+    create_events_batch,
+    delete_events_for_evaluation,
+    detect_events_from_segments,
+)
 from app.services.cloudflare_rs_services import r2_upload
 from app.services.cloudflare_stream_services import (
     enable_download,
@@ -131,6 +136,9 @@ async def handle_stream_to_audio(
         # Extract and update AI fields in evaluation
         await update_evaluation_ai_fields(session, evaluation_id, operative_view, len(segments))
 
+        # Rebuild timeline events for this evaluation after each processing run
+        await rebuild_timeline_events(session, evaluation_id, segments, operative_view)
+
         return "✅ Transcripción completada y guardada."
 
     except Exception as e:
@@ -215,3 +223,71 @@ async def update_evaluation_ai_fields(
         print(f"⚠️ Could not parse operative view as JSON: {e}")
     except Exception as e:
         print(f"⚠️ Error updating AI fields: {e}")
+
+
+async def rebuild_timeline_events(
+    session: AsyncSession,
+    evaluation_id: int,
+    segments: list[dict],
+    operative_view: str,
+):
+    """
+    Rebuild event timeline from transcript heuristics and AI JSON fields.
+    """
+    from app.models.evaluation_event_model import EvaluationEventCreate, EvaluationEventTypeEnum
+
+    await delete_events_for_evaluation(session, evaluation_id)
+
+    events: list[EvaluationEventCreate] = detect_events_from_segments(segments)
+
+    try:
+        json_match = re.search(r"```json\s*(.*?)\s*```", operative_view, re.DOTALL)
+        json_str = json_match.group(1) if json_match else operative_view
+        data = json.loads(json_str)
+        ai_extracted = data.get("ai_extracted", {})
+
+        if ai_extracted.get("customer_emotion"):
+            emotion = str(ai_extracted.get("customer_emotion")).lower()
+            if any(term in emotion for term in ["frustr", "enoj", "molest", "angry"]):
+                events.append(
+                    EvaluationEventCreate(
+                        event_type=EvaluationEventTypeEnum.EMOTIONAL_PEAK,
+                        timestamp_seconds=0.0,
+                        severity=4,
+                        confidence=0.7,
+                        evidence_text=f"customer_emotion={ai_extracted.get('customer_emotion')}",
+                        source="ai_json",
+                    )
+                )
+
+        if ai_extracted.get("problem_resolved") is True:
+            events.append(
+                EvaluationEventCreate(
+                    event_type=EvaluationEventTypeEnum.RESOLUTION,
+                    timestamp_seconds=0.0,
+                    severity=2,
+                    confidence=0.7,
+                    evidence_text="ai_extracted.problem_resolved=true",
+                    source="ai_json",
+                )
+            )
+
+        if ai_extracted.get("product_offered") is True:
+            events.append(
+                EvaluationEventCreate(
+                    event_type=EvaluationEventTypeEnum.SALES_SIGNAL,
+                    timestamp_seconds=0.0,
+                    severity=2,
+                    confidence=0.7,
+                    evidence_text="ai_extracted.product_offered=true",
+                    source="ai_json",
+                )
+            )
+    except json.JSONDecodeError:
+        print("⚠️ Could not parse operative JSON for event extraction")
+    except Exception as exc:
+        print(f"⚠️ Error while creating events from operative JSON: {exc}")
+
+    if events:
+        await create_events_batch(session, evaluation_id, events)
+        print(f"✅ {len(events)} eventos guardados para evaluación {evaluation_id}")
