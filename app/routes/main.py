@@ -12,11 +12,13 @@ from app.routes import (
     company_router,
     dashboard_router,
     evaluation_analysis_router,
+    evaluation_event_router,
     evaluation_router,
     notification_router,
     survey_router,
     user_router,
     payment_router,
+    processing_job_router,
     user_zone_router,
     zone_router,
     transcript_segment_router,
@@ -30,6 +32,7 @@ api_router.include_router(auth_router.router)
 api_router.include_router(user_router.router)
 api_router.include_router(company_router.router)
 api_router.include_router(payment_router.router)
+api_router.include_router(processing_job_router.router)
 api_router.include_router(zone_router.router)
 api_router.include_router(user_zone_router.router)
 api_router.include_router(survey_router.router)
@@ -43,6 +46,7 @@ api_router.include_router(dashboard_router.router)
 api_router.include_router(cloudflare_router.router)
 api_router.include_router(cloudflare_webhook_router.router)
 api_router.include_router(evaluation_analysis_router.router)
+api_router.include_router(evaluation_event_router.router)
 api_router.include_router(campaign_goals_evaluator_router.router)
 api_router.include_router(campaign_goals_progress_router.router)
 api_router.include_router(transcript_segment_router.router)

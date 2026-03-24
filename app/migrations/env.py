@@ -21,6 +21,9 @@ from app.models import (
     evaluation_model,
     notification_model,
     evaluation_analysis_model,
+    evaluation_event_model,
+    transcript_segment_model,
+    processing_job_model,
     campaign_goals_evaluator_model,
 )
 
