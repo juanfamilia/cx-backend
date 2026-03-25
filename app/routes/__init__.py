@@ -10,7 +10,7 @@ from .cloudflare_webhook_router import router as cloudflare_webhook_router
 from .company_router import router as company_router
 from .dashboard_router import router as dashboard_router
 from .evaluation_analysis_router import router as evaluation_analysis_router
-from .evaluation_event_router import router as evaluation_event_router
+from .evaluation_event import router as evaluation_event_router
 from .evaluation_router import router as evaluation_router
 from .notification_router import router as notification_router
 from .survey_router import router as survey_router
