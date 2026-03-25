@@ -1,4 +1,4 @@
-from .auth import router as auth_router
+from .auth_router import router as auth_router
 from .campaign_assigment_users import router as campaign_assigment_users_router
 from .campaign_assigment_zones import router as campaign_assigment_zones_router
 from .campaign_assignment import router as campaign_assignment_router
