@@ -16,7 +16,6 @@ from .notification_router import router as notification_router
 from .survey_router import router as survey_router
 from .user_router import router as user_router
 from .payment_router import router as payment_router
-from .processing_job_router import router as processing_job_router
 from .user_zone_router import router as user_zone_router
 from .zone_router import router as zone_router
 from .transcript_segment_router import router as transcript_segment_router
