@@ -18,7 +18,6 @@ from app.routes import (
     survey_router,
     user_router,
     payment_router,
-    processing_job_router,
     user_zone_router,
     zone_router,
     transcript_segment_router,
