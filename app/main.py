@@ -33,10 +33,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routing principal (SOLO UNA VEZ)
+# ✅ IMPORTANTE: solo una vez
 app.include_router(api_router, prefix=settings.API_URL)
 
-# 🔥 DEBUG CORRECTO
+print("🔥 ESTE MAIN SE ESTA EJECUTANDO")
+
+# ✅ DEBUG REAL (este es el bueno)
 @app.on_event("startup")
 async def debug_routes():
     print("\n=== REGISTERED ROUTES ===")
@@ -51,7 +53,7 @@ async def health_check():
         content={"status": "healthy", "service": "siete-cx-api"}
     )
 
-# Root para evitar 404 en /
+# Root
 @app.get("/")
 def root():
     return {"message": "API running"}
