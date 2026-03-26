@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from app.routes.main import api_router
 from app.core.config import settings
 
-# config
+# Configuración base
 if settings.PROJECT_MODE == "prod":
     app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 else:
@@ -12,18 +12,18 @@ else:
 
 app.title = settings.PROJECT_NAME
 
+# CORS
 if settings.PROJECT_MODE == "prod":
     origins = [
         "https://cx.sieteic.com",
-        "https://cx-frontendnew.vercel.app"]
+        "https://cx-frontendnew.vercel.app",
+    ]
 else:
     origins = [
         "https://cx.sieteic.com",
         "https://cx-frontendnew.vercel.app",
         "http://localhost:4200",
     ]
-
-# app.add_middleware(HTTPSRedirectMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,13 +33,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.middleware("http")(db_exception_handler)
-
-# Routing
+# Routing principal (con prefijo global)
 app.include_router(api_router, prefix=settings.API_URL)
 
-
-# Health check endpoint
-@app.get("/api/v1/health")
+# Health check (SIN prefijo duplicado)
+@app.get("/health")
 async def health_check():
-    return JSONResponse(content={"status": "healthy", "service": "siete-cx-api"})
+    return JSONResponse(
+        content={"status": "healthy", "service": "siete-cx-api"}
+    )
