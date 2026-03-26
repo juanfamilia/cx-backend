@@ -33,12 +33,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routing principal (con prefijo global)
+# 🔥 DEBUG: imprime rutas cargadas
+@app.on_event("startup")
+async def print_routes():
+    print("\n=== REGISTERED ROUTES ===")
+    for route in app.routes:
+        print(route.path)
+    print("=========================\n")
+
+# Routing principal
 app.include_router(api_router, prefix=settings.API_URL)
 
-# Health check (SIN prefijo duplicado)
+# Health check
 @app.get("/health")
 async def health_check():
     return JSONResponse(
         content={"status": "healthy", "service": "siete-cx-api"}
     )
+
+# Root para evitar 404 en /
+@app.get("/")
+def root():
+    return {"message": "API running"}
