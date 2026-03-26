@@ -18,6 +18,7 @@ from app.routes import (
     survey_router,
     user_router,
     payment_router,
+    processing_job_router,
     user_zone_router,
     zone_router,
     transcript_segment_router,
@@ -31,6 +32,7 @@ api_router.include_router(auth_router)
 api_router.include_router(user_router)
 api_router.include_router(company_router)
 api_router.include_router(payment_router)
+api_router.include_router(processing_job_router)
 api_router.include_router(zone_router)
 api_router.include_router(user_zone_router)
 api_router.include_router(survey_router)
