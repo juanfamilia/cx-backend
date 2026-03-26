@@ -1,3 +1,4 @@
+raise Exception("🔥 ESTE MAIN NO SE ESTA USANDO")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
