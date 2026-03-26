@@ -24,13 +24,14 @@ RUN uv sync --frozen --no-dev
 COPY app/ ./app/
 COPY alembic.ini ./
 
-# Default port (Railway will override via $PORT)
+# Railway setea PORT; pon un default solo por si acaso
 ENV PORT=8000
 EXPOSE 8000
 
-# Health check - use internal port
+# Healthcheck interno del contenedor
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
 
-# Start command - use shell form to expand $PORT variable
-CMD ["/app/.venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ⛔️ AQUÍ estaba el problema: estabas fijando 8000 en vez de usar $PORT
+# Usa la forma *shell* para que se expanda $PORT
+CMD /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
