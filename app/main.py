@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -34,12 +34,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Rutas principales
+# Router principal
 app.include_router(api_router, prefix=settings.API_URL)
+
+# Router solo para health (usa mismo prefix que la API)
+health_router = APIRouter()
+
+@health_router.get("/health")
+async def health_check():
+    return JSONResponse(
+        content={"status": "healthy", "service": "siete-cx-api"}
+    )
+
+app.include_router(health_router, prefix=settings.API_URL)
 
 print("🔥 ESTE MAIN SE ESTA EJECUTANDO")
 
-# Debug de rutas en startup
 @app.on_event("startup")
 async def debug_routes():
     print("\n=== REGISTERED ROUTES ===")
@@ -47,19 +57,10 @@ async def debug_routes():
         print(route.path)
     print("=========================\n")
 
-# Health check
-@app.get("/health")
-async def health_check():
-    return JSONResponse(
-        content={"status": "healthy", "service": "siete-cx-api"}
-    )
-
-# Root
 @app.get("/")
 def root():
     return {"message": "API running"}
 
-# Endpoint para ver rutas (opcional, útil en QA)
 @app.get("/debug/routes")
 def get_routes():
     return [route.path for route in app.routes]
