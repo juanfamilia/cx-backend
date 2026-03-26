@@ -34,12 +34,12 @@ app.add_middleware(
 )
 
 # 🔥 DEBUG: imprime rutas cargadas
-@app.on_event("startup")
-async def print_routes():
-    print("\n=== REGISTERED ROUTES ===")
-    for route in app.routes:
-        print(route.path)
-    print("=========================\n")
+app.include_router(api_router, prefix=settings.API_URL)
+
+print("\n=== REGISTERED ROUTES ===")
+for route in app.routes:
+    print(route.path)
+print("=========================\n")
 
 # Routing principal
 app.include_router(api_router, prefix=settings.API_URL)
