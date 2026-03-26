@@ -33,16 +33,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔥 DEBUG: imprime rutas cargadas
+# Routing principal (SOLO UNA VEZ)
 app.include_router(api_router, prefix=settings.API_URL)
 
-print("\n=== REGISTERED ROUTES ===")
-for route in app.routes:
-    print(route.path)
-print("=========================\n")
-
-# Routing principal
-app.include_router(api_router, prefix=settings.API_URL)
+# 🔥 DEBUG CORRECTO
+@app.on_event("startup")
+async def debug_routes():
+    print("\n=== REGISTERED ROUTES ===")
+    for route in app.routes:
+        print(route.path)
+    print("=========================\n")
 
 # Health check
 @app.get("/health")
