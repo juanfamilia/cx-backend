@@ -7,7 +7,11 @@ from app.core.config import settings
 
 # Configuración base
 if settings.PROJECT_MODE == "prod":
-    app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+    app = FastAPI(
+        openapi_url="/openapi.json",
+        docs_url="/docs",
+        redoc_url=None,
+    )
 else:
     app = FastAPI()
 
@@ -40,15 +44,18 @@ app.include_router(api_router, prefix=settings.API_URL)
 # Router solo para health (usa mismo prefix que la API)
 health_router = APIRouter()
 
+
 @health_router.get("/health")
 async def health_check():
     return JSONResponse(
         content={"status": "healthy", "service": "siete-cx-api"}
     )
 
+
 app.include_router(health_router, prefix=settings.API_URL)
 
 print("🔥 ESTE MAIN SE ESTA EJECUTANDO")
+
 
 @app.on_event("startup")
 async def debug_routes():
@@ -57,9 +64,11 @@ async def debug_routes():
         print(route.path)
     print("=========================\n")
 
+
 @app.get("/")
 def root():
     return {"message": "API running"}
+
 
 @app.get("/debug/routes")
 def get_routes():
