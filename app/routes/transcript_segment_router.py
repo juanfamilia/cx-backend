@@ -3,12 +3,12 @@ Transcript Segments Router
 Endpoints for transcript segment operations
 """
 from typing import Optional
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_db
-from app.utils.deps import get_auth_user
-from app.models.user_model import UserPublic
+from app.core.db import AsyncSessionLocal, get_db
+from app.utils.deps import check_company_payment_status, get_auth_user
+from app.services.evaluation_services import assert_evaluation_access
 from app.models.transcript_segment_model import (
     TranscriptSegmentsPublic,
     TranscriptSearchResponse,
@@ -26,29 +26,31 @@ from app.services.embedding_services import (
 router = APIRouter(
     prefix="/transcript-segments",
     tags=["Transcript Segments"],
+    dependencies=[Depends(get_auth_user), Depends(check_company_payment_status)],
 )
 
 
 @router.get("/evaluation/{evaluation_id}", response_model=TranscriptSegmentsPublic)
 async def get_evaluation_transcript(
+    request: Request,
     evaluation_id: int,
     session: AsyncSession = Depends(get_db),
-    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Get all transcript segments for an evaluation
     Returns segments ordered by start time for synchronized playback
     """
+    await assert_evaluation_access(session, evaluation_id, request.state.user)
     return await get_segments_for_evaluation(session, evaluation_id)
 
 
 @router.get("/search", response_model=TranscriptSearchResponse)
 async def search_transcripts(
+    request: Request,
     q: str,
     branch_id: Optional[str] = None,
     limit: int = 50,
     session: AsyncSession = Depends(get_db),
-    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Search transcript segments by text (keyword search)
@@ -59,9 +61,8 @@ async def search_transcripts(
     
     Returns matching segments with evaluation context
     """
-    # Get company_id from current user
-    company_id = current_user.company_id if hasattr(current_user, 'company_id') else None
-    
+    company_id = request.state.user.company_id
+
     return await search_transcripts_by_text(
         session=session,
         query_text=q,
@@ -73,10 +74,10 @@ async def search_transcripts(
 
 @router.post("/semantic-search", response_model=TranscriptSearchResponse)
 async def semantic_search(
+    request: Request,
     q: str,
     limit: int = 20,
     session: AsyncSession = Depends(get_db),
-    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Semantic search across transcript segments using embeddings
@@ -86,8 +87,8 @@ async def semantic_search(
     
     Returns matching segments ranked by semantic similarity
     """
-    company_id = current_user.company_id if hasattr(current_user, 'company_id') else None
-    
+    company_id = request.state.user.company_id
+
     return await semantic_search_transcripts(
         session=session,
         query_text=q,
@@ -98,10 +99,10 @@ async def semantic_search(
 
 @router.post("/evaluation/{evaluation_id}/generate-embeddings")
 async def generate_evaluation_embeddings(
+    request: Request,
     evaluation_id: int,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
-    current_user: UserPublic = Depends(get_auth_user),
 ):
     """
     Generate embeddings for all segments of an evaluation
@@ -109,11 +110,15 @@ async def generate_evaluation_embeddings(
     
     Runs in background for large transcripts
     """
-    # Run embedding generation in background
+    await assert_evaluation_access(session, evaluation_id, request.state.user)
+
     async def run_embeddings():
-        count = await generate_embeddings_for_evaluation(session, evaluation_id)
-        print(f"Generated {count} embeddings for evaluation {evaluation_id}")
-    
+        async with AsyncSessionLocal() as bg_session:
+            count = await generate_embeddings_for_evaluation(
+                bg_session, evaluation_id
+            )
+            print(f"Generated {count} embeddings for evaluation {evaluation_id}")
+
     background_tasks.add_task(run_embeddings)
     
     return {"message": f"Embedding generation started for evaluation {evaluation_id}"}

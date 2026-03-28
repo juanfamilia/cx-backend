@@ -18,10 +18,10 @@ from app.models.evaluation_model import (
 from app.models.notification_model import NotificationBase
 from app.models.survey_forms_model import SurveyForm
 from app.models.survey_model import SurveySection
-from app.models.user_model import User
+from app.models.user_model import User, UserPublic
 from app.services.notification_services import create_notification
 from app.types.pagination import Pagination
-from app.utils.exeptions import NotFoundException
+from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
 
 async def get_evaluations(
@@ -109,6 +109,23 @@ async def get_evaluation(session: AsyncSession, evaluation_id: int) -> Evaluatio
         raise NotFoundException("Evaluation not found")
 
     return db_evaluation
+
+
+async def assert_evaluation_access(
+    session: AsyncSession,
+    evaluation_id: int,
+    user: UserPublic,
+) -> None:
+    """
+    Same tenant rule as evaluation_router.get_one: role 0 bypasses; others need
+    evaluation.campaign.company_id == user.company_id.
+    """
+    evaluation = await get_evaluation(session, evaluation_id)
+    if user.role != 0 and (
+        evaluation.campaign is None
+        or evaluation.campaign.company_id != user.company_id
+    ):
+        raise PermissionDeniedException(custom_message="retrieve this evaluation")
 
 
 async def get_evaluation_answer(

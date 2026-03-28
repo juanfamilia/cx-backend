@@ -12,7 +12,7 @@ from fastapi import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-from app.core.db import get_db
+from app.core.db import AsyncSessionLocal, get_db
 from app.models.evaluation_model import (
     Evaluation,
     EvaluationAnswerBase,
@@ -166,10 +166,11 @@ async def create(
 
     evaluation_db = await create_evaluation(session, evaluation)
 
-    # Extraer Audio y pasar a una IA
-    background_tasks.add_task(
-        handle_stream_to_audio, media_url, evaluation_db.id, session
-    )
+    async def run_audio_pipeline(video_uid: str, evaluation_id: int) -> None:
+        async with AsyncSessionLocal() as bg_session:
+            await handle_stream_to_audio(video_uid, evaluation_id, bg_session)
+
+    background_tasks.add_task(run_audio_pipeline, media_url, evaluation_db.id)
 
     return evaluation_db
 
