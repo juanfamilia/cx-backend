@@ -23,6 +23,9 @@ from app.routes import (
     zone_router,
     transcript_segment_router,
     executive_router,
+    clips_router,
+    intelligence_router,
+    prompts_router,
 )
 
 
@@ -51,3 +54,6 @@ api_router.include_router(campaign_goals_evaluator_router)
 api_router.include_router(campaign_goals_progress_router)
 api_router.include_router(transcript_segment_router)
 api_router.include_router(executive_router)
+api_router.include_router(clips_router)
+api_router.include_router(intelligence_router)
+api_router.include_router(prompts_router)

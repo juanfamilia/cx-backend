@@ -1,5 +1,5 @@
 import json
-from typing import Optional
+from typing import List, Optional
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -41,6 +41,19 @@ from app.services.video_services import (
 )
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
+
+
+def _parse_visited_zones_json(raw: Optional[str]) -> List[int]:
+    """Parse JSON array from form field (same format as the Angular client)."""
+    if raw is None or (isinstance(raw, str) and not raw.strip()):
+        return []
+    try:
+        data = json.loads(raw)
+        if not isinstance(data, list):
+            return []
+        return [int(x) for x in data]
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return []
 
 
 router = APIRouter(
@@ -146,6 +159,10 @@ async def create(
     campaign_id: int = Form(...),
     location: Optional[str] = Form(default=None),
     evaluated_collaborator: Optional[str] = Form(default=None),
+    visited_zones: Optional[str] = Form(
+        default=None,
+        description="JSON array of zone ids, e.g. [1,2]",
+    ),
     evaluation_answers: str = Form(...),
 ) -> Evaluation:
 
@@ -161,6 +178,7 @@ async def create(
         user_id=request.state.user.id,
         location=location,
         evaluated_collaborator=evaluated_collaborator,
+        visited_zones=_parse_visited_zones_json(visited_zones),
         evaluation_answers=answers_list,
     )
 
@@ -184,6 +202,10 @@ async def update(
     video_title: Optional[str] = Form(default=None),
     location: Optional[str] = Form(default=None),
     evaluated_collaborator: Optional[str] = Form(default=None),
+    visited_zones: Optional[str] = Form(
+        default=None,
+        description="JSON array of zone ids; omit to leave unchanged",
+    ),
     evaluation_answers: Optional[str] = Form(default=None),
     session: AsyncSession = Depends(get_db),
 ) -> EvaluationPublic:
@@ -194,14 +216,20 @@ async def update(
         if db_evaluation.campaign.company_id != request.state.user.company_id:
             raise PermissionDeniedException(custom_message="update this evaluation")
 
-    parsed_answers = json.loads(evaluation_answers)
-    answers_list = [EvaluationAnswerUpdate(**item) for item in parsed_answers]
+    answers_list: Optional[List[EvaluationAnswerUpdate]] = None
+    if evaluation_answers is not None and evaluation_answers.strip():
+        parsed_answers = json.loads(evaluation_answers)
+        answers_list = [EvaluationAnswerUpdate(**item) for item in parsed_answers]
 
-    evaluation_update = EvaluationUpdate(
-        location=location,
-        evaluated_collaborator=evaluated_collaborator,
-        evaluation_answers=answers_list,
-    )
+    update_payload = {
+        "location": location,
+        "evaluated_collaborator": evaluated_collaborator,
+        "evaluation_answers": answers_list,
+    }
+    if visited_zones is not None:
+        update_payload["visited_zones"] = _parse_visited_zones_json(visited_zones)
+
+    evaluation_update = EvaluationUpdate(**update_payload)
 
     if media_url:
         video_url = get_video_url(media_url)

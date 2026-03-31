@@ -137,6 +137,7 @@ class EvaluationUpdate(SQLModel):
     status: Optional[StatusEnum] = StatusEnum.UPDATED
     evaluation_answers: Optional[List["EvaluationAnswerUpdate"]] = None
     video_id: Optional[int] = None
+    visited_zones: Optional[List[int]] = None
 
 
 class EvaluationPublic(EvaluationBase):

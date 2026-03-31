@@ -21,3 +21,6 @@ from .user_zone_router import router as user_zone_router
 from .zone_router import router as zone_router
 from .transcript_segment_router import router as transcript_segment_router
 from .executive_router import router as executive_router
+from .clips_router import router as clips_router
+from .intelligence_router import router as intelligence_router
+from .prompts_router import router as prompts_router
