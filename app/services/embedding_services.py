@@ -3,6 +3,8 @@ Embedding Services
 Generate and search embeddings for semantic transcript search
 """
 import json
+import logging
+import math
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -13,6 +15,8 @@ from app.models.transcript_segment_model import (
     TranscriptSearchResponse,
 )
 from app.models.evaluation_model import Evaluation
+
+logger = logging.getLogger(__name__)
 
 # Using text-embedding-3-small for cost efficiency
 EMBEDDING_MODEL = "text-embedding-3-small"
@@ -42,7 +46,6 @@ def generate_embedding(text: str) -> List[float]:
 
 def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
     """Calculate cosine similarity between two vectors"""
-    import math
     dot_product = sum(a * b for a, b in zip(vec1, vec2))
     norm1 = math.sqrt(sum(a * a for a in vec1))
     norm2 = math.sqrt(sum(b * b for b in vec2))
@@ -82,8 +85,12 @@ async def generate_embeddings_for_evaluation(
             # Commit in batches
             if count % batch_size == 0:
                 await session.commit()
-        except Exception as e:
-            print(f"Error generating embedding for segment {segment.id}: {e}")
+        except Exception:
+            logger.exception(
+                "Failed to generate embedding for segment_id=%s evaluation_id=%s",
+                segment.id,
+                evaluation_id,
+            )
             continue
     
     await session.commit()

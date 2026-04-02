@@ -2,7 +2,10 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import get_db
+from app.services.evaluation_services import assert_evaluation_access
 from app.utils.deps import check_company_payment_status, get_auth_user
 
 
@@ -58,16 +61,21 @@ async def get_clips_for_evaluation(
     request: Request,
     evaluation_id: int,
     delivered_only: bool = Query(default=True),
+    session: AsyncSession = Depends(get_db),
 ):
     # Compatibility endpoint: returns empty set until clip pipeline is enabled.
-    _ = request.state.user.company_id
+    await assert_evaluation_access(session, evaluation_id, request.state.user)
     _ = delivered_only
     return ClipsResponse(data=[], total=0, delivered_count=0)
 
 
 @router.get("/evaluation/{evaluation_id}/status", response_model=ClipsStatus)
-async def get_clips_status(request: Request, evaluation_id: int):
-    _ = request.state.user.company_id
+async def get_clips_status(
+    request: Request,
+    evaluation_id: int,
+    session: AsyncSession = Depends(get_db),
+):
+    await assert_evaluation_access(session, evaluation_id, request.state.user)
     return ClipsStatus(
         evaluation_id=evaluation_id,
         total=0,

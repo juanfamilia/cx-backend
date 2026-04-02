@@ -1,10 +1,10 @@
 import asyncio
 import json
+import logging
 import os
 import random
 import re
 import tempfile
-import time
 import uuid
 
 import httpx
@@ -32,6 +32,8 @@ from app.services.cloudflare_stream_services import (
 from app.services.openai_services import audio_analysis
 from app.services.transcript_segment_services import create_transcript_segments
 
+logger = logging.getLogger(__name__)
+
 
 async def download_video(url: str, ruta_destino: str):
     async with httpx.AsyncClient(follow_redirects=True) as client:
@@ -52,24 +54,24 @@ async def wait_and_download_video(
 ):
     for intento in range(max_retries):
         status, url = await get_download_status(video_uid)
-        print(f"🔃 Intento {intento + 1} | {status}")
+        logger.info("Video download attempt %s status=%s", intento + 1, status)
 
         if status == "ready" and url:
             try:
-                print("⏳ Descargando video...")
+                logger.info("Downloading video from Cloudflare")
                 await download_video(url, ruta_destino)
-                print("✅ Descarga completada.")
+                logger.info("Video download completed")
                 return True, url  # ✅
             except Exception as e:
-                print(f"❌ Error durante la descarga: {e}")
+                logger.warning("Video download failed: %s", e)
                 return False, None
 
         # Backoff exponencial con jitter
         wait_time = base_wait * (2**intento) + random.uniform(0, 1)
-        print(f"🔃 Reintentado en {wait_time:.2f} segundos...")
+        logger.info("Retrying download in %.2f seconds", wait_time)
         await asyncio.sleep(wait_time)
 
-    print("❌ Error limite de reintentos alcanzado.")
+    logger.error("Video download max retries exceeded for uid=%s", video_uid)
     return False, None
 
 
@@ -88,39 +90,49 @@ async def handle_stream_to_audio(
         is_ready = await wait_until_ready_to_stream(video_uid)
 
         if not is_ready:
-            print("❌ El video no está listo. Abortando proceso.")
+            logger.warning(
+                "Video not ready to stream, aborting evaluation_id=%s", evaluation_id
+            )
             return None
 
-        print("📥 Habilitando descarga del video en Cloudflare...")
+        logger.info("Enabling Cloudflare download evaluation_id=%s", evaluation_id)
         await enable_download(video_uid)
 
-        print("⏳ Esperando a que el enlace de descarga esté listo...")
+        logger.info("Waiting for download URL evaluation_id=%s", evaluation_id)
         success, download_url = await wait_and_download_video(video_uid, video_path)
 
         if not success:
-            print("Fallo en la descarga del video.")
+            logger.error("Video download failed evaluation_id=%s", evaluation_id)
             return None
 
-        print("🎧 Extrayendo audio...")
+        logger.info("Extracting audio evaluation_id=%s", evaluation_id)
         await run_in_threadpool(extract_audio, video_path, audio_path)
 
-        print("📤 Subiendo audio a R2...")
+        logger.info("Uploading audio to R2 evaluation_id=%s", evaluation_id)
         await run_in_threadpool(
             r2_upload, archivo_local=audio_path, nombre_objetivo=r2_key
         )
 
-        print("🧠 Enviando audio para análisis...")
+        logger.info("Running audio analysis evaluation_id=%s", evaluation_id)
         audio_result, segments, full_transcript = await run_in_threadpool(audio_analysis, audio_path)
 
-        print(f"📝 Transcripción completada. {len(segments)} segmentos detectados.")
+        logger.info(
+            "Transcription done evaluation_id=%s segment_count=%s",
+            evaluation_id,
+            len(segments),
+        )
 
         # Save transcript segments to database
         if segments:
-            print("💾 Guardando segmentos de transcripción...")
+            logger.info("Saving transcript segments evaluation_id=%s", evaluation_id)
             await create_transcript_segments(session, evaluation_id, segments)
-            print(f"✅ {len(segments)} segmentos guardados.")
+            logger.info(
+                "Transcript segments saved evaluation_id=%s count=%s",
+                evaluation_id,
+                len(segments),
+            )
 
-        print("💾 Guardando análisis de evaluación...")
+        logger.info("Saving evaluation analysis evaluation_id=%s", evaluation_id)
 
         executive_view, operative_view = split_analysis(audio_result)
 
@@ -141,17 +153,19 @@ async def handle_stream_to_audio(
 
         return "✅ Transcripción completada y guardada."
 
-    except Exception as e:
-        print(f"❌ Error durante el proceso: {e}")
-        import traceback
-        traceback.print_exc()
+    except Exception:
+        logger.exception(
+            "Audio pipeline failed evaluation_id=%s video_uid=%s",
+            evaluation_id,
+            video_uid,
+        )
         return None
 
     finally:
         for f in [video_path, audio_path]:
             if os.path.exists(f):
                 os.remove(f)
-                print(f"🗑️ Archivo temporal eliminado: {f}")
+                logger.debug("Removed temp file path=%s", f)
 
 
 async def update_evaluation_ai_fields(
@@ -179,7 +193,10 @@ async def update_evaluation_ai_fields(
         # Get the evaluation
         evaluation = await session.get(Evaluation, evaluation_id)
         if not evaluation:
-            print(f"⚠️ Evaluation {evaluation_id} not found for AI field update")
+            logger.warning(
+                "Evaluation not found for AI field update evaluation_id=%s",
+                evaluation_id,
+            )
             return
         
         # Extract AI fields
@@ -217,12 +234,18 @@ async def update_evaluation_ai_fields(
         
         session.add(evaluation)
         await session.commit()
-        print(f"✅ AI fields updated for evaluation {evaluation_id}")
-        
+        logger.info("AI fields updated evaluation_id=%s", evaluation_id)
+
     except json.JSONDecodeError as e:
-        print(f"⚠️ Could not parse operative view as JSON: {e}")
+        logger.warning(
+            "Could not parse operative view as JSON evaluation_id=%s: %s",
+            evaluation_id,
+            e,
+        )
     except Exception as e:
-        print(f"⚠️ Error updating AI fields: {e}")
+        logger.warning(
+            "Error updating AI fields evaluation_id=%s: %s", evaluation_id, e
+        )
 
 
 async def rebuild_timeline_events(
@@ -284,10 +307,21 @@ async def rebuild_timeline_events(
                 )
             )
     except json.JSONDecodeError:
-        print("⚠️ Could not parse operative JSON for event extraction")
+        logger.warning(
+            "Could not parse operative JSON for events evaluation_id=%s",
+            evaluation_id,
+        )
     except Exception as exc:
-        print(f"⚠️ Error while creating events from operative JSON: {exc}")
+        logger.warning(
+            "Error creating events from operative JSON evaluation_id=%s: %s",
+            evaluation_id,
+            exc,
+        )
 
     if events:
         await create_events_batch(session, evaluation_id, events)
-        print(f"✅ {len(events)} eventos guardados para evaluación {evaluation_id}")
+        logger.info(
+            "Timeline events saved evaluation_id=%s count=%s",
+            evaluation_id,
+            len(events),
+        )
