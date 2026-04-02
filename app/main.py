@@ -22,12 +22,14 @@ if settings.PROJECT_MODE == "prod":
     origins = [
         "https://cx.sieteic.com",
         "https://cx-frontendnew.vercel.app",
+        "siete-api-staging.up.railway.app",
     ]
 else:
     origins = [
         "https://cx.sieteic.com",
         "https://cx-frontendnew.vercel.app",
         "http://localhost:4200",
+        "siete-api-staging.up.railway.app",
     ]
 
 app.add_middleware(
