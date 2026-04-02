@@ -102,7 +102,7 @@ async def get_insights_summary(request: Request):
 @router.get("/insights/trends", response_model=InsightTrends)
 async def get_insights_trends(
     request: Request,
-    days: int = Query(default=30, ge=1, le=365)
+    days: int = Query(default=30, ge=1, le=365),
 ):
     _ = request.state.user.company_id
     _ = days
@@ -120,7 +120,7 @@ async def get_insights_trends(
 @router.get("/insights/top-actions", response_model=TopActionsResponse)
 async def get_top_actions(
     request: Request,
-    limit: int = Query(default=10, ge=1, le=50)
+    limit: int = Query(default=10, ge=1, le=50),
 ):
     _ = request.state.user.company_id
     _ = limit

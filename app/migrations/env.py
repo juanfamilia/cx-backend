@@ -25,6 +25,9 @@ from app.models import (
     transcript_segment_model,
     processing_job_model,
     campaign_goals_evaluator_model,
+    prompt_model,
+    insight_model,
+    clip_model,
 )
 
 config = context.config

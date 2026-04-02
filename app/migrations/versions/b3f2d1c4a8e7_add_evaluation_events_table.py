@@ -1,7 +1,7 @@
 """add evaluation events table
 
 Revision ID: b3f2d1c4a8e7
-Revises: 9a1b7f3c4d2e
+Revises: 2fbe48d2fb88
 Create Date: 2026-03-23 10:20:00.000000
 
 """
@@ -14,7 +14,7 @@ import sqlmodel.sql.sqltypes
 
 # revision identifiers, used by Alembic.
 revision: str = "b3f2d1c4a8e7"
-down_revision: Union[str, None] = "9a1b7f3c4d2e"
+down_revision: Union[str, None] = "2fbe48d2fb88"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
