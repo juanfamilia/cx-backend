@@ -147,10 +147,10 @@ async def create(
     request: Request, user_create: UserCreate, session: AsyncSession = Depends(get_db)
 ) -> UserPublic:
 
-    if request.state.user.role not in [0, 1]:
+    if request.state.user.role not in [0, 1, 2]:
         raise PermissionDeniedException(custom_message="create users")
 
-    if request.state.user.role == 1:
+    if request.state.user.role in [1, 2]:
         user_create.company_id = request.state.user.company_id
 
     user_create.birthdate = user_create.birthdate.replace(tzinfo=None)
@@ -201,7 +201,7 @@ async def delete(
     if request.state.user.role not in [0, 1]:
         raise PermissionDeniedException(custom_message="delete this user")
 
-    if request.state.user.role == 1 and request.state.user.company != user.company_id:
+    if request.state.user.role == 1 and request.state.user.company_id != user.company_id:
         raise PermissionDeniedException(custom_message="delete this user")
 
     await soft_delete_user(session, user_id)

@@ -12,8 +12,14 @@ def check_role_creation_permissions(creator_role: int, new_user_role: int) -> No
                 custom_message="No tienes permisos para crear este rol"
             )
 
-    # Gerente y Evaluador no pueden crear ningún usuario.
-    if creator_role in [2, 3]:
+    if creator_role == 2:
+        # Gerente solo puede crear Evaluadores (3).
+        if new_user_role != 3:
+            raise PermissionDeniedException(
+                custom_message="No tienes permisos para crear este rol"
+            )
+
+    if creator_role == 3:
         raise PermissionDeniedException(
             custom_message="No tienes permisos para crear usuarios"
         )
