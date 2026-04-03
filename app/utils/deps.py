@@ -40,6 +40,19 @@ async def check_company_payment_status(
     user=Depends(get_auth_user),
     session: AsyncSession = Depends(get_db),
 ):
+    # Superadmin: no amarrar a pago de una sola empresa (puede no tener company_id).
+    if user.role == 0:
+        return True
+
+    if user.company_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "Tu cuenta no tiene una empresa asignada. "
+                "Contacta al administrador para poder crear usuarios o usar el sistema."
+            ),
+        )
+
     payment = await is_company_payment_valid(user.company_id, session)
 
     if not payment:

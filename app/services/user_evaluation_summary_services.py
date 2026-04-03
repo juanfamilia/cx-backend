@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
@@ -53,7 +54,7 @@ async def get_company_users_evaluations(session: AsyncSession, company_id: int) 
     summary = result.first()
 
     queryCompanyAnalysis = select(CompanyCampaignAnalysis).where(
-        CompanyUserEvaluation.company_id == company_id
+        CompanyCampaignAnalysis.company_id == company_id
     )
     result_analysis = await session.scalars(queryCompanyAnalysis)
     analysis_summary = result_analysis.all()
@@ -63,24 +64,85 @@ async def get_company_users_evaluations(session: AsyncSession, company_id: int) 
 
 async def get_manager_summary(
     session: AsyncSession, company_id: int, user_id: int
-) -> ManagerSummary:
-
-    statement = select(ManagerSummary).where(ManagerSummary.company_id == company_id)
+) -> dict:
+    statement = select(ManagerSummary).where(ManagerSummary.user_id == user_id)
     result = await session.scalars(statement)
-    summary = result.first()
+    summary_row = result.first()
 
-    custom_query = """
-    SELECT *
-    FROM company_campaign_analysis_agg cca
-    JOIN campaign_zones cz ON cz.campaign_id = cca.campaign_id
-    JOIN user_zones uz ON uz.zone_id = cz.zone_id
-    WHERE uz.user_id = :user_id
-      AND cz.deleted_at IS NULL
-      AND uz.deleted_at IS NULL
-    """
-    result_analysis = await session.execute(custom_query, {"user_id": user_id}).all()
+    analysis_sql = text(
+        """
+        SELECT DISTINCT ON (cca.campaign_id)
+            cca.company_id,
+            cca.campaign_id,
+            cca.campaign_name,
+            cca.operative_views
+        FROM company_campaign_analysis cca
+        INNER JOIN campaign_zones cz
+            ON cz.campaign_id = cca.campaign_id AND cz.deleted_at IS NULL
+        INNER JOIN user_zones uz
+            ON uz.zone_id = cz.zone_id
+            AND uz.user_id = :user_id
+            AND uz.deleted_at IS NULL
+        WHERE cca.company_id = :company_id
+        ORDER BY cca.campaign_id
+        """
+    )
+    analysis_result = await session.execute(
+        analysis_sql, {"user_id": user_id, "company_id": company_id}
+    )
+    analysis_list = [dict(row) for row in analysis_result.mappings().all()]
 
-    return {"summary": summary, "analysis": result_analysis}
+    counts_sql = text(
+        """
+        SELECT
+            COUNT(*) FILTER (
+                WHERE e.status::text IN ('APROVED', 'aprobado')
+            ) AS evaluaciones_aprobadas,
+            COUNT(*) FILTER (
+                WHERE e.status::text IN ('REJECTED', 'rechazado')
+            ) AS evaluaciones_rechazadas
+        FROM evaluations e
+        INNER JOIN users u ON u.id = e.user_id AND u.deleted_at IS NULL
+        INNER JOIN user_zones ez ON ez.user_id = u.id AND ez.deleted_at IS NULL
+        INNER JOIN user_zones mz
+            ON mz.zone_id = ez.zone_id
+            AND mz.user_id = :manager_id
+            AND mz.deleted_at IS NULL
+        WHERE e.deleted_at IS NULL
+          AND u.company_id = :company_id
+          AND u.role = 3
+        """
+    )
+    counts_result = await session.execute(
+        counts_sql, {"manager_id": user_id, "company_id": company_id}
+    )
+    counts_row = counts_result.mappings().first()
+
+    eval_ok = int(counts_row["evaluaciones_aprobadas"] or 0) if counts_row else 0
+    eval_rej = int(counts_row["evaluaciones_rechazadas"] or 0) if counts_row else 0
+
+    summary_dict = {
+        "user_id": user_id,
+        "company_id": company_id,
+        "zonas_asignadas": 0,
+        "evaluadores_asignados": 0,
+        "active_campaigns": 0,
+        "evaluaciones_aprobadas": eval_ok,
+        "evaluaciones_rechazadas": eval_rej,
+    }
+    if summary_row:
+        dumped = summary_row.model_dump()
+        for key in (
+            "user_id",
+            "company_id",
+            "zonas_asignadas",
+            "evaluadores_asignados",
+            "active_campaigns",
+        ):
+            if dumped.get(key) is not None:
+                summary_dict[key] = dumped[key]
+
+    return {"summary": summary_dict, "analysis": analysis_list}
 
 
 async def get_superadmin_summary(session: AsyncSession) -> SuperadminSummary:

@@ -150,10 +150,20 @@ async def create(
     if request.state.user.role not in [0, 1, 2]:
         raise PermissionDeniedException(custom_message="create users")
 
+    update_payload: dict = {}
     if request.state.user.role in [1, 2]:
-        user_create.company_id = request.state.user.company_id
+        cid = request.state.user.company_id
+        if cid is None:
+            raise PermissionDeniedException(
+                custom_message="crear usuarios (sin empresa asignada en tu cuenta)"
+            )
+        update_payload["company_id"] = cid
 
-    user_create.birthdate = user_create.birthdate.replace(tzinfo=None)
+    if user_create.birthdate is not None:
+        update_payload["birthdate"] = user_create.birthdate.replace(tzinfo=None)
+
+    if update_payload:
+        user_create = user_create.model_copy(update=update_payload)
 
     check_role_creation_permissions(request.state.user.role, user_create.role)
 
