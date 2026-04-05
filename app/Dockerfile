@@ -23,6 +23,9 @@ RUN uv sync --frozen --no-dev
 # Copy application code
 COPY app/ ./app/
 COPY alembic.ini ./
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+
+RUN chmod +x /app/docker-entrypoint.sh
 
 # Railway setea PORT; pon un default solo por si acaso
 ENV PORT=8000
@@ -32,6 +35,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
 
-# ⛔️ AQUÍ estaba el problema: estabas fijando 8000 en vez de usar $PORT
-# Usa la forma *shell* para que se expanda $PORT
-CMD /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
+# Migraciones y arranque (Railway: DATABASE_URL debe estar definida)
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
