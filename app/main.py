@@ -49,7 +49,14 @@ app.title = settings.PROJECT_NAME
 
 # CORS (el navegador envía Origin del sitio donde está el Angular, no el host del API)
 _origins = build_cors_origins()
-_cors_regex = (settings.CORS_ORIGIN_REGEX or "").strip() or None
+# Staging: sin regex en env → https://*.vercel.app (previews). Prod: solo lista explícita salvo que definas regex.
+# Con CORS_ORIGIN_REGEX definido: ese patrón; tras strip vacío → solo allow_origins.
+if settings.CORS_ORIGIN_REGEX is not None:
+    _cors_regex: str | None = (settings.CORS_ORIGIN_REGEX or "").strip() or None
+elif settings.PROJECT_MODE == "prod":
+    _cors_regex = None
+else:
+    _cors_regex = r"https://.*\.vercel\.app"
 
 app.add_middleware(
     CORSMiddleware,
