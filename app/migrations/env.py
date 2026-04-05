@@ -23,7 +23,6 @@ from app.models import (
     evaluation_analysis_model,
     evaluation_event_model,
     transcript_segment_model,
-    processing_job_model,
     campaign_goals_evaluator_model,
     prompt_model,
     insight_model,
