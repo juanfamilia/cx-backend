@@ -5,6 +5,36 @@ from fastapi.responses import JSONResponse
 from app.routes.main import api_router
 from app.core.config import settings
 
+
+def build_cors_origins() -> list[str]:
+    """Orígenes del *frontend* (esquema + host). El host del API no debe ir aquí."""
+    if settings.PROJECT_MODE == "prod":
+        base = [
+            "https://cx.sieteic.com",
+            "https://cx-frontendnew.vercel.app",
+        ]
+    else:
+        base = [
+            "https://cx.sieteic.com",
+            "https://cx-frontendnew.vercel.app",
+            "http://localhost:4200",
+        ]
+    extra = [
+        o.strip()
+        for o in settings.CORS_EXTRA_ORIGINS.split(",")
+        if o.strip()
+    ]
+    out: list[str] = []
+    seen: set[str] = set()
+    for o in base + extra:
+        if "://" not in o:
+            o = f"https://{o}"
+        if o not in seen:
+            seen.add(o)
+            out.append(o)
+    return out
+
+
 # Configuración base
 if settings.PROJECT_MODE == "prod":
     app = FastAPI(
@@ -17,24 +47,14 @@ else:
 
 app.title = settings.PROJECT_NAME
 
-# CORS
-if settings.PROJECT_MODE == "prod":
-    origins = [
-        "https://cx.sieteic.com",
-        "https://cx-frontendnew.vercel.app",
-        "siete-api-staging.up.railway.app",
-    ]
-else:
-    origins = [
-        "https://cx.sieteic.com",
-        "https://cx-frontendnew.vercel.app",
-        "http://localhost:4200",
-        "siete-api-staging.up.railway.app",
-    ]
+# CORS (el navegador envía Origin del sitio donde está el Angular, no el host del API)
+_origins = build_cors_origins()
+_cors_regex = (settings.CORS_ORIGIN_REGEX or "").strip() or None
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=_origins,
+    allow_origin_regex=_cors_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

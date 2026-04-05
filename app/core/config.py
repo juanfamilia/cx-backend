@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     R2_BUCKET: str
     R2_ENDPOINT_URL: str
     OPENAI_API_KEY: str
+    # Orígenes adicionales para CORS (coma-separados, con o sin https://).
+    # Ej. staging: https://tu-app-staging.vercel.app
+    CORS_EXTRA_ORIGINS: str = ""
+    # Opcional: regex de orígenes (p. ej. previews de Vercel). Requiere coincidencia completa con Origin.
+    CORS_ORIGIN_REGEX: str | None = None
 
 
 settings = Settings()
