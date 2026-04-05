@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import Text
@@ -33,7 +33,7 @@ class Clip(ClipBase, table=True):
     )
     deleted_at: datetime | None = Field(default=None)
 
-    insight: "Insight" | None = Relationship(
+    insight: Optional["Insight"] = Relationship(
         back_populates="clips", sa_relationship_kwargs={"lazy": "noload"}
     )
 
