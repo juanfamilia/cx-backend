@@ -14,7 +14,6 @@ from app.models.user_model import (
 from app.services.users_services import (
     create_user,
     get_user,
-    get_user_by_zone,
     get_users,
     get_users_plain,
     soft_delete_user,
@@ -63,14 +62,16 @@ async def get_all(
             )
 
         case 2:
-            return await get_user_by_zone(
+            # Misma amplitud que admin empresa: todos los usuarios activos de la compañía
+            # (get_user_by_zone ocultaba evaluadores sin filas en user_zones).
+            return await get_users(
                 session,
                 offset,
                 limit,
                 filter,
                 search,
-                request.state.user.id,
                 request.state.user.company_id,
+                request.state.user.id,
             )
 
 
@@ -91,9 +92,7 @@ async def get_users_plain_list(
             return await get_users_plain(session, request.state.user.company_id)
 
         case 2:
-            return await get_users_plain(
-                session, request.state.user.company_id, request.state.user.id
-            )
+            return await get_users_plain(session, request.state.user.company_id)
 
 
 @router.get("/me")

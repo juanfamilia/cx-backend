@@ -30,42 +30,50 @@ async def get_users(
     user_id: Optional[int] = None,
 ) -> UsersPublic:
 
-    query = (
-        select(User, func.count().over().label("total"))
-        .options(selectinload(User.company))
-        .where(User.deleted_at == None)
-    )
-
+    filters: list = [User.deleted_at == None]
     if company_id is not None:
-        query = query.where(User.company_id == company_id)
-
+        filters.append(User.company_id == company_id)
     if user_id is not None:
-        query = query.where(User.id != user_id)
+        filters.append(User.id != user_id)
 
+    join_company = False
     if filter and search:
         match filter:
             case "full_name":
                 names = search.split()
                 if len(names) == 1:
-                    query = query.where(
+                    filters.append(
                         or_(
                             User.first_name.ilike(f"%{names[0]}%"),
                             User.last_name.ilike(f"%{names[0]}%"),
                         )
                     )
                 else:
-                    query = query.where(
+                    filters.append(
                         and_(
                             User.first_name.ilike(f"%{names[0]}%"),
                             User.last_name.ilike(f"%{' '.join(names[1:])}%"),
                         )
                     )
-
             case "email":
-                query = query.where(User.email.ilike(f"%{search}%"))
-
+                filters.append(User.email.ilike(f"%{search}%"))
             case "company":
-                query = query.where(Company.name.ilike(f"%{search}%"))
+                join_company = True
+                filters.append(Company.name.ilike(f"%{search}%"))
+
+    count_q = select(func.count()).select_from(User)
+    if join_company:
+        count_q = count_q.join(Company, User.company_id == Company.id)
+    count_q = count_q.where(and_(*filters))
+    total = int((await session.scalar(count_q)) or 0)
+
+    query = (
+        select(User, func.count().over().label("total"))
+        .options(selectinload(User.company))
+        .where(and_(*filters))
+    )
+    if join_company:
+        query = query.join(Company, User.company_id == Company.id)
 
     query = query.order_by(User.id).offset(offset).limit(limit)
 
@@ -73,10 +81,12 @@ async def get_users(
     db_users = result.unique().all()
 
     if not db_users:
-        raise NotFoundException("Users not found")
+        return UsersPublic(
+            data=[],
+            pagination=Pagination(first=offset, rows=limit, total=total),
+        )
 
     patients = [row[0] for row in db_users]
-    total = db_users[0][1] if db_users else 0
     pagination = Pagination(first=offset, rows=limit, total=total)
 
     return UsersPublic(data=patients, pagination=pagination)
