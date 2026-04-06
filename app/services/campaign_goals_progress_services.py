@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.models.campaign_goals_progress_model import CampaignGoalsProgress
-from app.utils.exeptions import NotFoundException
 
 
 async def get_campaign_goals_progress(
@@ -21,7 +20,5 @@ async def get_campaign_goals_progress(
     result = await session.execute(query)
     goals_progress = result.scalars().all()
 
-    if not goals_progress:
-        raise NotFoundException("Goals progress not found")
-
-    return goals_progress
+    # Sin metas asignadas o sin campañas vigentes: lista vacía (200), no 404.
+    return list(goals_progress)

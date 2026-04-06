@@ -1,39 +1,55 @@
+# syntax=docker/dockerfile:1
+# BuildKit: cache de uv entre builds (menos tiempo si solo cambia el código en app/).
+# En Railway, los builds suelen usar BuildKit; si no, el prefijo syntax sigue siendo válido.
+
+# --- Dependencias Python (capa cacheable; sin ffmpeg en build) ---
+FROM python:3.13-slim AS builder
+
+WORKDIR /app
+
+# Sin esto, apt puede arrastrar recomendaciones enormes (p. ej. con ffmpeg: Mesa/GTK/SDL).
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir uv
+
+COPY pyproject.toml ./
+COPY uv.lock ./
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+# --- Runtime: solo lo necesario para ejecutar (ffmpeg + cliente libpq) ---
 FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    libpq-dev \
-    gcc \
+    libpq5 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv
-RUN pip install --no-cache-dir uv
+COPY --from=builder /app/.venv /app/.venv
 
-# Copy dependency files
-COPY pyproject.toml ./
-COPY uv.lock ./
-
-# Install dependencies using uv sync (creates .venv)
-RUN uv sync --frozen --no-dev
-
-# Copy application code
 COPY app/ ./app/
 COPY alembic.ini ./
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 
 RUN chmod +x /app/docker-entrypoint.sh
 
-# Railway setea PORT; pon un default solo por si acaso
 ENV PORT=8000
+# Evita que `print()` y logs por stdout lleguen tarde al agregador de Railway (buffer sin TTY).
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
-# Healthcheck interno del contenedor
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:${PORT}/api/v1/health || exit 1
 
-# Migraciones y arranque (Railway: DATABASE_URL debe estar definida)
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

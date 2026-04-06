@@ -83,16 +83,6 @@ async def health_check():
 
 app.include_router(health_router, prefix=settings.API_URL)
 
-print("🔥 ESTE MAIN SE ESTA EJECUTANDO")
-
-
-@app.on_event("startup")
-async def debug_routes():
-    print("\n=== REGISTERED ROUTES ===")
-    for route in app.routes:
-        print(route.path)
-    print("=========================\n")
-
 
 @app.get("/")
 def root():
