@@ -283,21 +283,24 @@ async def get_assiments_campaigns(
     )
     zone_ids = [row[0] for row in user_zones]
 
+    # Sin zonas: devolver solo asignaciones por usuario (no fallar el endpoint completo).
     if not zone_ids:
-        raise NotFoundException("No zones assigned to user")
-
-    query_by_zone = (
-        select(CampaignZone)
-        .join(Campaign, CampaignZone.campaign_id == Campaign.id, isouter=True)
-        .where(
-            CampaignZone.zone_id.in_(zone_ids),
-            Campaign.date_end >= datetime.now(),
-            CampaignZone.deleted_at == None,
+        db_campaigns_zone = []
+    else:
+        query_by_zone = (
+            select(CampaignZone)
+            .join(Campaign, CampaignZone.campaign_id == Campaign.id, isouter=True)
+            .where(
+                CampaignZone.zone_id.in_(zone_ids),
+                Campaign.date_end >= datetime.now(),
+                CampaignZone.deleted_at == None,
+            )
+            .options(
+                selectinload(CampaignZone.campaign), selectinload(CampaignZone.zone)
+            )
+            .order_by(CampaignZone.id)
         )
-        .options(selectinload(CampaignZone.campaign), selectinload(CampaignZone.zone))
-        .order_by(CampaignZone.id)
-    )
-    result_by_zone = await session.execute(query_by_zone)
-    db_campaigns_zone = result_by_zone.scalars().all()
+        result_by_zone = await session.execute(query_by_zone)
+        db_campaigns_zone = result_by_zone.scalars().all()
 
     return currentAssignedCampaign(by_user=db_campaigns, by_zone=db_campaigns_zone)
