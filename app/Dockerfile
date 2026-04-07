@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-# BuildKit: cache de uv entre builds (menos tiempo si solo cambia el código en app/).
-# En Railway, los builds suelen usar BuildKit; si no, el prefijo syntax sigue siendo válido.
+# Nota Railway: no usar RUN --mount=type=cache sin compatibilidad verificada; su builder puede
+# rechazarlo ("missing an id argument"). La capa `uv sync` sigue cacheándose si no cambia uv.lock.
 
 # --- Dependencias Python (capa cacheable; sin ffmpeg en build) ---
 FROM python:3.13-slim AS builder
@@ -20,8 +20,7 @@ RUN pip install --no-cache-dir uv
 COPY pyproject.toml ./
 COPY uv.lock ./
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev
 
 # --- Runtime: solo lo necesario para ejecutar (ffmpeg + cliente libpq) ---
 FROM python:3.13-slim
