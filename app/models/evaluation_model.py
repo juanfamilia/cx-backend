@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Integer, Relationship, SQLModel, func, Date
 from sqlalchemy.dialects.postgresql import ARRAY
 
@@ -141,6 +141,8 @@ class EvaluationUpdate(SQLModel):
 
 
 class EvaluationPublic(EvaluationBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     video: Video | None = None
     campaign: CampaignPublic | None = None

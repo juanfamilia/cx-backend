@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import AsyncSessionLocal, get_db
 from app.models.evaluation_model import (
-    Evaluation,
     EvaluationAnswerBase,
     EvaluationAnswerUpdate,
     EvaluationCreate,
@@ -149,7 +148,7 @@ async def get_one(
     return evaluation
 
 
-@router.post("/")
+@router.post("/", response_model=EvaluationPublic)
 async def create(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -164,7 +163,7 @@ async def create(
         description="JSON array of zone ids, e.g. [1,2]",
     ),
     evaluation_answers: str = Form(...),
-) -> Evaluation:
+) -> EvaluationPublic:
 
     video_url = get_video_url(media_url)
     video_upload = await create_video(session, video_url, video_title)
@@ -190,7 +189,7 @@ async def create(
 
     background_tasks.add_task(run_audio_pipeline, media_url, evaluation_db.id)
 
-    return evaluation_db
+    return await get_evaluation(session, evaluation_db.id)
 
 
 @router.put("/{evaluation_id}")

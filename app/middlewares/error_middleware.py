@@ -51,14 +51,15 @@ async def db_exception_handler(request: Request, call_next):
 
 # Función para agregar los headers CORS manualmente
 def add_cors_headers(response, request: Request):
-    # Puedes modificar esta lógica si necesitas añadir más cosas
+    # Alineado con CORSMiddleware (credentials + preflight) cuando este helper añade cabeceras.
     origin = request.headers.get("Origin")
     if origin:
         response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = (
-            "GET, POST, PUT, DELETE, OPTIONS"
+            "GET, POST, PUT, DELETE, PATCH, OPTIONS"
         )
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
 
