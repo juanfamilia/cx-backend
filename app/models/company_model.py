@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.types.pagination import Pagination
@@ -44,6 +44,8 @@ class Company(CompanyBase, table=True):
 
 
 class CompanyPublic(CompanyBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     created_at: datetime | None
     updated_at: datetime | None

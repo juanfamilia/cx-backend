@@ -1,12 +1,57 @@
 from datetime import datetime
 from typing import List
-from pydantic import BaseModel
+
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
-from app.models.campaign_model import Campaign, CampaignPublic
-from app.models.campaign_user_model import CampaignUserPublic
+from app.models.campaign_model import Campaign, CampaignPublic, ChannelType
 from app.models.zone_model import Zone, ZonePublic
 from app.types.pagination import Pagination
+
+
+class CampaignForAssignmentList(BaseModel):
+    """Campaña sin `survey` anidado: evita grafos enormes y JSON no estándar (p. ej. NaN) en el cliente."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    company_id: int | None = None
+    name: str
+    objective: str | None = None
+    date_start: datetime
+    date_end: datetime
+    channel: ChannelType
+    survey_id: int | None = None
+    notes: str | None = None
+    goal: int = 0
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
+
+
+class AssignedViaUser(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    campaign_id: int | None = None
+    user_id: int | None = None
+    campaign: CampaignForAssignmentList | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
+
+
+class AssignedViaZone(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    campaign_id: int | None = None
+    zone_id: int | None = None
+    campaign: CampaignForAssignmentList | None = None
+    zone: ZonePublic | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    deleted_at: datetime | None = None
 
 
 class CampaignZoneBase(SQLModel):
@@ -32,6 +77,8 @@ class CampaignZone(CampaignZoneBase, table=True):
 
 
 class CampaignZonePublic(CampaignZoneBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     campaign: CampaignPublic | None = None
     zone: ZonePublic | None = None
@@ -51,5 +98,5 @@ class createCampaignZone(BaseModel):
 
 
 class currentAssignedCampaign(BaseModel):
-    by_user: List[CampaignUserPublic]
-    by_zone: List[CampaignZonePublic]
+    by_user: List[AssignedViaUser]
+    by_zone: List[AssignedViaZone]

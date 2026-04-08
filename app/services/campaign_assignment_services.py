@@ -12,6 +12,8 @@ from app.models.campaign_user_model import (
     CampaignUsersPublic,
 )
 from app.models.campaign_zone_model import (
+    AssignedViaUser,
+    AssignedViaZone,
     CampaignZone,
     CampaignZonePublic,
     CampaignZonesPublic,
@@ -303,4 +305,7 @@ async def get_assiments_campaigns(
         result_by_zone = await session.execute(query_by_zone)
         db_campaigns_zone = result_by_zone.scalars().all()
 
-    return currentAssignedCampaign(by_user=db_campaigns, by_zone=db_campaigns_zone)
+    return currentAssignedCampaign(
+        by_user=[AssignedViaUser.model_validate(r) for r in db_campaigns],
+        by_zone=[AssignedViaZone.model_validate(r) for r in db_campaigns_zone],
+    )

@@ -7,6 +7,7 @@ from app.core.db import get_db
 from app.services.campaign_assignment_services import (
     get_assiments_campaigns,
 )
+from app.models.campaign_zone_model import currentAssignedCampaign
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
@@ -18,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", response_model=currentAssignedCampaign)
 async def get_assiments(request: Request, session: AsyncSession = Depends(get_db)):
 
     if request.state.user.role != 3:

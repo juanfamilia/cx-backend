@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlmodel import Column, DateTime, Relationship, SQLModel, Field, func
+
+from pydantic import ConfigDict
+from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 if TYPE_CHECKING:
     from app.models.user_zone_model import UserZone
@@ -29,6 +31,8 @@ class Zone(ZoneBase, table=True):
 
 
 class ZonePublic(ZoneBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     created_at: datetime | None
     updated_at: datetime | None

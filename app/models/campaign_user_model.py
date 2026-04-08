@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.models.campaign_model import Campaign, CampaignPublic
@@ -31,6 +31,8 @@ class CampaignUser(CampaignUserBase, table=True):
 
 
 class CampaignUserPublic(CampaignUserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     campaign: CampaignPublic | None = None
     user: UserPublic | None = None

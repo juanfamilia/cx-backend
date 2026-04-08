@@ -1,10 +1,10 @@
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from sqlmodel import Relationship, SQLModel, Field, Column, DateTime, func
 
-from app.models.company_model import Company
+from app.models.company_model import Company, CompanyPublic
 from app.types.pagination import Pagination
 
 
@@ -109,8 +109,10 @@ class User(UserBase, table=True):
 
 
 class UserPublic(UserBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
-    company: Optional[Company] = None
+    company: Optional[CompanyPublic] = None
     created_at: datetime | None
     updated_at: datetime | None
     deleted_at: datetime | None
