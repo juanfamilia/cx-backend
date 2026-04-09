@@ -26,12 +26,6 @@ async def get_video(session: AsyncSession, video_id: str) -> Video:
 
 
 async def update_video_status(session: AsyncSession, video_id: int) -> Video:
-
-    # Buscar el video en la base de datos
+    """Return the video row. `videos.status` was removed in migration ddbcc7fdc927."""
     video = await get_video(session, video_id)
-
-    video.status = "available"
-    await session.commit()
-    await session.refresh(video)
-
     return video
