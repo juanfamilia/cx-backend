@@ -5,6 +5,28 @@ from typing import Tuple, List, Dict, Any
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
+def _whisper_segment_to_dict(seg: Any) -> Dict[str, Any]:
+    """Normalize Whisper segment objects (dict, Pydantic model, or attribute object)."""
+    if seg is None:
+        return {}
+    if isinstance(seg, dict):
+        return {
+            "start": float(seg.get("start", 0)),
+            "end": float(seg.get("end", 0)),
+            "text": str(seg.get("text", "")).strip(),
+            "avg_logprob": seg.get("avg_logprob"),
+        }
+    model_dump = getattr(seg, "model_dump", None)
+    if callable(model_dump):
+        return _whisper_segment_to_dict(model_dump())
+    return {
+        "start": float(getattr(seg, "start", 0)),
+        "end": float(getattr(seg, "end", 0)),
+        "text": str(getattr(seg, "text", "")).strip(),
+        "avg_logprob": getattr(seg, "avg_logprob", None),
+    }
+
+
 def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
     """
     Transcribe and analyze audio
@@ -24,16 +46,12 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
             language="es",
         )
 
-    # Extract segments from Whisper response
-    segments = []
-    if hasattr(transcript_response, 'segments') and transcript_response.segments:
-        for seg in transcript_response.segments:
-            segments.append({
-                'start': seg.get('start', seg.start) if hasattr(seg, 'start') else seg['start'],
-                'end': seg.get('end', seg.end) if hasattr(seg, 'end') else seg['end'],
-                'text': seg.get('text', seg.text) if hasattr(seg, 'text') else seg['text'],
-                'avg_logprob': seg.get('avg_logprob', getattr(seg, 'avg_logprob', None)),
-            })
+    segments: List[Dict[str, Any]] = []
+    raw_segments = getattr(transcript_response, "segments", None) or []
+    for seg in raw_segments:
+        d = _whisper_segment_to_dict(seg)
+        if d.get("text"):
+            segments.append(d)
     
     # Get full transcript text
     full_transcript = transcript_response.text if hasattr(transcript_response, 'text') else str(transcript_response)

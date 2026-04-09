@@ -33,11 +33,15 @@ from app.services.evaluation_services import (
     soft_delete_evaluation,
     update_evaluation,
 )
+from app.services.evaluation_ai_processing_service import (
+    get_evaluation_ai_processing,
+)
 from app.services.extract_audio_services import handle_stream_to_audio
 from app.services.video_services import (
     create_video,
     update_video_status,
 )
+from app.types.evaluation_ai_processing import EvaluationAiProcessingPublic
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
@@ -128,6 +132,26 @@ async def check_video(
     video = await update_video_status(session, video_id)
 
     return video
+
+
+@router.get(
+    "/{evaluation_id}/ai-processing",
+    response_model=EvaluationAiProcessingPublic,
+)
+async def get_ai_processing(
+    request: Request,
+    evaluation_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> EvaluationAiProcessingPublic:
+    evaluation = await get_evaluation(session, evaluation_id)
+
+    if request.state.user.role != 0 and (
+        evaluation.campaign is None
+        or evaluation.campaign.company_id != request.state.user.company_id
+    ):
+        raise PermissionDeniedException(custom_message="retrieve this evaluation")
+
+    return await get_evaluation_ai_processing(session, evaluation_id)
 
 
 @router.get("/{evaluation_id}")
