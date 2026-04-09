@@ -139,9 +139,9 @@ async def get_one(
 
     evaluation = await get_evaluation(session, evaluation_id)
 
-    if (
-        request.state.user.role != 0
-        and evaluation.campaign.company_id != request.state.user.company_id
+    if request.state.user.role != 0 and (
+        evaluation.campaign is None
+        or evaluation.campaign.company_id != request.state.user.company_id
     ):
         raise PermissionDeniedException(custom_message="retrieve this evaluation")
 
@@ -212,7 +212,10 @@ async def update(
     db_evaluation = await get_evaluation(session, evaluation_id)
 
     if request.state.user.role in [1, 2, 3]:
-        if db_evaluation.campaign.company_id != request.state.user.company_id:
+        if (
+            db_evaluation.campaign is None
+            or db_evaluation.campaign.company_id != request.state.user.company_id
+        ):
             raise PermissionDeniedException(custom_message="update this evaluation")
 
     answers_list: Optional[List[EvaluationAnswerUpdate]] = None
@@ -249,7 +252,10 @@ async def delete(
 
     if request.state.user.role in [1, 2, 3]:
         db_evaluation = await get_evaluation(session, evaluation_id)
-        if db_evaluation.campaign.company_id != request.state.user.company_id:
+        if (
+            db_evaluation.campaign is None
+            or db_evaluation.campaign.company_id != request.state.user.company_id
+        ):
             raise PermissionDeniedException(custom_message="delete this evaluation")
 
     await soft_delete_evaluation(session, evaluation_id)
