@@ -43,8 +43,9 @@ class EvaluationBase(SQLModel):
     location: Optional[str] = Field(nullable=True, default=None)
     evaluated_collaborator: str = Field(nullable=True)
     status: StatusEnum = Field(default=StatusEnum.SEND)
-    visited_zones: List[int] = Field(
-        sa_column=Column(ARRAY(Integer), nullable=True), default_factory=list
+    visited_zones: Optional[List[int]] = Field(
+        default=None,
+        sa_column=Column(ARRAY(Integer), nullable=True),
     )
     
     # ========== NEW METADATA FIELDS ==========
