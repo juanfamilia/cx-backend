@@ -1,3 +1,4 @@
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import delete, select
 
@@ -9,6 +10,22 @@ from app.models.evaluation_event_model import (
     EvaluationEventTypeEnum,
     EvaluationEventsPublic,
 )
+
+
+def is_undefined_evaluation_events_table_error(exc: BaseException | None) -> bool:
+    """True when Postgres reports that relation ``evaluation_events`` is missing."""
+    depth = 0
+    current: BaseException | None = exc
+    while current is not None and depth < 10:
+        msg = str(current).lower()
+        if "evaluation_events" in msg and "does not exist" in msg:
+            return True
+        nxt = getattr(current, "__cause__", None)
+        if nxt is None and isinstance(current, ProgrammingError):
+            nxt = getattr(current, "orig", None)
+        current = nxt
+        depth += 1
+    return False
 
 
 async def create_evaluation_event(

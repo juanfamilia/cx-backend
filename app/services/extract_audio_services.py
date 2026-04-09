@@ -9,6 +9,7 @@ import uuid
 
 import httpx
 from moviepy import VideoFileClip
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.concurrency import run_in_threadpool
 
@@ -22,6 +23,7 @@ from app.services.evaluation_event_services import (
     create_events_batch,
     delete_events_for_evaluation,
     detect_events_from_segments,
+    is_undefined_evaluation_events_table_error,
 )
 from app.services.cloudflare_rs_services import r2_upload
 from app.services.cloudflare_stream_services import (
@@ -260,69 +262,80 @@ async def rebuild_timeline_events(
     """
     from app.models.evaluation_event_model import EvaluationEventCreate, EvaluationEventTypeEnum
 
-    await delete_events_for_evaluation(session, evaluation_id)
-
-    events: list[EvaluationEventCreate] = detect_events_from_segments(segments)
-
     try:
-        json_match = re.search(r"```json\s*(.*?)\s*```", operative_view, re.DOTALL)
-        json_str = json_match.group(1) if json_match else operative_view
-        data = json.loads(json_str)
-        ai_extracted = data.get("ai_extracted", {})
+        await delete_events_for_evaluation(session, evaluation_id)
 
-        if ai_extracted.get("customer_emotion"):
-            emotion = str(ai_extracted.get("customer_emotion")).lower()
-            if any(term in emotion for term in ["frustr", "enoj", "molest", "angry"]):
+        events: list[EvaluationEventCreate] = detect_events_from_segments(segments)
+
+        try:
+            json_match = re.search(r"```json\s*(.*?)\s*```", operative_view, re.DOTALL)
+            json_str = json_match.group(1) if json_match else operative_view
+            data = json.loads(json_str)
+            ai_extracted = data.get("ai_extracted", {})
+
+            if ai_extracted.get("customer_emotion"):
+                emotion = str(ai_extracted.get("customer_emotion")).lower()
+                if any(term in emotion for term in ["frustr", "enoj", "molest", "angry"]):
+                    events.append(
+                        EvaluationEventCreate(
+                            event_type=EvaluationEventTypeEnum.EMOTIONAL_PEAK,
+                            timestamp_seconds=0.0,
+                            severity=4,
+                            confidence=0.7,
+                            evidence_text=f"customer_emotion={ai_extracted.get('customer_emotion')}",
+                            source="ai_json",
+                        )
+                    )
+
+            if ai_extracted.get("problem_resolved") is True:
                 events.append(
                     EvaluationEventCreate(
-                        event_type=EvaluationEventTypeEnum.EMOTIONAL_PEAK,
+                        event_type=EvaluationEventTypeEnum.RESOLUTION,
                         timestamp_seconds=0.0,
-                        severity=4,
+                        severity=2,
                         confidence=0.7,
-                        evidence_text=f"customer_emotion={ai_extracted.get('customer_emotion')}",
+                        evidence_text="ai_extracted.problem_resolved=true",
                         source="ai_json",
                     )
                 )
 
-        if ai_extracted.get("problem_resolved") is True:
-            events.append(
-                EvaluationEventCreate(
-                    event_type=EvaluationEventTypeEnum.RESOLUTION,
-                    timestamp_seconds=0.0,
-                    severity=2,
-                    confidence=0.7,
-                    evidence_text="ai_extracted.problem_resolved=true",
-                    source="ai_json",
+            if ai_extracted.get("product_offered") is True:
+                events.append(
+                    EvaluationEventCreate(
+                        event_type=EvaluationEventTypeEnum.SALES_SIGNAL,
+                        timestamp_seconds=0.0,
+                        severity=2,
+                        confidence=0.7,
+                        evidence_text="ai_extracted.product_offered=true",
+                        source="ai_json",
+                    )
                 )
+        except json.JSONDecodeError:
+            logger.warning(
+                "Could not parse operative JSON for events evaluation_id=%s",
+                evaluation_id,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Error creating events from operative JSON evaluation_id=%s: %s",
+                evaluation_id,
+                exc,
             )
 
-        if ai_extracted.get("product_offered") is True:
-            events.append(
-                EvaluationEventCreate(
-                    event_type=EvaluationEventTypeEnum.SALES_SIGNAL,
-                    timestamp_seconds=0.0,
-                    severity=2,
-                    confidence=0.7,
-                    evidence_text="ai_extracted.product_offered=true",
-                    source="ai_json",
-                )
+        if events:
+            await create_events_batch(session, evaluation_id, events)
+            logger.info(
+                "Timeline events saved evaluation_id=%s count=%s",
+                evaluation_id,
+                len(events),
             )
-    except json.JSONDecodeError:
-        logger.warning(
-            "Could not parse operative JSON for events evaluation_id=%s",
-            evaluation_id,
-        )
-    except Exception as exc:
-        logger.warning(
-            "Error creating events from operative JSON evaluation_id=%s: %s",
-            evaluation_id,
-            exc,
-        )
-
-    if events:
-        await create_events_batch(session, evaluation_id, events)
-        logger.info(
-            "Timeline events saved evaluation_id=%s count=%s",
-            evaluation_id,
-            len(events),
-        )
+    except ProgrammingError as exc:
+        if is_undefined_evaluation_events_table_error(exc):
+            await session.rollback()
+            logger.warning(
+                "evaluation_events table missing; skipping timeline rebuild "
+                "evaluation_id=%s (run alembic upgrade to create it)",
+                evaluation_id,
+            )
+            return
+        raise
