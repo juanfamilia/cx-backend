@@ -13,6 +13,9 @@ if TYPE_CHECKING:
 class AspectTypeEnum(str, Enum):
     NUMBER = "number"
     BOOLEAN = "boolean"
+    LIKERT = "likert"        # escala 1-5
+    COMPLIANCE = "compliance"  # C / NC / CP / NA
+    MEDIA = "media"          # requiere evidencia adjunta (foto/clip)
 
 
 # ----------- SECTIONS -----------
@@ -21,6 +24,9 @@ class SurveySectionBase(SQLModel):
     maximum_score: int
     order: int
     form_id: int | None = Field(default=None, foreign_key="survey_forms.id")
+    # Peso relativo de la sección (0.0 – 1.0). La suma de todas las secciones
+    # de un formulario debe ser 1.0. Si es None se distribuye igualmente.
+    weight: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
 
 class SurveySection(SurveySectionBase, table=True):
@@ -40,6 +46,7 @@ class SurveySectionCreate(SQLModel):
     name: str
     maximum_score: int
     order: int
+    weight: Optional[float] = None
     aspects: List["SurveyAspectCreate"]
 
 
@@ -48,6 +55,7 @@ class SurveySectionPublic(BaseModel):
     name: str
     maximum_score: int
     order: int
+    weight: Optional[float] = None
     aspects: List["SurveyAspectPublic"] | None = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -60,6 +68,10 @@ class SurveyAspectBase(SQLModel):
     maximum_score: Optional[int] = Field(default=None)
     section_id: int | None = Field(default=None, foreign_key="survey_sections.id")
     order: int
+    # Peso dentro de la sección (0.0 – 1.0). Si es None se distribuye igualmente.
+    weight: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    # Si True, este aspecto requiere evidencia (clip/foto) para poder marcarse como C
+    requires_evidence: bool = Field(default=False)
 
 
 class SurveyAspect(SurveyAspectBase, table=True):
@@ -82,6 +94,8 @@ class SurveyAspectCreate(SQLModel):
     type: AspectTypeEnum = AspectTypeEnum.NUMBER
     maximum_score: Optional[int] = None
     order: int
+    weight: Optional[float] = None
+    requires_evidence: bool = False
 
 
 class SurveyAspectPublic(BaseModel):
@@ -90,5 +104,7 @@ class SurveyAspectPublic(BaseModel):
     type: AspectTypeEnum
     maximum_score: Optional[int] = None
     order: int
+    weight: Optional[float] = None
+    requires_evidence: bool = False
 
     model_config = ConfigDict(from_attributes=True)

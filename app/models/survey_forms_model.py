@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 from pydantic import BaseModel, ConfigDict
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
@@ -17,10 +17,20 @@ from app.models.survey_model import (
 class SurveyFormBase(SQLModel):
     title: str
     company_id: int = Field(foreign_key="companies.id")
+    # Versionado: version se incrementa; parent_form_id apunta al formulario origen
+    # Las evaluaciones históricas mantienen su survey_id intacto al versionar.
+    version: int = Field(default=1)
+    parent_form_id: Optional[int] = Field(
+        default=None,
+        foreign_key="survey_forms.id",
+        description="ID del formulario del que deriva esta versión",
+    )
+    is_active: bool = Field(default=True, description="Solo un formulario activo por lineage")
 
 
 class SurveyFormUpdate(SQLModel):
     title: str | None = Field(default=None)
+    is_active: bool | None = Field(default=None)
 
 
 class SurveyForm(SurveyFormBase, table=True):

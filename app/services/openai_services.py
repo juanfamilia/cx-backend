@@ -1,7 +1,10 @@
+import logging
+
 from openai import OpenAI
 from app.core.config import settings
 from typing import Tuple, List, Dict, Any
 
+logger = logging.getLogger(__name__)
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
@@ -52,9 +55,23 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
         d = _whisper_segment_to_dict(seg)
         if d.get("text"):
             segments.append(d)
-    
-    # Get full transcript text
-    full_transcript = transcript_response.text if hasattr(transcript_response, 'text') else str(transcript_response)
+
+    # 1b. Speaker diarization (pyannote si HF_TOKEN configurado, heurística si no)
+    try:
+        from app.services.diarization_services import assign_speakers
+        segments = assign_speakers(audio_path, segments)
+        logger.info("Speaker diarization applied segment_count=%s", len(segments))
+    except Exception as exc:
+        logger.warning("Speaker diarization skipped: %s", exc)
+
+    # Get full transcript text (con etiquetas de hablante si están disponibles)
+    _has_speakers = any(seg.get("speaker") not in (None, "UNKNOWN") for seg in segments)
+    if _has_speakers:
+        full_transcript = "\n".join(
+            f"[{seg.get('speaker', 'UNKNOWN')}] {seg['text']}" for seg in segments
+        )
+    else:
+        full_transcript = transcript_response.text if hasattr(transcript_response, "text") else str(transcript_response)
 
     # 2. Analizar la transcripción con GPT-4o
     response = client.chat.completions.create(

@@ -7,6 +7,7 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 if TYPE_CHECKING:
     from app.models.user_zone_model import UserZone
     from app.models.campaign_zone_model import CampaignZone
+    from app.models.branch_model import Branch
 
 
 class ZoneBase(SQLModel):
@@ -26,6 +27,9 @@ class Zone(ZoneBase, table=True):
 
     user_zones: list["UserZone"] = Relationship(back_populates="zone")
     campaigns_zone: list["CampaignZone"] = Relationship(
+        back_populates="zone", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    branches: list["Branch"] = Relationship(
         back_populates="zone", sa_relationship_kwargs={"lazy": "noload"}
     )
 

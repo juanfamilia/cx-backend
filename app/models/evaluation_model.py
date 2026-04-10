@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from app.models.notification_model import Notification
     from app.models.evaluation_analysis_model import EvaluationAnalysis
     from app.models.transcript_segment_model import TranscriptSegment
+    from app.models.branch_model import Branch
 
 
 class InteractionTypeEnum(str, Enum):
@@ -69,6 +70,13 @@ class EvaluationBase(SQLModel):
         description="Duration of interaction in seconds"
     )
     
+    # Branch FK (nullable para backward-compat; branch_id/branch_name siguen como fallback)
+    branch_fk_id: Optional[int] = Field(
+        default=None,
+        foreign_key="branches.id",
+        description="FK a entidad Branch; si se usa este campo, branch_id/branch_name son derivados",
+    )
+
     # Customer info
     customer_segment: Optional[str] = Field(default=None, description="Customer segment (premium, standard, etc)")
     product_consulted: Optional[str] = Field(default=None, description="Product or service discussed")
@@ -117,6 +125,9 @@ class Evaluation(EvaluationBase, table=True):
     
     transcript_segments: List["TranscriptSegment"] = Relationship(
         back_populates="evaluation", sa_relationship_kwargs={"lazy": "noload"}
+    )
+    branch: Optional["Branch"] = Relationship(
+        back_populates="evaluations", sa_relationship_kwargs={"lazy": "noload"}
     )
 
 

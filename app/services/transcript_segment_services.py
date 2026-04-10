@@ -44,10 +44,11 @@ async def create_transcript_segments(
         
         db_segment = TranscriptSegment(
             evaluation_id=evaluation_id,
-            start_time=seg['start'],
-            end_time=seg['end'],
-            text=seg['text'].strip(),
+            start_time=seg["start"],
+            end_time=seg["end"],
+            text=seg["text"].strip(),
             confidence=confidence,
+            speaker=seg.get("speaker"),
         )
         session.add(db_segment)
         db_segments.append(db_segment)

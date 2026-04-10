@@ -42,6 +42,7 @@ from app.services.video_services import (
     update_video_status,
 )
 from app.types.evaluation_ai_processing import EvaluationAiProcessingPublic
+from app.services.audit_services import log_change
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
@@ -117,7 +118,23 @@ async def change_status(
     if request.state.user.role not in [1, 2]:
         raise PermissionDeniedException(custom_message="change status")
 
+    prev = await get_evaluation(session, evaluation_id)
+    prev_status = prev.status
+
     evaluation = await change_evaluation_status(session, evaluation_id, status)
+
+    await log_change(
+        session,
+        user_id=request.state.user.id,
+        user_email=request.state.user.email,
+        entity_type="evaluations",
+        entity_id=evaluation_id,
+        action="status_change",
+        field_name="status",
+        old_value=prev_status,
+        new_value=status.status,
+        justification=status.comment,
+    )
 
     return evaluation
 

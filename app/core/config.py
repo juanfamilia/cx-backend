@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     R2_BUCKET: str
     R2_ENDPOINT_URL: str
     OPENAI_API_KEY: str
+    # Hugging Face token para pyannote speaker diarization (opcional)
+    HF_TOKEN: str | None = None
     # Orígenes adicionales para CORS (coma-separados, con o sin https://).
     # Ej. staging: https://tu-app-staging.vercel.app
     CORS_EXTRA_ORIGINS: str = ""
