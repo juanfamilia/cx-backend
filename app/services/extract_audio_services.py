@@ -154,6 +154,21 @@ async def handle_stream_to_audio(
         # Rebuild timeline events for this evaluation after each processing run
         await rebuild_timeline_events(session, evaluation_id, segments, operative_view)
 
+        # Persist interaction phases (ENTRY → ATTENTION → CLOSURE, etc.)
+        from app.services.interaction_phase_services import persist_interaction_phases
+        await persist_interaction_phases(session, evaluation_id, operative_view)
+
+        # Auto-generate action plans based on AI thresholds (IRD, IOC, CES)
+        from app.services.action_plan_services import auto_generate_action_plans
+        ev = await session.get(__import__("app.models.evaluation_model", fromlist=["Evaluation"]).Evaluation, evaluation_id)
+        if ev and ev.campaigns_id:
+            from app.models.campaign_model import Campaign
+            campaign = await session.get(Campaign, ev.campaigns_id)
+            if campaign and campaign.company_id:
+                await auto_generate_action_plans(
+                    session, evaluation_id, campaign.company_id, operative_view
+                )
+
         return "✅ Transcripción completada y guardada."
 
     except Exception:

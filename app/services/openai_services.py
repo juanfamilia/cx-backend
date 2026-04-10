@@ -224,9 +224,37 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
                             "product_offered": false,
                             "nps_inferred": 0,
                             "greeting_detected": false
+                        },
+                        "interaction_phases": [
+                            {
+                                "phase": "ENTRY",
+                                "label": "Entrada / Bienvenida",
+                                "start_seconds": 0,
+                                "end_seconds": 30,
+                                "summary": "Descripción breve de lo que ocurre en esta fase"
+                            },
+                            {
+                                "phase": "ATTENTION",
+                                "label": "Atención / Gestión",
+                                "start_seconds": 30,
+                                "end_seconds": 120,
+                                "summary": "Descripción breve"
+                            },
+                            {
+                                "phase": "CLOSURE",
+                                "label": "Cierre / Despedida",
+                                "start_seconds": 120,
+                                "end_seconds": 180,
+                                "summary": "Descripción breve"
+                            }
+                        ]
                         }
-                        }
-                        
+
+                    IMPORTANTE para interaction_phases:
+                    - Detecta los momentos reales de la interacción basándote en el contenido.
+                    - Los timestamps deben ser los segundos exactos de inicio/fin de cada fase.
+                    - Si hay fases adicionales (espera, escalamiento, etc.) agrégalas.
+                    - Usa SIEMPRE los valores de phase: ENTRY, ATTENTION, CLOSURE, WAITING, ESCALATION, OTHER.
 
                     formato: >
                     Entrega SIEMPRE las dos vistas en orden:  
