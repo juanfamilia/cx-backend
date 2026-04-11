@@ -95,6 +95,7 @@ async def create_survey_form(
             name=section.name,
             maximum_score=section.maximum_score,
             order=section.order,
+            weight=section.weight,
             form_id=form.id,
         )
         session.add(db_section)
@@ -103,8 +104,11 @@ async def create_survey_form(
         for aspect in section.aspects:
             db_aspect = SurveyAspect(
                 description=aspect.description,
+                type=aspect.type,
                 maximum_score=aspect.maximum_score,
                 order=aspect.order,
+                weight=aspect.weight,
+                requires_evidence=aspect.requires_evidence,
                 section_id=db_section.id,
             )
             session.add(db_aspect)
@@ -152,6 +156,7 @@ async def update_survey_form(
             name=section.name,
             maximum_score=section.maximum_score,
             order=section.order,
+            weight=section.weight,
             form_id=form.id,
         )
         session.add(db_section)
@@ -160,8 +165,11 @@ async def update_survey_form(
         for aspect in section.aspects:
             db_aspect = SurveyAspect(
                 description=aspect.description,
+                type=aspect.type,
                 maximum_score=aspect.maximum_score,
                 order=aspect.order,
+                weight=aspect.weight,
+                requires_evidence=aspect.requires_evidence,
                 section_id=db_section.id,
             )
             session.add(db_aspect)
