@@ -31,6 +31,9 @@ class Branch(BranchBase, table=True):
     )
     deleted_at: Optional[datetime] = Field(default=None)
 
+    zone: Optional["Zone"] = Relationship(
+        back_populates="branches", sa_relationship_kwargs={"lazy": "noload"}
+    )
     evaluations: List["Evaluation"] = Relationship(
         back_populates="branch", sa_relationship_kwargs={"lazy": "noload"}
     )
