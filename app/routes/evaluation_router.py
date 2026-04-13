@@ -69,8 +69,10 @@ ALLOWED_TRANSITIONS: dict[int, dict[StatusEnum, list[StatusEnum]]] = {
         StatusEnum.REJECTED: [StatusEnum.APROVED, StatusEnum.EDIT],
     },
     2: {  # Gerente — aprueba, rechaza o devuelve a edición
-        StatusEnum.SEND:    [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
-        StatusEnum.UPDATED: [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        StatusEnum.SEND:     [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        StatusEnum.UPDATED:  [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        # Si el Gerente envió a edición y quiere reconsiderar sin esperar al evaluador:
+        StatusEnum.EDIT:     [StatusEnum.APROVED, StatusEnum.REJECTED],
     },
 }
 
