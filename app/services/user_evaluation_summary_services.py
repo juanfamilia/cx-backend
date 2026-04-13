@@ -92,41 +92,87 @@ async def get_manager_summary(
     )
     analysis_list = [dict(row) for row in analysis_result.mappings().all()]
 
-    counts_sql = text(
-        """
-        SELECT
-            COUNT(*) FILTER (
-                WHERE e.status::text IN ('APROVED', 'aprobado')
-            ) AS evaluaciones_aprobadas,
-            COUNT(*) FILTER (
-                WHERE e.status::text IN ('REJECTED', 'rechazado')
-            ) AS evaluaciones_rechazadas
-        FROM evaluations e
-        INNER JOIN users u ON u.id = e.user_id AND u.deleted_at IS NULL
-        INNER JOIN user_zones ez ON ez.user_id = u.id AND ez.deleted_at IS NULL
-        INNER JOIN user_zones mz
-            ON mz.zone_id = ez.zone_id
-            AND mz.user_id = :manager_id
-            AND mz.deleted_at IS NULL
-        WHERE e.deleted_at IS NULL
-          AND u.company_id = :company_id
-          AND u.role = 3
-        """
+    # Verificar si el gerente tiene zonas asignadas
+    has_zones_sql = text(
+        "SELECT COUNT(*) FROM user_zones WHERE user_id = :manager_id AND deleted_at IS NULL"
     )
-    counts_result = await session.execute(
-        counts_sql, {"manager_id": user_id, "company_id": company_id}
-    )
-    counts_row = counts_result.mappings().first()
+    has_zones_result = await session.execute(has_zones_sql, {"manager_id": user_id})
+    has_zones = (has_zones_result.scalar() or 0) > 0
 
+    if has_zones:
+        # Filtrar solo por evaluaciones en las zonas del gerente
+        counts_sql = text(
+            """
+            SELECT
+                COUNT(*) FILTER (
+                    WHERE e.status::text IN ('APROVED', 'aprobado')
+                ) AS evaluaciones_aprobadas,
+                COUNT(*) FILTER (
+                    WHERE e.status::text IN ('REJECTED', 'rechazado')
+                ) AS evaluaciones_rechazadas
+            FROM evaluations e
+            INNER JOIN users u ON u.id = e.user_id AND u.deleted_at IS NULL
+            INNER JOIN user_zones ez ON ez.user_id = u.id AND ez.deleted_at IS NULL
+            INNER JOIN user_zones mz
+                ON mz.zone_id = ez.zone_id
+                AND mz.user_id = :manager_id
+                AND mz.deleted_at IS NULL
+            WHERE e.deleted_at IS NULL
+              AND u.company_id = :company_id
+              AND u.role = 3
+            """
+        )
+        counts_result = await session.execute(
+            counts_sql, {"manager_id": user_id, "company_id": company_id}
+        )
+    else:
+        # Sin zonas configuradas: mostrar totales de la empresa
+        counts_sql = text(
+            """
+            SELECT
+                COUNT(*) FILTER (
+                    WHERE e.status::text IN ('APROVED', 'aprobado')
+                ) AS evaluaciones_aprobadas,
+                COUNT(*) FILTER (
+                    WHERE e.status::text IN ('REJECTED', 'rechazado')
+                ) AS evaluaciones_rechazadas
+            FROM evaluations e
+            INNER JOIN users u ON u.id = e.user_id AND u.deleted_at IS NULL
+            WHERE e.deleted_at IS NULL
+              AND u.company_id = :company_id
+              AND u.role = 3
+            """
+        )
+        counts_result = await session.execute(
+            counts_sql, {"company_id": company_id}
+        )
+
+    counts_row = counts_result.mappings().first()
     eval_ok = int(counts_row["evaluaciones_aprobadas"] or 0) if counts_row else 0
     eval_rej = int(counts_row["evaluaciones_rechazadas"] or 0) if counts_row else 0
+
+    # Si no tiene zonas, también completar active_campaigns desde la tabla directamente
+    if not has_zones and (summary_row is None or summary_row.active_campaigns == 0):
+        active_camps_sql = text(
+            """
+            SELECT COUNT(*) FROM campaigns
+            WHERE company_id = :company_id
+              AND deleted_at IS NULL
+              AND date_start <= CURRENT_DATE
+              AND date_end >= CURRENT_DATE
+            """
+        )
+        ac_result = await session.execute(active_camps_sql, {"company_id": company_id})
+        active_campaigns_fallback = int(ac_result.scalar() or 0)
+    else:
+        active_campaigns_fallback = None
 
     summary_dict = {
         "user_id": user_id,
         "company_id": company_id,
         "zonas_asignadas": 0,
         "evaluadores_asignados": 0,
-        "active_campaigns": 0,
+        "active_campaigns": active_campaigns_fallback if active_campaigns_fallback is not None else 0,
         "evaluaciones_aprobadas": eval_ok,
         "evaluaciones_rechazadas": eval_rej,
     }
@@ -141,6 +187,10 @@ async def get_manager_summary(
         ):
             if dumped.get(key) is not None:
                 summary_dict[key] = dumped[key]
+
+    # Si zones fallback existe y el view devolvió 0 en active_campaigns, usar el fallback
+    if active_campaigns_fallback is not None and summary_dict.get("active_campaigns", 0) == 0:
+        summary_dict["active_campaigns"] = active_campaigns_fallback
 
     return {"summary": summary_dict, "analysis": analysis_list}
 
