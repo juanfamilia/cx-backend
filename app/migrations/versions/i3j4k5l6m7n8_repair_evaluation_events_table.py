@@ -21,7 +21,7 @@ def upgrade() -> None:
     op.execute(
         """
         DO $$ BEGIN
-            CREATE TYPE IF NOT EXISTS evaluationeventtypeenum AS ENUM (
+            CREATE TYPE evaluationeventtypeenum AS ENUM (
                 'complaint', 'emotional_peak', 'sales_signal',
                 'objection', 'resolution', 'compliance_risk', 'other'
             );
