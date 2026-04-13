@@ -29,5 +29,13 @@ class Settings(BaseSettings):
     # Opcional: regex de orígenes (p. ej. previews de Vercel). Requiere coincidencia completa con Origin.
     CORS_ORIGIN_REGEX: str | None = None
 
+    # ── Email / SMTP (Hostinger) ─────────────────────────────────────────────
+    SMTP_HOST: str = "smtp.hostinger.com"
+    SMTP_PORT: int = 465          # 465 = SSL implícito; 587 = STARTTLS
+    SMTP_USER: str | None = None  # ej. notificaciones@sieteic.com
+    SMTP_PASSWORD: str | None = None
+    SMTP_FROM_NAME: str = "Siete CX"
+    SMTP_ENABLED: bool = False    # poner True en prod una vez configurado SMTP_USER/PASSWORD
+
 
 settings = Settings()

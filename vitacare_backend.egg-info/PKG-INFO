@@ -1,0 +1,29 @@
+Metadata-Version: 2.4
+Name: vitacare-backend
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: aiofiles>=24.1.0
+Requires-Dist: alembic>=1.15.2
+Requires-Dist: asyncpg>=0.30.0
+Requires-Dist: bcrypt==4.0.1
+Requires-Dist: boto3>=1.38.29
+Requires-Dist: fastapi[standard]>=0.115.12
+Requires-Dist: httpx>=0.28.1
+Requires-Dist: moviepy>=2.2.1
+Requires-Dist: openai>=1.91.0
+Requires-Dist: passlib[bcrypt]>=1.7.4
+Requires-Dist: psycopg2-binary>=2.9.10
+Requires-Dist: pydantic-settings>=2.9.1
+Requires-Dist: pyjwt>=2.10.1
+Requires-Dist: requests>=2.32.4
+Requires-Dist: sqlalchemy>=2.0.41
+Requires-Dist: sqlmodel>=0.0.24
+
+# Siete CX Backend
+
+## Project Specs
+
+- Python 3.13
+- PostgreSQL 14

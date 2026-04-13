@@ -36,6 +36,11 @@ class StatusEnum(str, Enum):
     REJECTED = "rechazado"
 
 
+class RejectionTypeEnum(str, Enum):
+    DISCARDED = "descartado"       # Definitivo, no requiere acción
+    DISCREPANCY = "discrepancia"   # Hay algo que revisar; puede reactivarse
+
+
 # ----------- EVALUATION -----------
 class EvaluationBase(SQLModel):
     campaigns_id: int | None = Field(default=None, foreign_key="campaigns.id")
@@ -92,6 +97,16 @@ class EvaluationBase(SQLModel):
     customer_effort_score: Optional[int] = Field(default=None, description="Customer effort score 0-100")
     nps_inferred: Optional[int] = Field(default=None, description="Inferred NPS score 0-10")
     greeting_detected: Optional[bool] = Field(default=None, description="Was a proper greeting detected?")
+
+    # ── Campos de rechazo (sólo relevantes cuando status == REJECTED) ─────────
+    rejection_type: Optional[str] = Field(
+        default=None,
+        description="descartado | discrepancia — sub-tipo de rechazo",
+    )
+    requires_revisit: bool = Field(
+        default=False,
+        description="Si True, se debe generar una nueva visita a la sucursal",
+    )
 
 
 class Evaluation(EvaluationBase, table=True):
@@ -171,8 +186,11 @@ class EvaluationsPublic(BaseModel):
 
 
 class StatusChangeRequest(BaseModel):
-    comment: str | None = None
     status: StatusEnum
+    comment: str | None = None
+    # Sólo aplica cuando status == REJECTED
+    rejection_type: Optional[RejectionTypeEnum] = None
+    requires_revisit: bool = False
 
 
 # ----------- ANSWERS -----------

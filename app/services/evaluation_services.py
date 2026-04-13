@@ -203,28 +203,43 @@ async def change_evaluation_status(
     actor_user_id: Optional[int] = None,
     actor_role: int = 1,
 ) -> EvaluationPublic:
+    from app.services.workflow_triggers import fire_workflow_trigger
+
     db_evaluation = await get_evaluation(session, evaluation_id)
+    old_status = db_evaluation.status
 
     db_evaluation.status = status.status
+
+    # Persistir campos de rechazo en la evaluación
+    if status.status == StatusEnum.REJECTED:
+        db_evaluation.rejection_type = status.rejection_type.value if status.rejection_type else None
+        db_evaluation.requires_revisit = status.requires_revisit
 
     session.add(db_evaluation)
     await session.commit()
     await session.refresh(db_evaluation)
 
-    # Dirección de la notificación:
-    # · Admin/Gerente actúa → notificar al evaluador dueño de la evaluación
-    # · Superadmin actúa    → también notificar al evaluador
-    # (cuando el evaluador reenvíe su trabajo, se notificará al revisor — pendiente
-    #  hasta tener lógica de asignación de evaluadores a supervisores)
-    notify_user_id = db_evaluation.user_id
-
+    # Notificación in-app (siempre al dueño de la evaluación)
     notification = NotificationBase(
-        user_id=notify_user_id,
+        user_id=db_evaluation.user_id,
         evaluation_id=db_evaluation.id,
         status=status.status,
         comment=status.comment,
     )
     await create_notification(session, notification)
+
+    # Triggers de workflow en background (email, planes de acción, etc.)
+    if actor_user_id:
+        await fire_workflow_trigger(
+            session=session,
+            evaluation_id=evaluation_id,
+            new_status=status.status,
+            old_status=old_status,
+            actor_user_id=actor_user_id,
+            comment=status.comment,
+            rejection_type=status.rejection_type.value if status.rejection_type else None,
+            requires_revisit=status.requires_revisit,
+        )
 
     return db_evaluation
 

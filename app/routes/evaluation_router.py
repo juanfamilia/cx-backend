@@ -20,6 +20,7 @@ from app.models.evaluation_model import (
     EvaluationPublic,
     EvaluationUpdate,
     EvaluationsPublic,
+    RejectionTypeEnum,
     StatusChangeRequest,
     StatusEnum,
 )
