@@ -46,9 +46,8 @@ async def get_evaluations(
         query = query.where(Campaign.company_id == company_id)
 
     if user_id is not None:
-        query = query.where(
-            Evaluation.user_id == user_id, Evaluation.status == StatusEnum.EDIT
-        )
+        # Evaluador ve todas sus evaluaciones (no solo las en edición)
+        query = query.where(Evaluation.user_id == user_id)
 
     if filter and search:
         match filter:
@@ -198,7 +197,11 @@ async def update_evaluation(
 
 
 async def change_evaluation_status(
-    session: AsyncSession, evaluation_id: int, status: StatusChangeRequest
+    session: AsyncSession,
+    evaluation_id: int,
+    status: StatusChangeRequest,
+    actor_user_id: Optional[int] = None,
+    actor_role: int = 1,
 ) -> EvaluationPublic:
     db_evaluation = await get_evaluation(session, evaluation_id)
 
@@ -208,8 +211,15 @@ async def change_evaluation_status(
     await session.commit()
     await session.refresh(db_evaluation)
 
+    # Dirección de la notificación:
+    # · Admin/Gerente actúa → notificar al evaluador dueño de la evaluación
+    # · Superadmin actúa    → también notificar al evaluador
+    # (cuando el evaluador reenvíe su trabajo, se notificará al revisor — pendiente
+    #  hasta tener lógica de asignación de evaluadores a supervisores)
+    notify_user_id = db_evaluation.user_id
+
     notification = NotificationBase(
-        user_id=db_evaluation.user_id,
+        user_id=notify_user_id,
         evaluation_id=db_evaluation.id,
         status=status.status,
         comment=status.comment,

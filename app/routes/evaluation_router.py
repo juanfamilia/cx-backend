@@ -47,6 +47,33 @@ from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.exeptions import PermissionDeniedException
 
 
+# ---------------------------------------------------------------------------
+# Máquina de estados por rol
+# Clave: rol del usuario (int). Valor: dict {estado_actual → [estados_permitidos]}
+# Rol 3 (Evaluador) no puede cambiar estado via este endpoint.
+# El filtro de zona para Gerente queda pendiente hasta tener zonas configuradas.
+# ---------------------------------------------------------------------------
+ALLOWED_TRANSITIONS: dict[int, dict[StatusEnum, list[StatusEnum]]] = {
+    0: {  # Superadmin — control total
+        StatusEnum.SEND:     [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        StatusEnum.UPDATED:  [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        StatusEnum.EDIT:     [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.SEND],
+        StatusEnum.REJECTED: [StatusEnum.APROVED, StatusEnum.EDIT, StatusEnum.SEND],
+        StatusEnum.APROVED:  [StatusEnum.REJECTED, StatusEnum.EDIT],
+    },
+    1: {  # Admin (C-Level)
+        StatusEnum.SEND:     [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        StatusEnum.UPDATED:  [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        StatusEnum.EDIT:     [StatusEnum.APROVED, StatusEnum.REJECTED],
+        StatusEnum.REJECTED: [StatusEnum.APROVED, StatusEnum.EDIT],
+    },
+    2: {  # Gerente — aprueba, rechaza o devuelve a edición
+        StatusEnum.SEND:    [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+        StatusEnum.UPDATED: [StatusEnum.APROVED, StatusEnum.REJECTED, StatusEnum.EDIT],
+    },
+}
+
+
 def _parse_visited_zones_json(raw: Optional[str]) -> List[int]:
     """Parse JSON array from form field (same format as the Angular client)."""
     if raw is None or (isinstance(raw, str) and not raw.strip()):
@@ -114,14 +141,34 @@ async def change_status(
     status: StatusChangeRequest = Body(...),
     session: AsyncSession = Depends(get_db),
 ) -> EvaluationPublic:
+    user_role: int = request.state.user.role
 
-    if request.state.user.role not in [1, 2]:
-        raise PermissionDeniedException(custom_message="change status")
+    # Solo roles 0, 1 y 2 pueden cambiar estado vía este endpoint
+    if user_role not in ALLOWED_TRANSITIONS:
+        raise PermissionDeniedException(custom_message="change evaluation status")
 
     prev = await get_evaluation(session, evaluation_id)
     prev_status = prev.status
 
-    evaluation = await change_evaluation_status(session, evaluation_id, status)
+    # Validar que la transición sea permitida para este rol
+    allowed_targets = ALLOWED_TRANSITIONS[user_role].get(prev_status, [])
+    if status.status not in allowed_targets:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Transición no permitida: '{prev_status}' → '{status.status}' "
+                f"para el rol {user_role}."
+            ),
+        )
+
+    evaluation = await change_evaluation_status(
+        session,
+        evaluation_id,
+        status,
+        actor_user_id=request.state.user.id,
+        actor_role=user_role,
+    )
 
     await log_change(
         session,
