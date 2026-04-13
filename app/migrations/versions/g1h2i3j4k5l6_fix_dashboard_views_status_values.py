@@ -49,12 +49,41 @@ GROUP BY u.company_id;
 """
 
 
+_drop_any = """
+DO $$
+DECLARE
+    obj_type char;
+BEGIN
+    -- Drop user_evaluation_summary regardless of whether it is a TABLE or VIEW
+    SELECT relkind INTO obj_type
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relname = 'user_evaluation_summary' AND n.nspname = 'public';
+
+    IF obj_type = 'r' THEN
+        DROP TABLE user_evaluation_summary CASCADE;
+    ELSIF obj_type = 'v' THEN
+        DROP VIEW user_evaluation_summary CASCADE;
+    END IF;
+
+    -- Drop company_users_evaluations regardless of whether it is a TABLE or VIEW
+    SELECT relkind INTO obj_type
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relname = 'company_users_evaluations' AND n.nspname = 'public';
+
+    IF obj_type = 'r' THEN
+        DROP TABLE company_users_evaluations CASCADE;
+    ELSIF obj_type = 'v' THEN
+        DROP VIEW company_users_evaluations CASCADE;
+    END IF;
+END $$;
+"""
+
+
 def upgrade() -> None:
-    # Drop existing objects regardless of type (could be TABLE or VIEW in different envs)
-    op.execute("DROP TABLE IF EXISTS user_evaluation_summary CASCADE;")
-    op.execute("DROP VIEW  IF EXISTS user_evaluation_summary CASCADE;")
-    op.execute("DROP TABLE IF EXISTS company_users_evaluations CASCADE;")
-    op.execute("DROP VIEW  IF EXISTS company_users_evaluations CASCADE;")
+    # Safely drop objects regardless of their type (TABLE vs VIEW) in each env
+    op.execute(_drop_any)
     op.execute(_user_evaluation_summary)
     op.execute(_company_users_evaluations)
 
