@@ -210,6 +210,10 @@ async def change_evaluation_status(
 
     db_evaluation.status = status.status
 
+    # Persistir comentario del revisor siempre que venga (visible para el evaluador)
+    if status.comment is not None:
+        db_evaluation.status_comment = status.comment
+
     # Persistir campos de rechazo en la evaluación
     if status.status == StatusEnum.REJECTED:
         db_evaluation.rejection_type = status.rejection_type.value if status.rejection_type else None

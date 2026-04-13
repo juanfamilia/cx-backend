@@ -108,6 +108,12 @@ class EvaluationBase(SQLModel):
         description="Si True, se debe generar una nueva visita a la sucursal",
     )
 
+    # ── Comentario del revisor al cambiar estado ────────────────────────────
+    status_comment: Optional[str] = Field(
+        default=None,
+        description="Motivo / indicación del revisor al cambiar estado (visible para el evaluador)",
+    )
+
 
 class Evaluation(EvaluationBase, table=True):
     __tablename__ = "evaluations"
