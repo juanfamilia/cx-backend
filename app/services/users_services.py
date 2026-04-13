@@ -274,10 +274,22 @@ async def create_user(session: AsyncSession, user: UserCreate) -> UserPublic:
 async def update_user(
     session: AsyncSession, user_id: int, user_update: UserUpdate
 ) -> UserPublic:
+    from fastapi import HTTPException
     db_user = await get_user(session, user_id)
 
     user_data = user_update.model_dump(exclude_unset=True)
     extra_data = {}
+
+    # Verificar unicidad del email si se está cambiando
+    if user_update.email and user_update.email != db_user.email:
+        existing = await session.scalar(
+            select(User).where(User.email == user_update.email, User.id != user_id)
+        )
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=f"El correo '{user_update.email}' ya está registrado por otro usuario.",
+            )
 
     if user_update.password is not None:
         extra_data["hashed_password"] = get_password_hash(user_update.password)

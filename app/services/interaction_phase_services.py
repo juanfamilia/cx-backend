@@ -86,17 +86,29 @@ async def persist_interaction_phases(
         logger.info("No interaction_phases found for evaluation_id=%s", evaluation_id)
         return []
 
-    # Borrar fases previas de esta evaluación
+    # Borrar fases previas de esta evaluación (guard: tabla puede no existir en BD antigua)
     from sqlmodel import delete
-    stmt = (
-        delete(EvaluationEvent)
-        .where(
-            EvaluationEvent.evaluation_id == evaluation_id,
-            EvaluationEvent.source == PHASE_SOURCE,
+    from sqlalchemy import text as sa_text
+    try:
+        tbl_exists = await session.scalar(
+            sa_text("SELECT to_regclass('public.evaluation_events')")
         )
-    )
-    await session.execute(stmt)
-    await session.commit()
+        if not tbl_exists:
+            logger.warning("evaluation_events table missing; skipping persist_interaction_phases evaluation_id=%s", evaluation_id)
+            return []
+        stmt = (
+            delete(EvaluationEvent)
+            .where(
+                EvaluationEvent.evaluation_id == evaluation_id,
+                EvaluationEvent.source == PHASE_SOURCE,
+            )
+        )
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as exc:
+        logger.error("persist_interaction_phases delete failed evaluation_id=%s: %s", evaluation_id, exc)
+        await session.rollback()
+        return []
 
     events: List[EvaluationEventCreate] = []
     for p in raw_phases:
