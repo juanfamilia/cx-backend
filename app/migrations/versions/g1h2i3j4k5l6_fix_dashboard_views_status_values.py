@@ -50,11 +50,18 @@ GROUP BY u.company_id;
 
 
 def upgrade() -> None:
+    # Drop existing objects regardless of type (could be TABLE or VIEW in different envs)
+    op.execute("DROP TABLE IF EXISTS user_evaluation_summary CASCADE;")
+    op.execute("DROP VIEW  IF EXISTS user_evaluation_summary CASCADE;")
+    op.execute("DROP TABLE IF EXISTS company_users_evaluations CASCADE;")
+    op.execute("DROP VIEW  IF EXISTS company_users_evaluations CASCADE;")
     op.execute(_user_evaluation_summary)
     op.execute(_company_users_evaluations)
 
 
 def downgrade() -> None:
+    op.execute("DROP VIEW IF EXISTS user_evaluation_summary CASCADE;")
+    op.execute("DROP VIEW IF EXISTS company_users_evaluations CASCADE;")
     # Restore original views that only matched uppercase English values
     op.execute(
         """
