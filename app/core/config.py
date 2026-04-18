@@ -2,8 +2,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # Busca .env en dos ubicaciones para soportar tanto el entorno local
+    # (archivo .env en la raíz del proyecto) como el contenedor Docker
+    # (docker-entrypoint.sh hace `cd /app` y el .env vive en `/` = `../.env`).
+    # Si ambos existen, el segundo (../.env) tiene prioridad (comportamiento
+    # preservado para producción).
     model_config = SettingsConfigDict(
-        env_file="../.env",
+        env_file=(".env", "../.env"),
         env_ignore_empty=True,
         extra="ignore",
     )
