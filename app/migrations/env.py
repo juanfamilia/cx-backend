@@ -27,6 +27,12 @@ from app.models import (
     prompt_model,
     insight_model,
     clip_model,
+    # Service Quality Framework (ver docs/METHODOLOGY.md)
+    industry_model,
+    framework_model,
+    quality_competency_model,
+    industry_template_model,
+    company_competency_config_model,
 )
 
 config = context.config
