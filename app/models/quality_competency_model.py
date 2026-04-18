@@ -26,8 +26,12 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.types.pagination import Pagination
 
+# Runtime imports: CompetencyFrameworkRefPublic referencia FrameworkDimensionPublic.
+# Si solo va en TYPE_CHECKING, Pydantic no puede resolver el forward ref en
+# model_rebuild() (NameError en deploy Python 3.13).
+from app.models.framework_model import FrameworkDimension, FrameworkDimensionPublic
+
 if TYPE_CHECKING:
-    from app.models.framework_model import FrameworkDimension, FrameworkDimensionPublic
     from app.models.industry_template_model import IndustryTemplate
     from app.models.company_competency_config_model import CompanyCompetencyConfig
 
