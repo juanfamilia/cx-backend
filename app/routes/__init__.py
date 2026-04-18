@@ -29,3 +29,4 @@ from .executive_router import router as executive_router
 from .clips_router import router as clips_router
 from .intelligence_router import router as intelligence_router
 from .prompts_router import router as prompts_router
+from .quality_framework_router import router as quality_framework_router

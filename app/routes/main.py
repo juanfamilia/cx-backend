@@ -31,6 +31,7 @@ from app.routes import (
     clips_router,
     intelligence_router,
     prompts_router,
+    quality_framework_router,
 )
 
 
@@ -67,3 +68,4 @@ api_router.include_router(executive_router)
 api_router.include_router(clips_router)
 api_router.include_router(intelligence_router)
 api_router.include_router(prompts_router)
+api_router.include_router(quality_framework_router)
