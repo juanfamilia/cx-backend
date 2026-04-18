@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from app.models.user_model import User
     from app.models.payment_model import Payment
     from app.models.campaign_model import Campaign
+    from app.models.industry_model import Industry
 
 
 class CompanyBase(SQLModel):
@@ -18,6 +19,9 @@ class CompanyBase(SQLModel):
     address: str
     state: str
     country: str = "DO"
+    industry_id: int | None = Field(
+        default=None, foreign_key="industries.id", index=True
+    )
 
 
 class CompanyUpdate(SQLModel):
@@ -27,6 +31,7 @@ class CompanyUpdate(SQLModel):
     address: str | None = Field(default=None)
     state: str | None = Field(default=None)
     country: str | None = Field(default=None)
+    industry_id: int | None = Field(default=None)
 
 
 class Company(CompanyBase, table=True):
@@ -41,6 +46,9 @@ class Company(CompanyBase, table=True):
     employees: list["User"] = Relationship(back_populates="company")
     payments: list["Payment"] = Relationship(back_populates="company")
     campaigns: list["Campaign"] = Relationship(back_populates="company")
+    industry: "Industry" = Relationship(
+        back_populates="companies", sa_relationship_kwargs={"lazy": "noload"}
+    )
 
 
 class CompanyPublic(CompanyBase):

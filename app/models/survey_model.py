@@ -8,6 +8,7 @@ from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 if TYPE_CHECKING:
     from app.models.evaluation_model import EvaluationAnswer
     from app.models.survey_forms_model import SurveyForm
+    from app.models.quality_competency_model import QualityCompetency
 
 
 class AspectTypeEnum(str, Enum):
@@ -72,6 +73,12 @@ class SurveyAspectBase(SQLModel):
     weight: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     # Si True, este aspecto requiere evidencia (clip/foto) para poder marcarse como C
     requires_evidence: bool = Field(default=False)
+    # Enlace opcional a una competencia del Service Quality Framework.
+    # Permite que el Gap Analysis compare humano vs IA usando la competencia
+    # explícita en lugar de heurísticas de palabras clave.
+    competency_id: int | None = Field(
+        default=None, foreign_key="quality_competencies.id", index=True
+    )
 
 
 class SurveyAspect(SurveyAspectBase, table=True):
@@ -87,6 +94,9 @@ class SurveyAspect(SurveyAspectBase, table=True):
     evaluation_answers: List["EvaluationAnswer"] = Relationship(
         back_populates="aspect", sa_relationship_kwargs={"lazy": "noload"}
     )
+    competency: "QualityCompetency" = Relationship(
+        sa_relationship_kwargs={"lazy": "noload"}
+    )
 
 
 class SurveyAspectCreate(SQLModel):
@@ -96,6 +106,7 @@ class SurveyAspectCreate(SQLModel):
     order: int
     weight: Optional[float] = None
     requires_evidence: bool = False
+    competency_id: Optional[int] = None
 
 
 class SurveyAspectPublic(BaseModel):
@@ -106,5 +117,6 @@ class SurveyAspectPublic(BaseModel):
     order: int
     weight: Optional[float] = None
     requires_evidence: bool = False
+    competency_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
