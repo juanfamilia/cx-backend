@@ -5,8 +5,10 @@ Endpoints for transcript segment operations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 
 from app.core.db import AsyncSessionLocal, get_db
 from app.utils.deps import check_company_payment_status, get_auth_user
@@ -24,6 +26,9 @@ from app.services.embedding_services import (
     generate_embeddings_for_evaluation,
     semantic_search_transcripts,
 )
+from app.models.evaluation_model import Evaluation
+from app.services.cloudflare_stream_services import extract_stream_uid_from_video_url
+from app.services.extract_audio_services import reprocess_transcription_only
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +135,54 @@ async def semantic_search(
         company_id=scoped_company_id,
         limit=limit,
     )
+
+
+@router.post("/evaluation/{evaluation_id}/reprocess-transcription")
+async def reprocess_evaluation_transcription(
+    request: Request,
+    evaluation_id: int,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Vuelve a ejecutar solo Whisper (+ diarización), reemplaza segmentos en BD y
+    actualiza `transcript_text` del análisis. **No** re-ejecuta el análisis GPT ni
+    campos IA de la evaluación (útil tras corregir el pipeline de Whisper).
+
+    Roles: 0, 1 o 2. Se ejecuta en segundo plano (puede tardar varios minutos).
+    """
+    if request.state.user.role not in (0, 1, 2):
+        raise PermissionDeniedException(
+            custom_message="reprocess transcription (solo admin o gerente)"
+        )
+    await assert_evaluation_access(session, evaluation_id, request.state.user)
+
+    stmt = (
+        select(Evaluation)
+        .where(Evaluation.id == evaluation_id, Evaluation.deleted_at.is_(None))
+        .options(selectinload(Evaluation.video))
+    )
+    ev = (await session.execute(stmt)).scalars().first()
+    if not ev or not ev.video_id or ev.video is None:
+        raise HTTPException(
+            status_code=400,
+            detail="La evaluación no tiene vídeo asociado.",
+        )
+
+    try:
+        video_uid = extract_stream_uid_from_video_url(ev.video.url)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    async def _run_reprocess() -> None:
+        async with AsyncSessionLocal() as bg_session:
+            await reprocess_transcription_only(video_uid, evaluation_id, bg_session)
+
+    background_tasks.add_task(_run_reprocess)
+    return {
+        "message": "Re-transcripción en cola. Recarga los segmentos en unos minutos.",
+        "evaluation_id": evaluation_id,
+    }
 
 
 @router.post("/evaluation/{evaluation_id}/generate-embeddings")

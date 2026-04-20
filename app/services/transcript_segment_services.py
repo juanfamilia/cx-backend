@@ -3,6 +3,8 @@ Transcript Segment Services
 Handles storage and retrieval of transcript segments
 """
 from typing import List, Optional
+
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func, or_
 
@@ -15,13 +17,43 @@ from app.models.transcript_segment_model import (
     TranscriptSearchResponse,
 )
 from app.models.evaluation_model import Evaluation
+from app.models.evaluation_analysis_model import EvaluationAnalysis
 from app.utils.exeptions import NotFoundException
+
+
+async def delete_segments_for_evaluation(
+    session: AsyncSession, evaluation_id: int
+) -> int:
+    """Elimina todos los segmentos de una evaluación (p. ej. antes de re-transcribir)."""
+    stmt = delete(TranscriptSegment).where(
+        TranscriptSegment.evaluation_id == evaluation_id
+    )
+    result = await session.execute(stmt)
+    return int(result.rowcount or 0)
+
+
+async def update_evaluation_analysis_transcript_text(
+    session: AsyncSession, evaluation_id: int, transcript_text: str
+) -> bool:
+    """Actualiza solo transcript_text en el análisis existente, si hay fila."""
+    q = select(EvaluationAnalysis).where(
+        EvaluationAnalysis.evaluation_id == evaluation_id,
+        EvaluationAnalysis.deleted_at.is_(None),
+    )
+    row = (await session.execute(q)).scalars().first()
+    if not row:
+        return False
+    row.transcript_text = transcript_text
+    session.add(row)
+    return True
 
 
 async def create_transcript_segments(
     session: AsyncSession,
     evaluation_id: int,
-    segments: List[dict]
+    segments: List[dict],
+    *,
+    do_commit: bool = True,
 ) -> List[TranscriptSegment]:
     """
     Create transcript segments from Whisper response
@@ -52,13 +84,16 @@ async def create_transcript_segments(
         )
         session.add(db_segment)
         db_segments.append(db_segment)
-    
-    await session.commit()
-    
-    # Refresh all to get IDs
-    for seg in db_segments:
-        await session.refresh(seg)
-    
+
+    if do_commit:
+        await session.commit()
+        for seg in db_segments:
+            await session.refresh(seg)
+    else:
+        await session.flush()
+        for seg in db_segments:
+            await session.refresh(seg)
+
     return db_segments
 
 

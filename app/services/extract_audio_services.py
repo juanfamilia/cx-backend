@@ -202,6 +202,79 @@ async def handle_stream_to_audio(
                 logger.debug("Removed temp file path=%s", f)
 
 
+async def reprocess_transcription_only(
+    video_uid: str,
+    evaluation_id: int,
+    session: AsyncSession,
+) -> Optional[str]:
+    """
+    Solo Whisper + diarización: reemplaza segmentos y `transcript_text` del análisis.
+    No ejecuta GPT ni actualiza campos IA de la evaluación.
+    """
+    from app.services.openai_services import transcribe_audio_segments_only
+    from app.services.transcript_segment_services import (
+        create_transcript_segments,
+        delete_segments_for_evaluation,
+        update_evaluation_analysis_transcript_text,
+    )
+
+    id_archivo = str(uuid.uuid4())
+    tmp_dir = tempfile.gettempdir()
+    video_path = f"{tmp_dir}/retr_{id_archivo}.mp4"
+    audio_path = f"{tmp_dir}/retr_{id_archivo}.mp3"
+
+    try:
+        is_ready = await wait_until_ready_to_stream(video_uid)
+        if not is_ready:
+            logger.warning(
+                "reprocess_transcription_only: video not ready evaluation_id=%s",
+                evaluation_id,
+            )
+            return None
+
+        await enable_download(video_uid)
+        success, _ = await wait_and_download_video(video_uid, video_path)
+        if not success:
+            logger.error(
+                "reprocess_transcription_only: download failed evaluation_id=%s",
+                evaluation_id,
+            )
+            return None
+
+        await run_in_threadpool(extract_audio, video_path, audio_path)
+        segments, full_transcript = await run_in_threadpool(
+            transcribe_audio_segments_only, audio_path
+        )
+
+        await delete_segments_for_evaluation(session, evaluation_id)
+        await create_transcript_segments(
+            session, evaluation_id, segments, do_commit=False
+        )
+        await update_evaluation_analysis_transcript_text(
+            session, evaluation_id, full_transcript
+        )
+        await session.commit()
+        logger.info(
+            "reprocess_transcription_only OK evaluation_id=%s segments=%s",
+            evaluation_id,
+            len(segments),
+        )
+        return f"segments={len(segments)}"
+    except Exception:
+        logger.exception(
+            "reprocess_transcription_only failed evaluation_id=%s", evaluation_id
+        )
+        await session.rollback()
+        return None
+    finally:
+        for f in (video_path, audio_path):
+            if os.path.exists(f):
+                try:
+                    os.remove(f)
+                except OSError:
+                    pass
+
+
 async def update_evaluation_ai_fields(
     session: AsyncSession,
     evaluation_id: int,

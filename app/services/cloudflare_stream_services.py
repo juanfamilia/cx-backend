@@ -1,8 +1,25 @@
 import asyncio
 import random
+import re
 from fastapi import logger
 import httpx
 from app.core.config import settings
+
+
+def extract_stream_uid_from_video_url(video_url: str) -> str:
+    """
+    Obtiene el UID de Cloudflare Stream desde la URL guardada en `videos.url`
+    (p. ej. ...cloudflarestream.com/<uid>/manifest/...) o devuelve el string si ya es un UUID.
+    """
+    if not video_url or not str(video_url).strip():
+        raise ValueError("video_url vacío")
+    s = str(video_url).strip()
+    m = re.search(r"cloudflarestream\.com/([^/]+)/", s, flags=re.IGNORECASE)
+    if m:
+        return m.group(1)
+    if re.match(r"^[a-f0-9-]{36}$", s, flags=re.IGNORECASE):
+        return s
+    raise ValueError(f"No se pudo extraer el UID de Cloudflare Stream de: {s[:96]}")
 
 
 # Construir URL de Cloudflare Stream

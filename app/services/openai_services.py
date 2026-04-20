@@ -48,20 +48,14 @@ def _whisper_segment_to_dict(seg: Any) -> Dict[str, Any]:
     }
 
 
-def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
+def transcribe_audio_segments_only(
+    audio_path: str,
+) -> Tuple[List[Dict[str, Any]], str]:
     """
-    Transcribe and analyze audio
-    
-    Returns:
-        Tuple of (analysis_text, segments_list, full_transcript_text)
-        - analysis_text: The GPT analysis result
-        - segments_list: List of {start, end, text} from Whisper
-        - full_transcript_text: Complete transcript as string
+    Whisper (verbose_json, español) + diarización de hablantes.
+    No llama a GPT. Útil para re-transcribir sin rehacer el análisis completo.
     """
-    # 1. Transcribir el audio
     with open(audio_path, "rb") as audio_file:
-        # No usar `prompt` de sesgo léxico largo aquí: en verbose_json Whisper puede
-        # repetir ese texto en muchos segmentos en lugar del audio real.
         transcript_response = client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file,
@@ -76,22 +70,40 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
         if d.get("text"):
             segments.append(d)
 
-    # 1b. Speaker diarization (pyannote si HF_TOKEN configurado, heurística si no)
     try:
         from app.services.diarization_services import assign_speakers
+
         segments = assign_speakers(audio_path, segments)
         logger.info("Speaker diarization applied segment_count=%s", len(segments))
     except Exception as exc:
         logger.warning("Speaker diarization skipped: %s", exc)
 
-    # Get full transcript text (con etiquetas de hablante si están disponibles)
     _has_speakers = any(seg.get("speaker") not in (None, "UNKNOWN") for seg in segments)
     if _has_speakers:
         full_transcript = "\n".join(
             f"[{seg.get('speaker', 'UNKNOWN')}] {seg['text']}" for seg in segments
         )
     else:
-        full_transcript = transcript_response.text if hasattr(transcript_response, "text") else str(transcript_response)
+        full_transcript = (
+            transcript_response.text
+            if hasattr(transcript_response, "text")
+            else str(transcript_response)
+        )
+
+    return segments, full_transcript
+
+
+def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
+    """
+    Transcribe and analyze audio
+    
+    Returns:
+        Tuple of (analysis_text, segments_list, full_transcript_text)
+        - analysis_text: The GPT analysis result
+        - segments_list: List of {start, end, text} from Whisper
+        - full_transcript_text: Complete transcript as string
+    """
+    segments, full_transcript = transcribe_audio_segments_only(audio_path)
 
     # 2. Analizar la transcripción con GPT-4o
     response = client.chat.completions.create(
