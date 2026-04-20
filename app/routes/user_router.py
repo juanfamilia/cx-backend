@@ -127,15 +127,25 @@ async def get_one(
 ) -> UserPublic:
 
     user = await get_user(session, user_id)
+    actor = request.state.user
 
-    if request.state.user.role not in [0, 1]:
-        if user.id != request.state.user.id:
+    if actor.role in (0, 1):
+        if actor.role == 1 and user.company_id != actor.company_id:
             raise PermissionDeniedException(custom_message="retrieve this user")
+        return user
 
-    if (
-        request.state.user.role == 1
-        and user.company_id != request.state.user.company_id
-    ):
+    if actor.role == 2:
+        if user.id == actor.id:
+            return user
+        if (
+            user.role == 3
+            and user.company_id is not None
+            and user.company_id == actor.company_id
+        ):
+            return user
+        raise PermissionDeniedException(custom_message="retrieve this user")
+
+    if user.id != actor.id:
         raise PermissionDeniedException(custom_message="retrieve this user")
 
     return user
@@ -179,16 +189,36 @@ async def update_any(
     session: AsyncSession = Depends(get_db),
 ) -> UserPublic:
 
-    if request.state.user.role not in [0, 1]:
+    if request.state.user.role not in [0, 1, 2]:
         raise PermissionDeniedException(custom_message="update this user")
 
-    if (
-        request.state.user.role == 1
-        and request.state.user.company_id != user_update.company_id
-    ):
-        raise PermissionDeniedException(custom_message="update users to other company")
+    actor = request.state.user
+    target = await get_user(session, user_id)
 
-    check_role_creation_permissions(request.state.user.role, user_update.role)
+    if actor.role == 2:
+        if actor.company_id is None:
+            raise PermissionDeniedException(
+                custom_message="actualizar usuarios (sin empresa asignada en tu cuenta)"
+            )
+        if target.company_id != actor.company_id or target.role != 3:
+            raise PermissionDeniedException(custom_message="update this user")
+        payload = user_update.model_dump(exclude_unset=True)
+        new_role = payload.get("role", target.role)
+        if new_role != 3:
+            raise PermissionDeniedException(
+                custom_message="solo puedes mantener el rol de evaluador en este usuario"
+            )
+        user_update = user_update.model_copy(update={"company_id": actor.company_id})
+        check_role_creation_permissions(actor.role, new_role)
+    else:
+        if (
+            actor.role == 1
+            and user_update.company_id is not None
+            and actor.company_id != user_update.company_id
+        ):
+            raise PermissionDeniedException(custom_message="update users to other company")
+
+        check_role_creation_permissions(actor.role, user_update.role)
 
     if user_update.birthdate:
         user_update.birthdate = user_update.birthdate.replace(tzinfo=None)

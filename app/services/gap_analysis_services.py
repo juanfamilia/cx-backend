@@ -6,8 +6,9 @@ extraídos automáticamente. Genera discrepancias clasificadas por severidad
 y un score de confiabilidad del programa por evaluación.
 
 Mapeo de campos:
-  Aspecto del formulario (tipo COMPLIANCE/BOOLEAN) → campo IA equivalente
-  La detección es por descripción del aspecto (heurística de palabras clave).
+  1) Si el aspecto tiene `competency_id` y la competencia define `ai_field_hint`
+     válido en Evaluation, se usa ese mapeo (prioridad sobre heurística).
+  2) Si no, heurística por palabras clave en la descripción (español / inglés).
 """
 
 import logging
@@ -66,11 +67,32 @@ class GapAnalysisResult(BaseModel):
 # Cada entrada: (keywords, ai_field, ai_confidence_default)
 # Se elige el primer match.
 
+# Campos en Evaluation que aceptamos vía competencia (ai_field_hint); evita typos / RCE por nombre.
+_GAP_AI_FIELDS_FROM_COMPETENCY: frozenset[str] = frozenset(
+    {
+        "greeting_detected",
+        "problem_resolved",
+        "product_offered",
+        "customer_emotion",
+        "agent_emotion",
+    }
+)
+
 _KEYWORD_MAP: List[tuple] = [
-    (["saludo", "bienvenida", "greeting"],   "greeting_detected",  0.85),
-    (["resolv", "solución", "solucion", "problem"], "problem_resolved", 0.80),
-    (["product", "ofert", "venta", "ofrec"], "product_offered",   0.75),
-    (["emoción", "emocion", "satisf", "trato", "amabilidad"], "customer_emotion", 0.70),
+    (["saludo", "bienvenida", "greeting", "recib", "acog"], "greeting_detected", 0.85),
+    (["identific", "presentación", "presentacion", "quien habla"], "greeting_detected", 0.78),
+    (
+        ["resolv", "solución", "solucion", "problem", "gestion", "gestión", "contest"],
+        "problem_resolved",
+        0.80,
+    ),
+    (["product", "ofert", "venta", "ofrec", "cross", "upsell", "adicional"], "product_offered", 0.75),
+    (
+        ["emoción", "emocion", "satisf", "trato", "amabilidad", "cortesía", "cortesia", "calidez"],
+        "customer_emotion",
+        0.70,
+    ),
+    (["despedida", "cierre", "cerrar", "despid", "agradec"], "greeting_detected", 0.68),
 ]
 
 # Umbral para considerar discrepancia "activa"
@@ -88,6 +110,24 @@ def _match_ai_field(description: str) -> Optional[tuple]:
         if any(kw in desc_lower for kw in keywords):
             return ai_field, confidence
     return None
+
+
+def _mapping_from_competency(aspect: SurveyAspect) -> Optional[tuple[str, float]]:
+    """Usa `ai_field_hint` del catálogo de competencias cuando existe y es seguro."""
+    comp = getattr(aspect, "competency", None)
+    if comp is None:
+        return None
+    hint = (getattr(comp, "ai_field_hint", None) or "").strip()
+    if not hint or hint not in _GAP_AI_FIELDS_FROM_COMPETENCY:
+        return None
+    return hint, 0.92
+
+
+def _resolve_ai_mapping(aspect: SurveyAspect) -> Optional[tuple[str, float]]:
+    mapped = _mapping_from_competency(aspect)
+    if mapped:
+        return mapped
+    return _match_ai_field(aspect.description or "")
 
 
 def _normalize_auditor(answer: EvaluationAnswer) -> Optional[bool]:
@@ -108,8 +148,30 @@ def _normalize_ai(evaluation: Evaluation, ai_field: str) -> Optional[bool]:
     if isinstance(val, bool):
         return val
     if isinstance(val, str):
-        pos = {"satisfecho", "contento", "feliz", "positivo", "amable", "profesional"}
-        neg = {"frustrado", "molesto", "enojado", "negativo", "apático"}
+        pos = {
+            "satisfecho",
+            "contento",
+            "feliz",
+            "positivo",
+            "amable",
+            "profesional",
+            "neutral",
+            "tranquilo",
+            "agradecido",
+            "conforme",
+        }
+        neg = {
+            "frustrado",
+            "molesto",
+            "enojado",
+            "negativo",
+            "apático",
+            "apatico",
+            "irritado",
+            "enfadado",
+            "hostil",
+            "insatisfecho",
+        }
         lower = val.lower()
         if lower in pos:
             return True
@@ -117,6 +179,9 @@ def _normalize_ai(evaluation: Evaluation, ai_field: str) -> Optional[bool]:
             return False
         return None
     if isinstance(val, (int, float)):
+        # NPS inferido 0–10: mitad de escala como umbral neutro
+        if ai_field == "nps_inferred":
+            return val >= 7
         return val >= 50
     return None
 
@@ -161,7 +226,7 @@ async def compute_gap_analysis(
         .options(
             selectinload(Evaluation.evaluation_answers).selectinload(
                 EvaluationAnswer.aspect
-            )
+            ).selectinload(SurveyAspect.competency)
         )
     )
     result = await session.execute(q)
@@ -181,7 +246,7 @@ async def compute_gap_analysis(
         if not aspect:
             continue
 
-        match = _match_ai_field(aspect.description)
+        match = _resolve_ai_mapping(aspect)
         if not match:
             continue
 

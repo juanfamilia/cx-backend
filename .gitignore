@@ -5,3 +5,5 @@ __pycache__/
 # environments
 .venv/
 .env
+scripts/smoke.local.env
+scripts/smoke.local.env.txt

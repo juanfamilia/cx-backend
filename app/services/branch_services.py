@@ -51,7 +51,7 @@ async def get_branches(
 
     return BranchesPublic(
         data=list(rows),
-        pagination=Pagination(total=total, offset=offset, limit=limit),
+        pagination=Pagination(first=offset, rows=limit, total=total),
     )
 
 

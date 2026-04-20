@@ -122,7 +122,7 @@ async def get_action_plans(
 
     return ActionPlansPublic(
         data=[ActionPlanPublic.model_validate(r) for r in rows],
-        pagination=Pagination(total=total, offset=offset, limit=limit),
+        pagination=Pagination(first=offset, rows=limit, total=total),
     )
 
 

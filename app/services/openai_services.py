@@ -7,6 +7,31 @@ from typing import Tuple, List, Dict, Any
 logger = logging.getLogger(__name__)
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
+# Whisper usa esto como sesgo léxico (español, dominio CX); mejora nombres de producto y jerga local.
+_WHISPER_CONTEXT_PROMPT = (
+    "Español. Contexto: atención al cliente, agente y cliente, sucursal, producto, "
+    "consulta, espera, cola, pago, reclamo, saludo y despedida."
+)
+
+
+def _transcript_confidence_preamble(segments: List[Dict[str, Any]]) -> str:
+    """Si los segmentos tienen logprob bajo, avisar al modelo de análisis (GPT)."""
+    probs = [
+        float(s["avg_logprob"])
+        for s in segments
+        if s.get("avg_logprob") is not None
+    ]
+    if not probs:
+        return ""
+    mean_lp = sum(probs) / len(probs)
+    if mean_lp >= -0.78:
+        return ""
+    return (
+        "[Calidad de la transcripción automática] La confianza media del reconocimiento "
+        "de voz es baja. Cita solo frases que aparezcan en el texto; si el audio es "
+        "ambiguo, dilo explícitamente. El contenido está en español.\n\n"
+    )
+
 
 def _whisper_segment_to_dict(seg: Any) -> Dict[str, Any]:
     """Normalize Whisper segment objects (dict, Pydantic model, or attribute object)."""
@@ -47,6 +72,7 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
             file=audio_file,
             response_format="verbose_json",
             language="es",
+            prompt=_WHISPER_CONTEXT_PROMPT,
         )
 
     segments: List[Dict[str, Any]] = []
@@ -85,6 +111,10 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
                     Debes entregar un análisis balanceado entre storytelling ejecutivo y consistencia cuantitativa.  
                     Tu trabajo debe alinearse con las mejores prácticas de la disciplina (Forrester CX Index, 
                     NPS de Bain & Company, Customer Effort Score de Gartner, estándares de CXPA y Harvard Business Review).  
+
+                    idioma: >
+                    La transcripción está en español; conserva matices del castellano y no traduzcas verbatims
+                    a otro idioma salvo que el cliente lo pida explícitamente.
 
                     contexto: >
                     Recibirás una transcripción de interacción entre cliente y agente (real o mystery shopper).  
@@ -265,9 +295,13 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
             },
             {
                 "role": "user",
-                "content": f"Este es el texto transcrito del audio:\n\n{full_transcript}",
+                "content": (
+                    f"{_transcript_confidence_preamble(segments)}"
+                    f"Este es el texto transcrito del audio (español):\n\n{full_transcript}"
+                ),
             },
         ],
+        temperature=0,
     )
 
     analysis_result = response.choices[0].message.content

@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     R2_BUCKET: str
     R2_ENDPOINT_URL: str
     OPENAI_API_KEY: str
+    # Opcional: refinamiento de intervalos sensibles (cuenta/tarjeta) sobre la transcripción
+    ANTHROPIC_API_KEY: str | None = None
+    # Si True, tras transcribir se genera un MP4 de “entrega” (intro + silencios en datos sensibles) en R2
+    DELIVERY_VIDEO_ENABLED: bool = False
     # Hugging Face token para pyannote speaker diarization (opcional)
     HF_TOKEN: str | None = None
     # Orígenes adicionales para CORS (coma-separados, con o sin https://).

@@ -13,6 +13,7 @@ from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.concurrency import run_in_threadpool
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.models.evaluation_analysis_model import EvaluationAnalysisBase
 from app.services.evaluation_analysis_services import (
@@ -133,6 +134,21 @@ async def handle_stream_to_audio(
                 evaluation_id,
                 len(segments),
             )
+
+        if settings.DELIVERY_VIDEO_ENABLED and segments:
+            from app.services.video_delivery_edit_services import (
+                compose_and_upload_delivery_video,
+            )
+
+            dk = await compose_and_upload_delivery_video(
+                session, evaluation_id, video_path, segments
+            )
+            if dk:
+                logger.info(
+                    "Delivery video composed evaluation_id=%s r2_key=%s",
+                    evaluation_id,
+                    dk,
+                )
 
         logger.info("Saving evaluation analysis evaluation_id=%s", evaluation_id)
 

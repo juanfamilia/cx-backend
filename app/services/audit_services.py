@@ -82,5 +82,5 @@ async def get_audit_logs(
 
     return AuditLogsPublic(
         data=[AuditLogPublic.model_validate(r) for r in rows],
-        pagination=Pagination(total=total, offset=offset, limit=limit),
+        pagination=Pagination(first=offset, rows=limit, total=total),
     )
