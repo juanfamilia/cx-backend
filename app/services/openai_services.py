@@ -7,13 +7,6 @@ from typing import Tuple, List, Dict, Any
 logger = logging.getLogger(__name__)
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
-# Whisper usa esto como sesgo léxico (español, dominio CX); mejora nombres de producto y jerga local.
-_WHISPER_CONTEXT_PROMPT = (
-    "Español. Contexto: atención al cliente, agente y cliente, sucursal, producto, "
-    "consulta, espera, cola, pago, reclamo, saludo y despedida."
-)
-
-
 def _transcript_confidence_preamble(segments: List[Dict[str, Any]]) -> str:
     """Si los segmentos tienen logprob bajo, avisar al modelo de análisis (GPT)."""
     probs = [
@@ -67,12 +60,13 @@ def audio_analysis(audio_path: str) -> Tuple[str, List[Dict[str, Any]], str]:
     """
     # 1. Transcribir el audio
     with open(audio_path, "rb") as audio_file:
+        # No usar `prompt` de sesgo léxico largo aquí: en verbose_json Whisper puede
+        # repetir ese texto en muchos segmentos en lugar del audio real.
         transcript_response = client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file,
             response_format="verbose_json",
             language="es",
-            prompt=_WHISPER_CONTEXT_PROMPT,
         )
 
     segments: List[Dict[str, Any]] = []
