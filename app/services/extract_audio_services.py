@@ -208,8 +208,12 @@ async def reprocess_transcription_only(
     session: AsyncSession,
 ) -> str | None:
     """
-    Solo Whisper + diarización: reemplaza segmentos y `transcript_text` del análisis.
-    No ejecuta GPT ni actualiza campos IA de la evaluación.
+    Vuelve a procesar desde el vídeo ya en Cloudflare Stream (sin nueva subida):
+    descarga, extrae audio, sube MP3 a R2, Whisper + diarización, y opcionalmente
+    regenera el MP4 de entrega en R2 (mismo criterio que el pipeline principal).
+
+    Reemplaza segmentos y `transcript_text` del análisis. No ejecuta GPT ni
+    actualiza campos IA de la evaluación.
     """
     from app.services.openai_services import transcribe_audio_segments_only
     from app.services.transcript_segment_services import (
@@ -242,9 +246,35 @@ async def reprocess_transcription_only(
             return None
 
         await run_in_threadpool(extract_audio, video_path, audio_path)
+
+        r2_audio_key = f"audios/{id_archivo}.mp3"
+        logger.info(
+            "reprocess_transcription_only: uploading audio to R2 evaluation_id=%s key=%s",
+            evaluation_id,
+            r2_audio_key,
+        )
+        await run_in_threadpool(
+            r2_upload, archivo_local=audio_path, nombre_objetivo=r2_audio_key
+        )
+
         segments, full_transcript = await run_in_threadpool(
             transcribe_audio_segments_only, audio_path
         )
+
+        if settings.DELIVERY_VIDEO_ENABLED and segments:
+            from app.services.video_delivery_edit_services import (
+                compose_and_upload_delivery_video,
+            )
+
+            dk = await compose_and_upload_delivery_video(
+                session, evaluation_id, video_path, segments
+            )
+            if dk:
+                logger.info(
+                    "reprocess_transcription_only: delivery video refreshed evaluation_id=%s key=%s",
+                    evaluation_id,
+                    dk,
+                )
 
         await delete_segments_for_evaluation(session, evaluation_id)
         await create_transcript_segments(

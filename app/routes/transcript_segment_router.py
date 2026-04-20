@@ -145,9 +145,11 @@ async def reprocess_evaluation_transcription(
     session: AsyncSession = Depends(get_db),
 ):
     """
-    Vuelve a ejecutar solo Whisper (+ diarización), reemplaza segmentos en BD y
-    actualiza `transcript_text` del análisis. **No** re-ejecuta el análisis GPT ni
-    campos IA de la evaluación (útil tras corregir el pipeline de Whisper).
+    Reprocesa desde el vídeo ya asociado en Cloudflare Stream (sin subir archivo nuevo):
+    descarga, extrae audio, sube MP3 a R2, Whisper (+ diarización) y, si
+    `DELIVERY_VIDEO_ENABLED`, regenera el MP4 de entrega en R2. Actualiza segmentos
+    en BD y `transcript_text` del análisis. **No** re-ejecuta el análisis GPT ni
+    campos IA de la evaluación.
 
     Roles: 0, 1 o 2. Se ejecuta en segundo plano (puede tardar varios minutos).
     """
