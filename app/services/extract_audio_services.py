@@ -206,7 +206,7 @@ async def reprocess_transcription_only(
     video_uid: str,
     evaluation_id: int,
     session: AsyncSession,
-) -> Optional[str]:
+) -> str | None:
     """
     Solo Whisper + diarización: reemplaza segmentos y `transcript_text` del análisis.
     No ejecuta GPT ni actualiza campos IA de la evaluación.

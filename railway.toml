@@ -4,6 +4,8 @@ dockerfilePath = "app/Dockerfile"
 
 [deploy]
 healthcheckPath = "/api/v1/health"
-healthcheckTimeout = 100
+# Railway default is 300s; a lower value fails deploys when alembic + cold imports exceed the window.
+# "service unavailable" during health checks is often the edge proxy before the process listens on $PORT.
+healthcheckTimeout = 300
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
