@@ -1,12 +1,42 @@
 import asyncio
 from logging.config import fileConfig
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import AsyncEngine
-from alembic import context
-from sqlmodel import SQLModel
-from app.core.db import engine
 
-from app.models import (
+from alembic import context
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlmodel import SQLModel
+
+
+class _AlembicDbSettings(BaseSettings):
+    """
+    Solo `POSTGRES_URI` para migraciones: evita cargar `app.core.config.Settings`
+    (JWT, R2, OpenAI, etc.) al ejecutar `alembic upgrade`.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=(".env", "../.env"),
+        env_ignore_empty=True,
+        extra="ignore",
+    )
+    POSTGRES_URI: str
+
+
+def _async_database_url(url: str) -> str:
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    return url
+
+
+_db = _AlembicDbSettings()
+engine = create_async_engine(
+    _async_database_url(_db.POSTGRES_URI),
+    echo=False,
+)
+
+from app.models import (  # noqa: E402 — tras definir `engine` (metadata)
     user_model,
     company_model,
     payment_model,
@@ -27,7 +57,6 @@ from app.models import (
     prompt_model,
     insight_model,
     clip_model,
-    # Service Quality Framework (ver docs/METHODOLOGY.md)
     industry_model,
     framework_model,
     quality_competency_model,

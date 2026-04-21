@@ -46,6 +46,8 @@ Producto **separado** de Siete CX sobre la **misma infraestructura** (auth, empr
 
 ## Migración
 
+Solo necesitas **`POSTGRES_URI`** en el entorno o en `.env` / `../.env` (Alembic ya no carga el resto de `Settings`).
+
 Tras desplegar el backend, desde la raíz del repo (con dependencias instaladas en el entorno activo):
 
 ```bash
