@@ -22,6 +22,8 @@ class CompanyBase(SQLModel):
     industry_id: int | None = Field(
         default=None, foreign_key="industries.id", index=True
     )
+    # Siete InS (investigación cualitativa / focus): lo activa rol 0 por empresa.
+    siete_ins_enabled: bool = Field(default=False)
 
 
 class CompanyUpdate(SQLModel):
@@ -32,6 +34,7 @@ class CompanyUpdate(SQLModel):
     state: str | None = Field(default=None)
     country: str | None = Field(default=None)
     industry_id: int | None = Field(default=None)
+    siete_ins_enabled: bool | None = Field(default=None)
 
 
 class Company(CompanyBase, table=True):

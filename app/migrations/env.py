@@ -33,6 +33,7 @@ from app.models import (
     quality_competency_model,
     industry_template_model,
     company_competency_config_model,
+    ins_study_model,
 )
 
 config = context.config
