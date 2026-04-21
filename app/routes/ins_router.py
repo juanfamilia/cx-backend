@@ -47,7 +47,7 @@ async def ins_access_probe(request: Request, session: AsyncSession = Depends(get
 @router.get(
     "/studies",
     response_model=list[InsStudyPublic],
-    dependencies=[Depends(require_ins_product_access)],
+    # Sin `require_ins_product_access`: si el producto está apagado, el servicio devuelve [] (evita 403 en el listado).
 )
 async def list_studies(
     request: Request,
