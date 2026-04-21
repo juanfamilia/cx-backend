@@ -24,6 +24,10 @@ class CompanyBase(SQLModel):
     )
     # Siete InS (investigación cualitativa / focus): lo activa rol 0 por empresa.
     siete_ins_enabled: bool = Field(default=False)
+    # Siete Field (control de levantamiento / CSV-ready).
+    siete_field_enabled: bool = Field(default=False)
+    # Siete Clever (analítica cuantitativa reproducible).
+    siete_clever_enabled: bool = Field(default=False)
 
 
 class CompanyUpdate(SQLModel):
@@ -35,6 +39,8 @@ class CompanyUpdate(SQLModel):
     country: str | None = Field(default=None)
     industry_id: int | None = Field(default=None)
     siete_ins_enabled: bool | None = Field(default=None)
+    siete_field_enabled: bool | None = Field(default=None)
+    siete_clever_enabled: bool | None = Field(default=None)
 
 
 class Company(CompanyBase, table=True):

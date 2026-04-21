@@ -1,0 +1,80 @@
+"""Siete Field — proyectos de control de levantamiento (CSV / conectores)."""
+
+from datetime import datetime
+
+from pydantic import ConfigDict
+from sqlalchemy import Column, DateTime, Text, func
+from sqlmodel import Field, SQLModel
+
+
+class FieldProjectBase(SQLModel):
+    name: str = Field(max_length=500)
+    description: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    import_format_version: str = Field(
+        default="2026.1",
+        max_length=32,
+        description="Versión del layout CSV esperado en importaciones.",
+    )
+    status: str = Field(
+        default="draft",
+        max_length=32,
+        description="draft | active | archived",
+    )
+
+
+class FieldProject(FieldProjectBase, table=True):
+    __tablename__ = "field_projects"
+
+    id: int | None = Field(default=None, primary_key=True)
+    company_id: int = Field(foreign_key="companies.id", index=True)
+    client_id: int = Field(foreign_key="end_clients.id", index=True)
+
+    created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
+    updated_at: datetime = Field(
+        sa_column=Column(DateTime, server_default=func.now(), onupdate=func.now())
+    )
+    deleted_at: datetime | None = Field(default=None)
+
+
+class FieldProjectCreate(SQLModel):
+    name: str
+    description: str | None = None
+    client_id: int
+    company_id: int | None = None
+    """Rol 0: puede fijar empresa; resto usa la empresa del usuario."""
+
+
+class FieldProjectPublic(FieldProjectBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    company_id: int
+    client_id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class FieldImportRunBase(SQLModel):
+    status: str = Field(max_length=32)  # pending | processing | completed | failed
+    format_version: str = Field(max_length=32)
+    error_detail: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    row_count: int | None = Field(default=None)
+
+
+class FieldImportRun(FieldImportRunBase, table=True):
+    __tablename__ = "field_import_runs"
+
+    id: int | None = Field(default=None, primary_key=True)
+    field_project_id: int = Field(foreign_key="field_projects.id", index=True)
+
+    created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
+    completed_at: datetime | None = Field(default=None)
+
+
+class FieldImportRunPublic(FieldImportRunBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    field_project_id: int
+    created_at: datetime
+    completed_at: datetime | None

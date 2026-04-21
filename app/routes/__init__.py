@@ -31,3 +31,6 @@ from .intelligence_router import router as intelligence_router
 from .prompts_router import router as prompts_router
 from .quality_framework_router import router as quality_framework_router
 from .ins_router import router as ins_router
+from .entitlements_router import router as entitlements_router
+from .end_clients_router import router as end_clients_router
+from .field_router import router as field_router

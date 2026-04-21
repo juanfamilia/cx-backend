@@ -33,6 +33,9 @@ from app.routes import (
     prompts_router,
     quality_framework_router,
     ins_router,
+    entitlements_router,
+    end_clients_router,
+    field_router,
 )
 
 
@@ -71,3 +74,6 @@ api_router.include_router(intelligence_router)
 api_router.include_router(prompts_router)
 api_router.include_router(quality_framework_router)
 api_router.include_router(ins_router)
+api_router.include_router(entitlements_router)
+api_router.include_router(end_clients_router)
+api_router.include_router(field_router)
