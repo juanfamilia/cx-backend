@@ -46,9 +46,18 @@ Producto **separado** de Siete CX sobre la **misma infraestructura** (auth, empr
 
 ## Migración
 
-Tras desplegar el backend:
+Tras desplegar el backend, desde la raíz del repo (con dependencias instaladas en el entorno activo):
 
 ```bash
+# Siempre funciona si Alembic está instalado en ese Python (Codespaces / venv / Docker):
+python -m alembic upgrade head
+```
+
+Alternativas:
+
+```bash
+uv run alembic upgrade head
+# o, con el venv activado (.venv/bin en PATH):
 alembic upgrade head
 ```
 
