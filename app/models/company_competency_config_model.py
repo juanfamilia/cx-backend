@@ -28,11 +28,11 @@ from sqlmodel import (
 
 from app.types.pagination import Pagination
 
+# Runtime: Pydantic debe resolver `competency` para OpenAPI (/openapi.json).
+from app.models.quality_competency_model import QualityCompetencyPublic
+
 if TYPE_CHECKING:
-    from app.models.quality_competency_model import (
-        QualityCompetency,
-        QualityCompetencyPublic,
-    )
+    from app.models.quality_competency_model import QualityCompetency
 
 
 class CompanyCompetencyConfigBase(SQLModel):
@@ -85,7 +85,7 @@ class CompanyCompetencyConfigPublic(CompanyCompetencyConfigBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    competency: Optional["QualityCompetencyPublic"] = None
+    competency: Optional[QualityCompetencyPublic] = None
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 

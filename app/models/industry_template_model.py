@@ -26,12 +26,14 @@ from sqlmodel import (
 
 from app.types.pagination import Pagination
 
+# Import en runtime (no solo TYPE_CHECKING): Pydantic/OpenAPI deben resolver
+# `competency` en IndustryTemplatePublic; si queda solo forward string, falla
+# `class-not-fully-defined` al generar /openapi.json (p. ej. Python 3.13 en Railway).
+from app.models.quality_competency_model import QualityCompetencyPublic
+
 if TYPE_CHECKING:
     from app.models.industry_model import Industry
-    from app.models.quality_competency_model import (
-        QualityCompetency,
-        QualityCompetencyPublic,
-    )
+    from app.models.quality_competency_model import QualityCompetency
 
 
 class IndustryTemplateBase(SQLModel):
@@ -83,7 +85,7 @@ class IndustryTemplatePublic(IndustryTemplateBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    competency: Optional["QualityCompetencyPublic"] = None
+    competency: Optional[QualityCompetencyPublic] = None
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
