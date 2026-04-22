@@ -91,6 +91,44 @@ def _parse_duration_sec(raw: str) -> tuple[int | None, bool]:
         return None, True
 
 
+def _finding_message_row_incomplete(
+    data_row_index: int, case_id: str, wave_id: str
+) -> str:
+    """Texto orientado a negocio / agencia (qué falta y qué hacer)."""
+    missing: list[str] = []
+    if not case_id:
+        missing.append("«case_id» (código del caso en terreno)")
+    if not wave_id:
+        missing.append("«wave_id» (ola, semana o marco del levantamiento)")
+    if len(missing) == 2:
+        detail = " faltan " + " y ".join(missing)
+    else:
+        detail = " falta " + missing[0]
+    return (
+        f"Fila {data_row_index} del archivo (la fila 1 es la cabecera):{detail}. "
+        "Sin esos dos datos el sistema no puede registrar el caso en el proyecto. "
+        "Revise celdas vacías, espacios de más o un delimitador CSV mal configurado."
+    )
+
+
+def _finding_message_duplicate(
+    case_id: str, wave_id: str, first_materialized_row_id: int
+) -> str:
+    return (
+        f"Esta fila vuelve a usar el mismo caso y la misma ola que ya importó antes "
+        f"(«{case_id}» + «{wave_id}»). La primera aparición quedó en el registro de fila id={first_materialized_row_id}. "
+        "Si no era intencional, corrija el CSV; si son dos visitas distintas, use otro identificador de caso u ola."
+    )
+
+
+def _finding_message_invalid_duration(dur_raw: str) -> str:
+    return (
+        f"La duración en segundos no es válida: valor recibido «{dur_raw}». "
+        "Debe ser un número entero mayor o igual que cero (sin letras ni símbolos). "
+        "Si aún no tiene duración, deje la celda vacía."
+    )
+
+
 async def _get_project(session: AsyncSession, project_id: int) -> FieldProject:
     row = await session.get(FieldProject, project_id)
     if row is None or row.deleted_at is not None:
@@ -222,7 +260,9 @@ async def import_field_csv_2026_1(
                     severity="error",
                     case_id=case_id or None,
                     wave_id=wave_id or None,
-                    message=f"Fila de datos #{data_row_index}: case_id y wave_id son obligatorios.",
+                    message=_finding_message_row_incomplete(
+                        data_row_index, case_id, wave_id
+                    ),
                 )
             )
             continue
@@ -258,9 +298,8 @@ async def import_field_csv_2026_1(
                     severity="warn",
                     case_id=case_id,
                     wave_id=wave_id,
-                    message=(
-                        "Mismo case_id+wave_id que la fila materializada "
-                        f"id={seen_case_wave[key]} en esta corrida."
+                    message=_finding_message_duplicate(
+                        case_id, wave_id, seen_case_wave[key]
                     ),
                 )
             )
@@ -278,7 +317,7 @@ async def import_field_csv_2026_1(
                     severity="warn",
                     case_id=case_id,
                     wave_id=wave_id,
-                    message=f"duration_sec no válido o negativo: {dur_raw!r}",
+                    message=_finding_message_invalid_duration(dur_raw),
                 )
             )
 
