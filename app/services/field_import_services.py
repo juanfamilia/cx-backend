@@ -40,6 +40,11 @@ FINDING_INVALID_DURATION = "INVALID_DURATION"
 FINDING_ROW_INCOMPLETE = "ROW_INCOMPLETE"
 
 
+def _utc_naive() -> datetime:
+    """UTC sin tzinfo: columnas TIMESTAMP WITHOUT TIME ZONE (asyncpg + aware falla)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 def _normalize_headers(fieldnames: list[str] | None) -> set[str]:
     if not fieldnames:
         return set()
@@ -156,7 +161,7 @@ async def import_field_csv_2026_1(
         run.status = "failed"
         run.error_detail = msg[:8000]
         run.row_count = None
-        run.completed_at = datetime.now(timezone.utc)
+        run.completed_at = _utc_naive()
         _add_ledger_event(
             session,
             project_id=project.id,
@@ -280,7 +285,7 @@ async def import_field_csv_2026_1(
     run.status = "completed"
     run.row_count = inserted_rows
     run.error_detail = None
-    run.completed_at = datetime.now(timezone.utc)
+    run.completed_at = _utc_naive()
 
     _add_ledger_event(
         session,
