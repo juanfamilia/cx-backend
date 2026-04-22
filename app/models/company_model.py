@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
-from pydantic import BaseModel, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, field_validator
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, func
 
 from app.types.pagination import Pagination
@@ -29,6 +30,14 @@ class CompanyBase(SQLModel):
     # Siete Clever (analítica cuantitativa reproducible).
     siete_clever_enabled: bool = Field(default=False)
 
+    @field_validator("industry_id", mode="before")
+    @classmethod
+    def industry_id_zero_is_none(cls, v: int | None) -> int | None:
+        """UI / selects suelen mandar 0 como vacío; en BD la FK no admite 0."""
+        if v == 0:
+            return None
+        return v
+
 
 class CompanyUpdate(SQLModel):
     name: str | None = Field(default=None)
@@ -41,6 +50,13 @@ class CompanyUpdate(SQLModel):
     siete_ins_enabled: bool | None = Field(default=None)
     siete_field_enabled: bool | None = Field(default=None)
     siete_clever_enabled: bool | None = Field(default=None)
+
+    @field_validator("industry_id", mode="before")
+    @classmethod
+    def industry_id_zero_is_none(cls, v: int | None) -> int | None:
+        if v == 0:
+            return None
+        return v
 
 
 class Company(CompanyBase, table=True):
