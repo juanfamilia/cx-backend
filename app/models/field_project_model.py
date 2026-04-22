@@ -39,9 +39,16 @@ class FieldProject(FieldProjectBase, table=True):
 class FieldProjectCreate(SQLModel):
     name: str
     description: str | None = None
-    client_id: int
-    company_id: int | None = None
-    """Rol 0: puede fijar empresa; resto usa la empresa del usuario."""
+    client_id: int = Field(
+        description="Cliente final (end_clients); debe existir y pertenecer a la misma empresa que company_id.",
+    )
+    company_id: int | None = Field(
+        default=None,
+        description=(
+            "Rol 0 sin empresa en el perfil (company_id null en users): obligatorio. "
+            "Rol 0 con empresa: opcional (se usa la del usuario). Roles 1–2: omitir."
+        ),
+    )
 
 
 class FieldProjectPublic(FieldProjectBase):
