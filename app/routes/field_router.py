@@ -11,12 +11,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.models.company_model import Company
+from app.models.field_ledger_model import (
+    FieldFindingPublic,
+    FieldImportRowPublic,
+    FieldLedgerEventPublic,
+)
 from app.models.field_project_model import (
     FieldImportRunPublic,
     FieldProjectCreate,
     FieldProjectPublic,
 )
 from app.services.field_import_services import import_field_csv_2026_1
+from app.services.field_ledger_services import (
+    list_findings_for_run,
+    list_import_runs_for_project,
+    list_ledger_events_for_project,
+    list_rows_for_run,
+)
 from app.services.field_project_services import create_field_project, list_field_projects
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.field_access import require_field_product_access
@@ -87,3 +98,71 @@ async def import_project_csv(
     raw = await file.read()
     run = await import_field_csv_2026_1(session, request.state.user, project_id, raw)
     return FieldImportRunPublic.model_validate(run)
+
+
+@router.get(
+    "/projects/{project_id}/import-runs",
+    response_model=list[FieldImportRunPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Corridas de import (Execution Ledger)",
+)
+async def get_project_import_runs(
+    project_id: int,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_import_runs_for_project(
+        session, request.state.user, project_id, limit=limit
+    )
+
+
+@router.get(
+    "/projects/{project_id}/import-runs/{run_id}/rows",
+    response_model=list[FieldImportRowPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Filas materializadas de una corrida",
+)
+async def get_import_run_rows(
+    project_id: int,
+    run_id: int,
+    request: Request,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_rows_for_run(
+        session, request.state.user, project_id, run_id, offset=offset, limit=limit
+    )
+
+
+@router.get(
+    "/projects/{project_id}/import-runs/{run_id}/findings",
+    response_model=list[FieldFindingPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Hallazgos QC de una corrida",
+)
+async def get_import_run_findings(
+    project_id: int,
+    run_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_findings_for_run(session, request.state.user, project_id, run_id)
+
+
+@router.get(
+    "/projects/{project_id}/ledger-events",
+    response_model=list[FieldLedgerEventPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Eventos de ledger del proyecto",
+)
+async def get_project_ledger_events(
+    project_id: int,
+    request: Request,
+    limit: int = Query(100, ge=1, le=500),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_ledger_events_for_project(
+        session, request.state.user, project_id, limit=limit
+    )

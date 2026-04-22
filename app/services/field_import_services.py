@@ -1,13 +1,15 @@
-"""Importación CSV Field (formato 2026.1) — validación + field_import_runs (sin staging aún)."""
+"""Importación CSV Field (2026.1) + Execution Ledger: filas, hallazgos, eventos."""
 
 from __future__ import annotations
 
 import csv
 import io
 from datetime import datetime, timezone
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from typing import Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.field_ledger_model import FieldFinding, FieldImportRow, FieldLedgerEvent
 from app.models.field_project_model import FieldImportRun, FieldProject
 from app.models.user_model import User
 from app.services.field_project_services import assert_field_staff
@@ -27,11 +29,61 @@ REQUIRED_COLUMNS = frozenset(
     }
 )
 
+OPTIONAL_COLUMNS = frozenset({"quota_cell", "lat", "lon", "flags"})
+
+EVENT_IMPORT_STARTED = "import_started"
+EVENT_IMPORT_FAILED = "import_failed"
+EVENT_IMPORT_COMPLETED = "import_completed"
+
+FINDING_DUPLICATE_CASE = "DUPLICATE_CASE_IN_RUN"
+FINDING_INVALID_DURATION = "INVALID_DURATION"
+FINDING_ROW_INCOMPLETE = "ROW_INCOMPLETE"
+
 
 def _normalize_headers(fieldnames: list[str] | None) -> set[str]:
     if not fieldnames:
         return set()
-    return {h.strip().lstrip("\ufeff") for h in fieldnames if h and h.strip()}
+    return {h.strip().lstrip("\ufeff").lower() for h in fieldnames if h and h.strip()}
+
+
+def _cell(row: dict[str, Any], key: str) -> str:
+    v = row.get(key)
+    if v is None:
+        return ""
+    return str(v).strip()
+
+
+def _cell_ci(row: dict[str, Any], key_lower: str) -> str:
+    for k, v in row.items():
+        if (k or "").strip().lower() == key_lower:
+            return str(v).strip() if v is not None else ""
+    return ""
+
+
+def _extras_from_row(row: dict[str, Any]) -> dict[str, Any] | None:
+    lower_map = {(k or "").strip().lower(): k for k in row.keys() if k}
+    out: dict[str, Any] = {}
+    for want in OPTIONAL_COLUMNS:
+        orig = lower_map.get(want.lower())
+        if orig:
+            v = _cell(row, orig)
+            if v:
+                out[want] = v
+    return out or None
+
+
+def _parse_duration_sec(raw: str) -> tuple[int | None, bool]:
+    """(valor, inválido)."""
+    s = (raw or "").strip()
+    if not s:
+        return None, False
+    try:
+        n = int(float(s))
+        if n < 0:
+            return n, True
+        return n, False
+    except ValueError:
+        return None, True
 
 
 async def _get_project(session: AsyncSession, project_id: int) -> FieldProject:
@@ -48,6 +100,26 @@ def _assert_project_access(user: User, project: FieldProject) -> None:
         raise PermissionDeniedException(custom_message="proyecto Field no permitido")
 
 
+def _add_ledger_event(
+    session: AsyncSession,
+    *,
+    project_id: int,
+    run_id: int | None,
+    actor_user_id: int | None,
+    event_type: str,
+    payload: dict[str, Any] | None = None,
+) -> None:
+    session.add(
+        FieldLedgerEvent(
+            field_project_id=project_id,
+            field_import_run_id=run_id,
+            actor_user_id=actor_user_id,
+            event_type=event_type,
+            payload=payload,
+        )
+    )
+
+
 async def import_field_csv_2026_1(
     session: AsyncSession,
     user: User,
@@ -57,6 +129,8 @@ async def import_field_csv_2026_1(
     await assert_field_staff(user)
     project = await _get_project(session, project_id)
     _assert_project_access(user, project)
+
+    actor_id: int | None = user.id if getattr(user, "id", None) else None
 
     run = FieldImportRun(
         field_project_id=project.id,
@@ -68,11 +142,30 @@ async def import_field_csv_2026_1(
     session.add(run)
     await session.flush()
 
-    def fail(msg: str) -> None:
+    _add_ledger_event(
+        session,
+        project_id=project.id,
+        run_id=run.id,
+        actor_user_id=actor_id,
+        event_type=EVENT_IMPORT_STARTED,
+        payload={"format_version": FORMAT_VERSION},
+    )
+    await session.flush()
+
+    def fail(msg: str) -> FieldImportRun:
         run.status = "failed"
         run.error_detail = msg[:8000]
         run.row_count = None
         run.completed_at = datetime.now(timezone.utc)
+        _add_ledger_event(
+            session,
+            project_id=project.id,
+            run_id=run.id,
+            actor_user_id=actor_id,
+            event_type=EVENT_IMPORT_FAILED,
+            payload={"detail": msg[:2000]},
+        )
+        return run
 
     try:
         text = raw_bytes.decode("utf-8-sig")
@@ -91,19 +184,117 @@ async def import_field_csv_2026_1(
         await session.refresh(run)
         return run
 
-    row_count = 0
-    for row in reader:
-        if not row:
+    seen_case_wave: dict[tuple[str, str], int] = {}
+    data_row_index = 0
+    finding_count = 0
+    inserted_rows = 0
+
+    for raw_row in reader:
+        if not raw_row:
             continue
-        values = [str(v).strip() if v is not None else "" for v in row.values()]
+        values = [str(v).strip() if v is not None else "" for v in raw_row.values()]
         if not any(values):
             continue
-        row_count += 1
+
+        data_row_index += 1
+        case_id = _cell_ci(raw_row, "case_id")
+        wave_id = _cell_ci(raw_row, "wave_id")
+        interviewer_id = _cell_ci(raw_row, "interviewer_id")
+        disposition = _cell_ci(raw_row, "disposition")
+        started_at = _cell_ci(raw_row, "started_at") or None
+        completed_at = _cell_ci(raw_row, "completed_at") or None
+        dur_raw = _cell_ci(raw_row, "duration_sec")
+        duration_sec, dur_bad = _parse_duration_sec(dur_raw)
+
+        if not case_id or not wave_id:
+            finding_count += 1
+            session.add(
+                FieldFinding(
+                    field_project_id=project.id,
+                    field_import_run_id=run.id,
+                    field_import_row_id=None,
+                    code=FINDING_ROW_INCOMPLETE,
+                    severity="error",
+                    case_id=case_id or None,
+                    wave_id=wave_id or None,
+                    message=f"Fila de datos #{data_row_index}: case_id y wave_id son obligatorios.",
+                )
+            )
+            continue
+
+        extras = _extras_from_row(raw_row)
+
+        db_row = FieldImportRow(
+            field_project_id=project.id,
+            field_import_run_id=run.id,
+            source_row_number=data_row_index,
+            case_id=case_id,
+            wave_id=wave_id,
+            interviewer_id=interviewer_id or "",
+            disposition=disposition or "",
+            started_at_text=started_at,
+            completed_at_text=completed_at,
+            duration_sec=duration_sec,
+            extras=extras,
+        )
+        session.add(db_row)
+        await session.flush()
+        inserted_rows += 1
+
+        key = (case_id.lower(), wave_id.lower())
+        if key in seen_case_wave:
+            finding_count += 1
+            session.add(
+                FieldFinding(
+                    field_project_id=project.id,
+                    field_import_run_id=run.id,
+                    field_import_row_id=db_row.id,
+                    code=FINDING_DUPLICATE_CASE,
+                    severity="warn",
+                    case_id=case_id,
+                    wave_id=wave_id,
+                    message=(
+                        "Mismo case_id+wave_id que la fila materializada "
+                        f"id={seen_case_wave[key]} en esta corrida."
+                    ),
+                )
+            )
+        else:
+            seen_case_wave[key] = db_row.id
+
+        if dur_bad:
+            finding_count += 1
+            session.add(
+                FieldFinding(
+                    field_project_id=project.id,
+                    field_import_run_id=run.id,
+                    field_import_row_id=db_row.id,
+                    code=FINDING_INVALID_DURATION,
+                    severity="warn",
+                    case_id=case_id,
+                    wave_id=wave_id,
+                    message=f"duration_sec no válido o negativo: {dur_raw!r}",
+                )
+            )
 
     run.status = "completed"
-    run.row_count = row_count
+    run.row_count = inserted_rows
     run.error_detail = None
     run.completed_at = datetime.now(timezone.utc)
+
+    _add_ledger_event(
+        session,
+        project_id=project.id,
+        run_id=run.id,
+        actor_user_id=actor_id,
+        event_type=EVENT_IMPORT_COMPLETED,
+        payload={
+            "rows_materialized": inserted_rows,
+            "data_lines_seen": data_row_index,
+            "findings_created": finding_count,
+        },
+    )
+
     await session.commit()
     await session.refresh(run)
     return run
