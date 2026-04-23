@@ -46,5 +46,11 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "Siete CX"
     SMTP_ENABLED: bool = False    # poner True en prod una vez configurado SMTP_USER/PASSWORD
 
+    # SurveyToGo / Dooblo newapi (HTTP Basic: usuario suele ser REST_KEY/email)
+    # Opcional: importación Field desde API en lugar de solo CSV
+    DOOBLO_BASE_URL: str | None = None
+    DOOBLO_USER: str | None = None
+    DOOBLO_PASSWORD: str | None = None
+
 
 settings = Settings()
