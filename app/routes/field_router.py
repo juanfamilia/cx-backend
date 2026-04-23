@@ -6,7 +6,7 @@ Prefijo: `/api/v1/field`
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -31,6 +31,7 @@ from app.services.field_ledger_services import (
 from app.services.field_project_services import create_field_project, list_field_projects
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.field_access import require_field_product_access
+from app.integrations.dooblo_client import dooblo_configured, get_survey_interview_ids
 
 router = APIRouter(
     prefix="/field",
@@ -40,6 +41,44 @@ router = APIRouter(
         Depends(check_company_payment_status),
     ],
 )
+
+
+@router.get(
+    "/dooblo/status",
+    dependencies=[Depends(require_field_product_access)],
+    summary="Indica si el servidor tiene credenciales Dooblo (sin exponer secretos).",
+)
+async def field_dooblo_status():
+    return {"dooblo_configured": dooblo_configured()}
+
+
+@router.get(
+    "/dooblo/survey-interview-ids",
+    dependencies=[Depends(require_field_product_access)],
+    summary="Proxy a Dooblo newapi: SurveyInterviewIDs (prueba o integración Field).",
+)
+async def field_dooblo_survey_interview_ids(
+    surveyID: str = Query(..., description="ID de encuesta en SurveyToGo (surveyIDs en el API upstream)"),
+):
+    if not dooblo_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Dooblo no está configurado (DOOBLO_BASE_URL, DOOBLO_USER, DOOBLO_PASSWORD).",
+        )
+    r = await get_survey_interview_ids(surveyID)
+    ct = (r.headers.get("content-type") or "").lower()
+    out: dict = {
+        "upstream_status": r.status_code,
+        "content_type": r.headers.get("content-type"),
+    }
+    if "json" in ct:
+        try:
+            out["data"] = r.json()
+        except Exception:
+            out["raw"] = r.text
+    else:
+        out["raw"] = r.text
+    return out
 
 
 @router.get("/access")

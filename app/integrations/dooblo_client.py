@@ -29,6 +29,7 @@ async def get_survey_interview_ids(
     survey_id: str,
     *,
     timeout: float = 120.0,
+    follow_redirects: bool = True,
 ) -> httpx.Response:
     """
     GET .../SurveyInterviewIDs?surveyIDs=<id>
@@ -43,4 +44,5 @@ async def get_survey_interview_ids(
             params={"surveyIDs": survey_id},
             auth=(settings.DOOBLO_USER, settings.DOOBLO_PASSWORD),
             timeout=timeout,
+            follow_redirects=follow_redirects,
         )
