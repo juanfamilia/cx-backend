@@ -17,10 +17,20 @@ from app.models.field_ledger_model import (
     FieldImportRowPublic,
     FieldLedgerEventPublic,
 )
+from app.models.field_decision_model import (
+    FieldOperationalSnapshotPublic,
+    FieldPolicySetPublic,
+    FieldProjectExternalSourcePublic,
+)
 from app.models.field_project_model import (
     FieldImportRunPublic,
     FieldProjectCreate,
     FieldProjectPublic,
+)
+from app.services.field_decision_services import (
+    get_operational_snapshot,
+    list_external_sources,
+    list_policy_sets,
 )
 from app.services.field_import_services import import_field_csv_2026_1
 from app.services.field_ledger_services import (
@@ -329,6 +339,48 @@ async def create_project(
     session: AsyncSession = Depends(get_db),
 ):
     return await create_field_project(session, request.state.user, body)
+
+
+@router.get(
+    "/projects/{project_id}/decision-layer/external-sources",
+    response_model=list[FieldProjectExternalSourcePublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Mapeos canónicos a orígenes (Dooblo, CSV, manual).",
+)
+async def get_project_external_sources(
+    project_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_external_sources(session, request.state.user, project_id)
+
+
+@router.get(
+    "/projects/{project_id}/decision-layer/policy-sets",
+    response_model=list[FieldPolicySetPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Políticas/umbrales versionados del proyecto (reglas de negocio auditable).",
+)
+async def get_project_policy_sets(
+    project_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_policy_sets(session, request.state.user, project_id)
+
+
+@router.get(
+    "/projects/{project_id}/operational-snapshot",
+    response_model=FieldOperationalSnapshotPublic | None,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Proyección de estado (cuota, GPS, flags) si existe; aún no calculada = null.",
+)
+async def get_project_operational_snapshot(
+    project_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    return await get_operational_snapshot(session, request.state.user, project_id)
 
 
 @router.post(
