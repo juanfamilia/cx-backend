@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import AsyncSessionLocal
 from app.integrations import dooblo_client as dooblo
+from app.services.company_dooblo_service import get_dooblo_creds_for_company
 from app.integrations.field_decision_engine import (
     build_findings_from_quota_response,
     CODE_NO_SURVEY,
@@ -67,9 +68,13 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
     run = await session.get(FieldSyncRun, sync_run_id)
     assert run is not None  # nosec
 
-    if not dooblo.dooblo_configured():
+    creds = await get_dooblo_creds_for_company(session, run.company_id)
+    if creds is None:
         run.status = SYNC_RUN_FAILED
-        run.error_summary = "Dooblo no está configurado (DOOBLO_* en servidor)."
+        run.error_summary = (
+            "Dooblo no está configurado para esta empresa (guarde credenciales en Field) "
+            "ni a nivel de servidor (DOOBLO_*)."
+        )
         run.completed_at = _utc_naive()
         await session.commit()
         return
@@ -113,7 +118,7 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
     policy_id = policy.id if policy else None
 
     survey_id = str(src.external_survey_id).strip()
-    r_http = await dooblo.get_survey_quotas_status(survey_id)
+    r_http = await dooblo.get_survey_quotas_status(survey_id, creds=creds)
     proxy = httpx_response_to_proxy_dict(r_http)
     upstream = int(proxy.get("upstream_status") or 0)
     quota_payload = proxy.get("data")

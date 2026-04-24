@@ -52,8 +52,14 @@ from app.services.field_ledger_services import (
     list_rows_for_run,
 )
 from app.services.field_project_services import create_field_project, list_field_projects
+from app.services.company_dooblo_service import (
+    get_dooblo_creds_for_company,
+    get_dooblo_settings_public,
+    upsert_dooblo_settings,
+)
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.field_access import require_field_product_access
+from app.models.company_dooblo_model import CompanyDoobloPutBody
 from app.integrations import dooblo_client as dooblo
 from app.integrations.dooblo_serialize import httpx_response_to_proxy_dict
 
@@ -87,25 +93,101 @@ DOOBLO_RAW_ALLOWED = frozenset(
 )
 
 
-def _dooblo_require_config() -> None:
-    if not dooblo.dooblo_configured():
-        raise HTTPException(
-            status_code=503,
-            detail="Dooblo no está configurado (DOOBLO_BASE_URL, DOOBLO_USER, DOOBLO_PASSWORD).",
-        )
-
-
 def _dooblo_proxy(r: httpx.Response) -> dict:
     return httpx_response_to_proxy_dict(r)
+
+
+def _resolve_effective_company_id_for_field(
+    request: Request, company_id: int | None
+) -> int:
+    u = request.state.user
+    if u.role == 0:
+        if company_id is None or company_id <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Indique company_id (ID de la empresa cuyo Dooblo desea administrar o consultar).",
+            )
+        return int(company_id)
+    if u.company_id is None:
+        raise HTTPException(
+            status_code=403, detail="Usuario sin empresa: no se puede vincular Dooblo."
+        )
+    if company_id is not None and int(company_id) != int(u.company_id):
+        raise HTTPException(
+            status_code=403, detail="Solo puede operar con Dooblo de su propia empresa."
+        )
+    return int(u.company_id)
+
+
+async def _dooblo_creds_for_request_or_503(
+    session: AsyncSession, request: Request, company_id: int | None
+) -> dooblo.DoobloCreds:
+    cid = _resolve_effective_company_id_for_field(request, company_id)
+    c = await get_dooblo_creds_for_company(session, cid)
+    if c is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Dooblo no está configurado para esta empresa. Guárdelos en Siete Field o use variables DOOBLO_* en el servidor.",
+        )
+    return c
 
 
 @router.get(
     "/dooblo/status",
     dependencies=[Depends(require_field_product_access)],
-    summary="Indica si el servidor tiene credenciales Dooblo (sin exponer secretos).",
+    summary="Estado de credenciales Dooblo para la empresa (sin exponer claves).",
 )
-async def field_dooblo_status():
-    return {"dooblo_configured": dooblo.dooblo_configured()}
+async def field_dooblo_status(
+    request: Request,
+    company_id: int | None = Query(
+        None, description="Superadmin: empresa objetivo. Otros roles usan su propia company."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    cid = _resolve_effective_company_id_for_field(request, company_id)
+    out = await get_dooblo_settings_public(session, request.state.user, cid)
+    out["dooblo_configured"] = out.get("configured", False)
+    return out
+
+
+@router.get(
+    "/dooblo/credentials",
+    dependencies=[Depends(require_field_product_access)],
+    summary="Ver configuración Dooblo por empresa (sin contraseña).",
+)
+async def field_dooblo_get_credentials(
+    request: Request,
+    company_id: int | None = Query(
+        None, description="Superadmin: ID de la empresa. Obligatorio para rol 0."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    cid = _resolve_effective_company_id_for_field(request, company_id)
+    return await get_dooblo_settings_public(session, request.state.user, cid)
+
+
+@router.put(
+    "/dooblo/credentials",
+    dependencies=[Depends(require_field_product_access)],
+    summary="Guardar o actualizar credenciales Dooblo para la empresa (cifrado en base de datos).",
+)
+async def field_dooblo_put_credentials(
+    request: Request,
+    body: CompanyDoobloPutBody,
+    company_id: int | None = Query(
+        None, description="Superadmin: ID de la empresa. Obligatorio para rol 0."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    cid = _resolve_effective_company_id_for_field(request, company_id)
+    return await upsert_dooblo_settings(
+        session,
+        request.state.user,
+        cid,
+        base_url=body.base_url,
+        api_user=body.api_user,
+        password=body.password,
+    )
 
 
 @router.get(
@@ -114,12 +196,17 @@ async def field_dooblo_status():
     summary="Dooblo: SurveyInterviewIDs (lista de subject IDs bajo criterio / encuesta).",
 )
 async def field_dooblo_survey_interview_ids(
+    request: Request,
     surveyID: str = Query(
         ..., description="Parámetro surveyIDs en newapi (ID o lista según documentación Dooblo)."
     ),
+    company_id: int | None = Query(
+        None, description="Superadmin: empresa cuyas credenciales Dooblo usar."
+    ),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_survey_interview_ids(surveyID)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_survey_interview_ids(surveyID, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -129,14 +216,17 @@ async def field_dooblo_survey_interview_ids(
     summary="Dooblo: SurveyInterviewIDsByLastModified (sincronización por ventana de tiempo).",
 )
 async def field_dooblo_survey_interview_ids_by_modified(
+    request: Request,
     surveyID: str = Query(..., description="Encuesta (surveyIDs en newapi)"),
     daysBack: Optional[int] = Query(None, ge=0, le=3650),
     fromDate: Optional[str] = None,
     toDate: Optional[str] = None,
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
     r = await dooblo.get_survey_interview_ids_by_last_modified(
-        surveyID, days_back=daysBack, from_date=fromDate, to_date=toDate
+        surveyID, days_back=daysBack, from_date=fromDate, to_date=toDate, creds=creds
     )
     return _dooblo_proxy(r)
 
@@ -147,10 +237,13 @@ async def field_dooblo_survey_interview_ids_by_modified(
     summary="Dooblo: ProjectSurveys (encuestas de un proyecto).",
 )
 async def field_dooblo_project_surveys(
+    request: Request,
     projectID: str = Query(..., description="ID de proyecto en Studio / newapi"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_project_surveys(projectID)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_project_surveys(projectID, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -160,10 +253,13 @@ async def field_dooblo_project_surveys(
     summary="Dooblo: Surveys (detalles de una encuesta).",
 )
 async def field_dooblo_survey_details(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta en SurveyToGo"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_survey_details(surveyID)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_survey_details(surveyID, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -173,10 +269,13 @@ async def field_dooblo_survey_details(
     summary="Dooblo: SimpleSurveyExport (estructura de encuesta; preferible a GetSurveyXML).",
 )
 async def field_dooblo_simple_survey_export(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_simple_survey_export(surveyID)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_simple_survey_export(surveyID, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -186,11 +285,14 @@ async def field_dooblo_simple_survey_export(
     summary="Dooblo: SimpleExport (export tabular; subjectIDs separados por coma, máx. 99 por lote al consumir).",
 )
 async def field_dooblo_simple_export(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta"),
     subjectIDs: str = Query(..., description="IDs de sujeto separados por coma, ej. 101,102,103"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_simple_export(surveyID, subjectIDs)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_simple_export(surveyID, subjectIDs, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -200,11 +302,14 @@ async def field_dooblo_simple_export(
     summary="Dooblo: OperationData (datos operacionales de entrevistas).",
 )
 async def field_dooblo_operation_data(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta"),
     subjectIDs: str = Query(..., description="IDs de sujeto separados por coma"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_operation_data(surveyID, subjectIDs)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_operation_data(surveyID, subjectIDs, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -214,14 +319,21 @@ async def field_dooblo_operation_data(
     summary="Dooblo: SurveyInterviewData (XML/JSON; hasta 99 subjectIDs por llamada).",
 )
 async def field_dooblo_survey_interview_data(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta"),
     subjectIDs: str = Query(..., description="Hasta 99 IDs separados por coma"),
     onlyHeaders: bool = Query(False, description="Solo cabeceras si aplica en newapi"),
     includeNulls: bool = Query(False, description="Incluir nulos en payload"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
     r = await dooblo.get_survey_interview_data(
-        surveyID, subjectIDs, only_headers=onlyHeaders, include_nulls=includeNulls
+        surveyID,
+        subjectIDs,
+        only_headers=onlyHeaders,
+        include_nulls=includeNulls,
+        creds=creds,
     )
     return _dooblo_proxy(r)
 
@@ -232,10 +344,13 @@ async def field_dooblo_survey_interview_data(
     summary="Dooblo: GetSurveyQuotasStatus (estado de cuotas por encuesta).",
 )
 async def field_dooblo_quotas_status(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_survey_quotas_status(surveyID)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_survey_quotas_status(surveyID, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -245,10 +360,13 @@ async def field_dooblo_quotas_status(
     summary="Dooblo: QuotaStructure (malla de cuota).",
 )
 async def field_dooblo_quota_structure(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_quota_structure(surveyID)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_quota_structure(surveyID, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -258,10 +376,13 @@ async def field_dooblo_quota_structure(
     summary="Dooblo: HandlingExamples (totales de cuota en tabla).",
 )
 async def field_dooblo_handling_examples(
+    request: Request,
     surveyID: str = Query(..., description="ID de encuesta"),
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
-    r = await dooblo.get_handling_examples(surveyID)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    r = await dooblo.get_handling_examples(surveyID, creds=creds)
     return _dooblo_proxy(r)
 
 
@@ -271,13 +392,16 @@ async def field_dooblo_handling_examples(
     summary="Dooblo: GetSurveyorsRoute (rutas GPS; suele requerir SurveyorName o GroupName).",
 )
 async def field_dooblo_surveyors_route(
+    request: Request,
     surveyorName: Optional[str] = Query(None, description="Nombre de encuestado / surveyor (según doc)"),
     groupName: Optional[str] = Query(None, description="O grupo, según requisito newapi"),
     surveyID: Optional[str] = Query(None, description="Opcional, si aplica a la ruta"),
     fromDate: Optional[str] = None,
     toDate: Optional[str] = None,
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
     try:
         r = await dooblo.get_surveyors_route(
             survey_id=surveyID,
@@ -285,6 +409,7 @@ async def field_dooblo_surveyors_route(
             group_name=groupName,
             from_date=fromDate,
             to_date=toDate,
+            creds=creds,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -299,16 +424,20 @@ async def field_dooblo_surveyors_route(
 async def field_dooblo_raw(
     operation: str,
     request: Request,
+    company_id: int | None = Query(None, description="Superadmin: empresa (credenciales)."),
+    session: AsyncSession = Depends(get_db),
 ):
-    _dooblo_require_config()
     if operation not in DOOBLO_RAW_ALLOWED:
         raise HTTPException(
             status_code=400,
             detail=f"Operación no permitida. Permitidas: {', '.join(sorted(DOOBLO_RAW_ALLOWED))}.",
         )
-    # Query plana: claves repetidas, última gana (suficiente para la mayoría de llamadas).
-    params: dict = dict(request.query_params)
-    r = await dooblo.dooblo_get(operation, params)
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    # No reenviar `company_id` a Dooblo.
+    params: dict = {
+        k: v for k, v in dict(request.query_params).items() if k != "company_id"
+    }
+    r = await dooblo.dooblo_get(operation, params, creds=creds)
     return _dooblo_proxy(r)
 
 

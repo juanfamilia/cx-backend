@@ -67,6 +67,7 @@ from app.models import (  # noqa: E402 — tras definir `engine` (metadata)
     field_project_model,
     field_decision_model,
     field_ledger_model,
+    company_dooblo_model,
 )
 
 config = context.config
