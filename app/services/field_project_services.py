@@ -87,6 +87,7 @@ async def create_field_project(
         description=(body.description or "").strip() or None,
         import_format_version="2026.1",
         status="draft",
+        ingest_mode=body.ingest_mode,
     )
     session.add(row)
     await session.commit()

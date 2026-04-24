@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, field_validator
 from sqlalchemy import Column, DateTime, Text, func
 from sqlmodel import Field, SQLModel
 
@@ -19,6 +19,11 @@ class FieldProjectBase(SQLModel):
         default="draft",
         max_length=32,
         description="draft | active | archived",
+    )
+    ingest_mode: str = Field(
+        default="csv",
+        max_length=32,
+        description="Origen principal declarado: csv (archivo) | dooblo (API SurveyToGo).",
     )
 
 
@@ -49,6 +54,21 @@ class FieldProjectCreate(SQLModel):
             "Rol 0 con empresa: opcional (se usa la del usuario). Roles 1–2: omitir."
         ),
     )
+    ingest_mode: str = Field(
+        default="csv",
+        max_length=32,
+        description="csv | dooblo — origen de datos que el operador declara al crear el proyecto.",
+    )
+
+    @field_validator("ingest_mode", mode="before")
+    @classmethod
+    def _normalize_ingest_mode(cls, v: object) -> str:
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return "csv"
+        s = str(v).strip().lower()
+        if s not in ("csv", "dooblo"):
+            raise ValueError("ingest_mode debe ser csv o dooblo")
+        return s
 
 
 class FieldProjectPublic(FieldProjectBase):
