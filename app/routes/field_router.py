@@ -7,7 +7,7 @@ Prefijo: `/api/v1/field`
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -18,9 +18,14 @@ from app.models.field_ledger_model import (
     FieldLedgerEventPublic,
 )
 from app.models.field_decision_model import (
+    DoobloAnalysisRequest,
+    FieldFindingApprovalBody,
     FieldOperationalSnapshotPublic,
+    FieldPolicySetCreate,
     FieldPolicySetPublic,
+    FieldProjectExternalSourceCreate,
     FieldProjectExternalSourcePublic,
+    FieldSyncRunPublic,
 )
 from app.models.field_project_model import (
     FieldImportRunPublic,
@@ -28,10 +33,17 @@ from app.models.field_project_model import (
     FieldProjectPublic,
 )
 from app.services.field_decision_services import (
+    create_external_source,
+    create_policy_set,
+    create_sync_run_for_dooblo_analysis,
     get_operational_snapshot,
     list_external_sources,
     list_policy_sets,
+    list_project_findings,
+    list_sync_runs,
+    set_finding_approval,
 )
+from app.services.field_dooblo_analysis_task import run_dooblo_analysis_task
 from app.services.field_import_services import import_field_csv_2026_1
 from app.services.field_ledger_services import (
     list_findings_for_run,
@@ -381,6 +393,108 @@ async def get_project_operational_snapshot(
     session: AsyncSession = Depends(get_db),
 ):
     return await get_operational_snapshot(session, request.state.user, project_id)
+
+
+@router.post(
+    "/projects/{project_id}/decision-layer/external-sources",
+    response_model=FieldProjectExternalSourcePublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Crear mapeo a origen (Dooblo, CSV, manual, etc.).",
+)
+async def post_project_external_source(
+    project_id: int,
+    request: Request,
+    body: FieldProjectExternalSourceCreate,
+    session: AsyncSession = Depends(get_db),
+):
+    return await create_external_source(session, request.state.user, project_id, body)
+
+
+@router.post(
+    "/projects/{project_id}/decision-layer/policy-sets",
+    response_model=FieldPolicySetPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Crear nueva versión de política (versión = max+1 en el proyecto).",
+)
+async def post_project_policy_set(
+    project_id: int,
+    request: Request,
+    body: FieldPolicySetCreate,
+    session: AsyncSession = Depends(get_db),
+):
+    return await create_policy_set(session, request.state.user, project_id, body)
+
+
+@router.get(
+    "/projects/{project_id}/decision-layer/sync-runs",
+    response_model=list[FieldSyncRunPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Corridas técnicas de sync/análisis (incl. field_analysis).",
+)
+async def get_project_sync_runs(
+    project_id: int,
+    request: Request,
+    limit: int = Query(30, ge=1, le=200),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_sync_runs(session, request.state.user, project_id, limit=limit)
+
+
+@router.post(
+    "/projects/{project_id}/decision-layer/dooblo-analyze",
+    response_model=FieldSyncRunPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Encolar análisis Dooblo (cuota + reglas) de forma asíncrona. Idempotente por idempotency_key.",
+)
+async def post_project_dooblo_analyze(
+    project_id: int,
+    request: Request,
+    body: DoobloAnalysisRequest,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
+):
+    public, created = await create_sync_run_for_dooblo_analysis(
+        session, request.state.user, project_id, body
+    )
+    if created and public.id is not None:
+        background_tasks.add_task(run_dooblo_analysis_task, public.id)
+    return public
+
+
+@router.get(
+    "/projects/{project_id}/decision-layer/findings",
+    response_model=list[FieldFindingPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Hallazgos (CSV y capa de decisión); filtro opcional por source=.",
+)
+async def get_project_all_findings(
+    project_id: int,
+    request: Request,
+    source: Optional[str] = Query(None, description="Ej. dooblo_analysis, csv"),
+    limit: int = Query(200, ge=1, le=500),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_project_findings(
+        session, request.state.user, project_id, source=source, limit=limit
+    )
+
+
+@router.patch(
+    "/projects/{project_id}/decision-layer/findings/{finding_id}/approval",
+    response_model=FieldFindingPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Aprobar / rechazar / pending un hallazgo (gobernanza de decisión).",
+)
+async def patch_finding_approval(
+    project_id: int,
+    finding_id: int,
+    request: Request,
+    body: FieldFindingApprovalBody,
+    session: AsyncSession = Depends(get_db),
+):
+    return await set_finding_approval(
+        session, request.state.user, project_id, finding_id, body
+    )
 
 
 @router.post(

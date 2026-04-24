@@ -1,20 +1,44 @@
-"""Lectura de la capa de decisión Field (fuentes externas, políticas, snapshot)."""
+"""Lectura y escritura de la capa de decisión Field (fuentes, políticas, snapshot, sync, hallazgos)."""
 
+from datetime import datetime, timezone
+
+from fastapi import HTTPException
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
 from app.models.field_decision_model import (
+    DoobloAnalysisRequest,
     FieldOperationalSnapshot,
     FieldOperationalSnapshotPublic,
     FieldPolicySet,
+    FieldPolicySetCreate,
     FieldPolicySetPublic,
     FieldProjectExternalSource,
+    FieldProjectExternalSourceCreate,
     FieldProjectExternalSourcePublic,
+    FieldSyncRun,
+    FieldSyncRunPublic,
+    RUN_KIND_FIELD_ANALYSIS,
+    SOURCE_TYPE_CSV,
+    SOURCE_TYPE_DOOBLO,
+    SOURCE_TYPE_MANUAL,
+    SYNC_STRATEGY_FULL,
+    SYNC_STRATEGY_INCREMENTAL,
+    FieldFindingApprovalBody,
+    SYNC_RUN_PENDING,
 )
+from app.models.field_ledger_model import FieldFinding, FieldFindingPublic
 from app.models.field_project_model import FieldProject
 from app.models.user_model import User
 from app.services.field_project_services import assert_field_staff
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
+
+_VALID_SOURCE = frozenset({SOURCE_TYPE_DOOBLO, SOURCE_TYPE_CSV, SOURCE_TYPE_MANUAL, "api"})
+_VALID_SYNC = frozenset({SYNC_STRATEGY_FULL, SYNC_STRATEGY_INCREMENTAL, "none"})
+
+
+def _utc_now_naive() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _assert_project_access(user: User, project: FieldProject) -> None:
@@ -29,6 +53,9 @@ async def _get_project(session: AsyncSession, project_id: int) -> FieldProject:
     if row is None or row.deleted_at is not None:
         raise NotFoundException("Proyecto Field no encontrado")
     return row
+
+
+# --- lectura ---
 
 
 async def list_external_sources(
@@ -73,10 +100,192 @@ async def get_operational_snapshot(
     await assert_field_staff(user)
     project = await _get_project(session, project_id)
     _assert_project_access(user, project)
-    stmt = select(FieldOperationalSnapshot).where(
-        FieldOperationalSnapshot.field_project_id == project_id
-    )
-    row = (await session.execute(stmt)).scalars().first()
+    row = (
+        await session.execute(
+            select(FieldOperationalSnapshot).where(
+                FieldOperationalSnapshot.field_project_id == project_id
+            )
+        )
+    ).scalars().first()
     if row is None:
         return None
     return FieldOperationalSnapshotPublic.model_validate(row)
+
+
+async def list_sync_runs(
+    session: AsyncSession,
+    user: User,
+    project_id: int,
+    limit: int = 30,
+) -> list[FieldSyncRunPublic]:
+    await assert_field_staff(user)
+    project = await _get_project(session, project_id)
+    _assert_project_access(user, project)
+    limit = min(max(limit, 1), 200)
+    stmt = (
+        select(FieldSyncRun)
+        .where(FieldSyncRun.field_project_id == project_id)
+        .order_by(FieldSyncRun.id.desc())
+        .limit(limit)
+    )
+    rows = (await session.execute(stmt)).scalars().all()
+    return [FieldSyncRunPublic.model_validate(r) for r in rows]
+
+
+async def list_project_findings(
+    session: AsyncSession,
+    user: User,
+    project_id: int,
+    source: str | None = None,
+    limit: int = 200,
+) -> list[FieldFindingPublic]:
+    await assert_field_staff(user)
+    project = await _get_project(session, project_id)
+    _assert_project_access(user, project)
+    limit = min(max(limit, 1), 500)
+    stmt = select(FieldFinding).where(FieldFinding.field_project_id == project_id)
+    if source is not None:
+        stmt = stmt.where(FieldFinding.source == source)
+    stmt = stmt.order_by(FieldFinding.id.desc()).limit(limit)
+    rows = (await session.execute(stmt)).scalars().all()
+    return [FieldFindingPublic.model_validate(r) for r in rows]
+
+
+# --- escritura ---
+
+
+async def create_external_source(
+    session: AsyncSession,
+    user: User,
+    project_id: int,
+    body: FieldProjectExternalSourceCreate,
+) -> FieldProjectExternalSourcePublic:
+    await assert_field_staff(user)
+    project = await _get_project(session, project_id)
+    _assert_project_access(user, project)
+    st = (body.source_type or "").strip().lower()
+    if st not in _VALID_SOURCE:
+        raise HTTPException(
+            400, detail=f"source_type no válido. Use: {', '.join(sorted(_VALID_SOURCE))}."
+        )
+    sync = (body.sync_strategy or None)
+    if sync is not None and sync not in (SYNC_STRATEGY_FULL, SYNC_STRATEGY_INCREMENTAL, "none"):
+        raise HTTPException(400, detail="sync_strategy debe ser full, incremental, none o null.")
+
+    row = FieldProjectExternalSource(
+        field_project_id=project_id,
+        company_id=project.company_id,
+        source_type=st,
+        external_project_id=(body.external_project_id or None),
+        external_survey_id=(body.external_survey_id or None),
+        external_customer_id=(body.external_customer_id or None),
+        wave_id=(body.wave_id or None),
+        is_active=body.is_active,
+        sync_strategy=None if not sync or sync == "none" else sync,
+    )
+    session.add(row)
+    await session.commit()
+    await session.refresh(row)
+    return FieldProjectExternalSourcePublic.model_validate(row)
+
+
+async def create_policy_set(
+    session: AsyncSession,
+    user: User,
+    project_id: int,
+    body: FieldPolicySetCreate,
+) -> FieldPolicySetPublic:
+    await assert_field_staff(user)
+    project = await _get_project(session, project_id)
+    _assert_project_access(user, project)
+
+    res = await session.execute(
+        select(func.coalesce(func.max(FieldPolicySet.version), 0)).where(
+            FieldPolicySet.field_project_id == project_id
+        )
+    )
+    next_v = int(res.scalar_one() or 0) + 1
+
+    row = FieldPolicySet(
+        field_project_id=project_id,
+        version=next_v,
+        name=(body.name or None),
+        config=body.config if body.config is not None else {},
+        created_by_user_id=user.id,
+    )
+    session.add(row)
+    await session.commit()
+    await session.refresh(row)
+    return FieldPolicySetPublic.model_validate(row)
+
+
+async def create_sync_run_for_dooblo_analysis(
+    session: AsyncSession,
+    user: User,
+    project_id: int,
+    body: DoobloAnalysisRequest,
+) -> tuple[FieldSyncRunPublic, bool]:
+    """(run, created). Si idempotency_key existe en el mismo proyecto, devuelve (existente, False)."""
+    await assert_field_staff(user)
+    project = await _get_project(session, project_id)
+    _assert_project_access(user, project)
+    ikey = (body.idempotency_key or "").strip()
+    if not ikey:
+        raise HTTPException(400, detail="idempotency_key es obligatoria.")
+    ex = await session.execute(select(FieldSyncRun).where(FieldSyncRun.idempotency_key == ikey))
+    found = ex.scalars().first()
+    if found is not None:
+        if found.field_project_id != project_id:
+            raise HTTPException(409, detail="idempotency_key ya usada en otro proyecto.")
+        return FieldSyncRunPublic.model_validate(found), False
+
+    ex_src = body.field_project_external_source_id
+    pol = body.field_policy_set_id
+
+    if ex_src is not None:
+        srow = await session.get(FieldProjectExternalSource, ex_src)
+        if srow is None or srow.field_project_id != project_id:
+            raise NotFoundException("FieldProjectExternalSource no encontrada en este proyecto.")
+    if pol is not None:
+        prow = await session.get(FieldPolicySet, pol)
+        if prow is None or prow.field_project_id != project_id:
+            raise NotFoundException("FieldPolicySet no encontrada en este proyecto.")
+
+    run = FieldSyncRun(
+        field_project_id=project_id,
+        company_id=project.company_id,
+        run_kind=RUN_KIND_FIELD_ANALYSIS,
+        idempotency_key=ikey,
+        field_project_external_source_id=ex_src,
+        field_policy_set_id=pol,
+        field_import_run_id=None,
+        status=SYNC_RUN_PENDING,
+    )
+    session.add(run)
+    await session.commit()
+    await session.refresh(run)
+    return FieldSyncRunPublic.model_validate(run), True
+
+
+async def set_finding_approval(
+    session: AsyncSession,
+    user: User,
+    project_id: int,
+    finding_id: int,
+    body: FieldFindingApprovalBody,
+) -> FieldFindingPublic:
+    await assert_field_staff(user)
+    project = await _get_project(session, project_id)
+    _assert_project_access(user, project)
+    f = await session.get(FieldFinding, finding_id)
+    if f is None or f.field_project_id != project_id:
+        raise NotFoundException("Hallazgo no encontrado en este proyecto.")
+    st = (body.status or "").strip().lower()
+    if st not in ("approved", "rejected", "pending"):
+        raise HTTPException(400, detail="status debe ser approved, rejected o pending.")
+    f.approval_status = st
+    f.reviewed_by_user_id = user.id
+    f.reviewed_at = _utc_now_naive()
+    await session.commit()
+    await session.refresh(f)
+    return FieldFindingPublic.model_validate(f)

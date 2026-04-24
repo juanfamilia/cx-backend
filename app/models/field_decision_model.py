@@ -20,6 +20,8 @@ from sqlmodel import Field, SQLModel
 SOURCE_TYPE_DOOBLO = "dooblo"
 SOURCE_TYPE_CSV = "csv"
 SOURCE_TYPE_MANUAL = "manual"
+# Hallazgos / snapshot generados por motor de decisión (no solo proxy HTTP).
+SOURCE_TYPE_DOOBLO_ANALYSIS = "dooblo_analysis"
 
 SYNC_STRATEGY_FULL = "full"
 SYNC_STRATEGY_INCREMENTAL = "incremental"
@@ -229,3 +231,34 @@ class FieldOperationalSnapshotPublic(SQLModel):
     route_flags: dict[str, Any] | None
     field_status: dict[str, Any] | None
     last_calculated_at: datetime | None
+
+
+# --- Cuerpos de escritura (API) ---
+
+
+class FieldProjectExternalSourceCreate(SQLModel):
+    source_type: str = Field(max_length=32, description="dooblo, csv, manual, …")
+    external_project_id: str | None = Field(default=None, max_length=255)
+    external_survey_id: str | None = Field(default=None, max_length=255)
+    external_customer_id: str | None = Field(default=None, max_length=255)
+    wave_id: str | None = Field(default=None, max_length=255)
+    is_active: bool = True
+    sync_strategy: str | None = Field(
+        default=None, max_length=64, description="full | incremental u otros, según operación"
+    )
+
+
+class FieldPolicySetCreate(SQLModel):
+    name: str | None = Field(default=None, max_length=255)
+    config: dict[str, Any] = Field(default_factory=dict, description="Umbrales y reglas (versión = max+1 en servidor).")
+
+
+class DoobloAnalysisRequest(SQLModel):
+    idempotency_key: str = Field(max_length=512, description="Clave de idempotencia (cliente o servidor, única en sync runs).")
+    field_project_external_source_id: int | None = None
+    field_policy_set_id: int | None = None
+
+
+class FieldFindingApprovalBody(SQLModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+    status: str = Field(description="approved | rejected | pending (reabrir)")

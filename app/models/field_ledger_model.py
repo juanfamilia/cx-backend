@@ -33,17 +33,42 @@ class FieldFinding(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     field_project_id: int = Field(foreign_key="field_projects.id", index=True)
-    field_import_run_id: int = Field(foreign_key="field_import_runs.id", index=True)
+    # Nullable cuando el hallazgo proviene de la capa de decisión (Dooblo) sin import CSV.
+    field_import_run_id: int | None = Field(
+        default=None,
+        foreign_key="field_import_runs.id",
+        index=True,
+    )
+    field_sync_run_id: int | None = Field(
+        default=None,
+        foreign_key="field_sync_runs.id",
+        index=True,
+    )
+    field_policy_set_id: int | None = Field(
+        default=None,
+        foreign_key="field_policy_sets.id",
+        index=True,
+    )
     field_import_row_id: int | None = Field(
         default=None,
         foreign_key="field_import_rows.id",
         index=True,
     )
+    idempotency_key: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    # Origen: csv, dooblo_analysis, …
+    source: str | None = Field(default=None, max_length=32, index=True)
     code: str = Field(max_length=64, index=True)
     severity: str = Field(max_length=16, description="info | warn | error")
     case_id: str | None = Field(default=None, max_length=500, index=True)
     wave_id: str | None = Field(default=None, max_length=500)
     message: str = Field(sa_column=Column(Text, nullable=False))
+    explanation: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    recommendation: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+    evidence: dict[str, Any] | None = Field(default=None, sa_column=Column(JSONB, nullable=True))
+    # pending | approved | rejected | None (legado o sin flujo)
+    approval_status: str | None = Field(default=None, max_length=32, index=True)
+    reviewed_by_user_id: int | None = Field(default=None, foreign_key="users.id", index=True)
+    reviewed_at: datetime | None = Field(default=None)
 
     created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
 
@@ -88,13 +113,23 @@ class FieldFindingPublic(SQLModel):
 
     id: int
     field_project_id: int
-    field_import_run_id: int
+    field_import_run_id: int | None
+    field_sync_run_id: int | None
+    field_policy_set_id: int | None
     field_import_row_id: int | None
+    idempotency_key: str | None
+    source: str | None
     code: str
     severity: str
     case_id: str | None
     wave_id: str | None
     message: str
+    explanation: str | None
+    recommendation: str | None
+    evidence: Optional[dict[str, Any]]
+    approval_status: str | None
+    reviewed_by_user_id: int | None
+    reviewed_at: datetime | None
     created_at: datetime
 
 

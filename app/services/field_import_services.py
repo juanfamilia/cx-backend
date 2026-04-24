@@ -9,6 +9,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.field_decision_model import SOURCE_TYPE_CSV
 from app.models.field_ledger_model import FieldFinding, FieldImportRow, FieldLedgerEvent
 from app.models.field_project_model import FieldImportRun, FieldProject
 from app.models.user_model import User
@@ -263,6 +264,7 @@ async def import_field_csv_2026_1(
                     message=_finding_message_row_incomplete(
                         data_row_index, case_id, wave_id
                     ),
+                    source=SOURCE_TYPE_CSV,
                 )
             )
             continue
@@ -301,6 +303,7 @@ async def import_field_csv_2026_1(
                     message=_finding_message_duplicate(
                         case_id, wave_id, seen_case_wave[key]
                     ),
+                    source=SOURCE_TYPE_CSV,
                 )
             )
         else:
@@ -318,6 +321,7 @@ async def import_field_csv_2026_1(
                     case_id=case_id,
                     wave_id=wave_id,
                     message=_finding_message_invalid_duration(dur_raw),
+                    source=SOURCE_TYPE_CSV,
                 )
             )
 
