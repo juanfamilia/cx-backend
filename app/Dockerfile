@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --no-cache-dir uv
 
+# Tras añadir dependencias en pyproject.toml: `uv lock` y commitear uv.lock
+# (uv sync --frozen no instala paquetes que no figuran en el lock).
 COPY pyproject.toml ./
 COPY uv.lock ./
 
