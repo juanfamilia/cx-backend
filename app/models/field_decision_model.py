@@ -262,3 +262,8 @@ class DoobloAnalysisRequest(SQLModel):
 class FieldFindingApprovalBody(SQLModel):
     model_config = ConfigDict(str_strip_whitespace=True)
     status: str = Field(description="approved | rejected | pending (reabrir)")
+    note: str | None = Field(
+        default=None,
+        max_length=8000,
+        description="Motivo u operación concreta (auditoría en decision log).",
+    )

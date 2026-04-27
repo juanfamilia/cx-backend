@@ -27,7 +27,12 @@ from app.models.field_decision_model import (
     FieldFindingApprovalBody,
     SYNC_RUN_PENDING,
 )
-from app.models.field_ledger_model import FieldFinding, FieldFindingPublic
+from app.models.field_ledger_model import (
+    FieldFinding,
+    FieldFindingDecisionLog,
+    FieldFindingDecisionLogPublic,
+    FieldFindingPublic,
+)
 from app.models.field_project_model import FieldProject
 from app.models.user_model import User
 from app.services.field_project_services import assert_field_staff
@@ -35,6 +40,13 @@ from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
 _VALID_SOURCE = frozenset({SOURCE_TYPE_DOOBLO, SOURCE_TYPE_CSV, SOURCE_TYPE_MANUAL, "api"})
 _VALID_SYNC = frozenset({SYNC_STRATEGY_FULL, SYNC_STRATEGY_INCREMENTAL, "none"})
+
+
+def _user_display_name(u: User) -> str:
+    name = f"{(u.first_name or '').strip()} {(u.last_name or '').strip()}".strip()
+    if name:
+        return name
+    return str(u.email) if u.email else f"user #{u.id}"
 
 
 def _utc_now_naive() -> datetime:
@@ -149,6 +161,43 @@ async def list_project_findings(
     stmt = stmt.order_by(FieldFinding.id.desc()).limit(limit)
     rows = (await session.execute(stmt)).scalars().all()
     return [FieldFindingPublic.model_validate(r) for r in rows]
+
+
+async def list_finding_decision_log(
+    session: AsyncSession,
+    user: User,
+    project_id: int,
+    finding_id: int,
+    limit: int = 100,
+) -> list[FieldFindingDecisionLogPublic]:
+    """Historial auditable de cambios de estado (aprobación) sobre un hallazgo."""
+    await assert_field_staff(user)
+    project = await _get_project(session, project_id)
+    _assert_project_access(user, project)
+    f = await session.get(FieldFinding, finding_id)
+    if f is None or f.field_project_id != project_id:
+        raise NotFoundException("Hallazgo no encontrado en este proyecto.")
+    limit = min(max(limit, 1), 500)
+    stmt = (
+        select(FieldFindingDecisionLog)
+        .where(
+            FieldFindingDecisionLog.field_finding_id == finding_id,
+            FieldFindingDecisionLog.field_project_id == project_id,
+        )
+        .order_by(FieldFindingDecisionLog.id.desc())
+        .limit(limit)
+    )
+    rows = (await session.execute(stmt)).scalars().all()
+    if not rows:
+        return []
+    actor_ids = {r.actor_user_id for r in rows}
+    ures = await session.execute(select(User).where(User.id.in_(actor_ids)))
+    umap = {u.id: _user_display_name(u) for u in ures.scalars().all()}
+    out: list[FieldFindingDecisionLogPublic] = []
+    for r in rows:
+        base = FieldFindingDecisionLogPublic.model_validate(r)
+        out.append(base.model_copy(update={"actor_display": umap.get(r.actor_user_id)}))
+    return out
 
 
 # --- escritura ---
@@ -283,6 +332,18 @@ async def set_finding_approval(
     st = (body.status or "").strip().lower()
     if st not in ("approved", "rejected", "pending"):
         raise HTTPException(400, detail="status debe ser approved, rejected o pending.")
+    prev = f.approval_status
+    note = (body.note or "").strip() or None
+    log = FieldFindingDecisionLog(
+        company_id=project.company_id,
+        field_project_id=project_id,
+        field_finding_id=finding_id,
+        actor_user_id=user.id,
+        from_status=prev,
+        to_status=st,
+        note=note,
+    )
+    session.add(log)
     f.approval_status = st
     f.reviewed_by_user_id = user.id
     f.reviewed_at = _utc_now_naive()

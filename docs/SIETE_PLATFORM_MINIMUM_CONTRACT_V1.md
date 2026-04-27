@@ -117,6 +117,7 @@ Cada módulo puede tener tablas propias, pero el **significado** exportable / cr
 ### 4.3 Decisión e historial
 
 - Entidad **decisión** (o `decision_log`): enlace a hallazgo(s), actor, instante, tipo (aceptar, mitigar, escalar, descartar con motivo), enlace a **acción** si aplica.
+- **Field (implementación v1):** historial de cambios de gobernanza sobre un hallazgo en tabla `field_finding_decision_logs` (transición `approval_status`, nota opcional, actor, instante); API `GET …/decision-layer/findings/{id}/decision-log` y `PATCH …/approval` con cuerpo `{ status, note? }`.
 - **Acción (evolutivo):** tarea, ticket, playbook — el modelo no debe bloquear la fase 2.
 
 ### 4.4 Auditoría (mínimo)

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_db
 from app.models.company_model import Company
 from app.models.field_ledger_model import (
+    FieldFindingDecisionLogPublic,
     FieldFindingPublic,
     FieldImportRowPublic,
     FieldLedgerEventPublic,
@@ -39,6 +40,7 @@ from app.services.field_decision_services import (
     get_operational_snapshot,
     list_external_sources,
     list_policy_sets,
+    list_finding_decision_log,
     list_project_findings,
     list_sync_runs,
     set_finding_approval,
@@ -623,6 +625,24 @@ async def patch_finding_approval(
 ):
     return await set_finding_approval(
         session, request.state.user, project_id, finding_id, body
+    )
+
+
+@router.get(
+    "/projects/{project_id}/decision-layer/findings/{finding_id}/decision-log",
+    response_model=list[FieldFindingDecisionLogPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Historial auditable de decisiones (cambios de aprobación) sobre un hallazgo.",
+)
+async def get_finding_decision_log(
+    project_id: int,
+    finding_id: int,
+    request: Request,
+    limit: int = Query(100, ge=1, le=500),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_finding_decision_log(
+        session, request.state.user, project_id, finding_id, limit=limit
     )
 
 

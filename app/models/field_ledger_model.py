@@ -28,6 +28,26 @@ class FieldImportRow(SQLModel, table=True):
     created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
 
 
+class FieldFindingDecisionLog(SQLModel, table=True):
+    """
+    Historial de decisiones operativas sobre un hallazgo (auditoría).
+    Alineado al contrato mínimo de plataforma: quién, cuándo, de qué estado a cuál, con nota opcional.
+    """
+
+    __tablename__ = "field_finding_decision_logs"
+
+    id: int | None = Field(default=None, primary_key=True)
+    company_id: int = Field(foreign_key="companies.id", index=True)
+    field_project_id: int = Field(foreign_key="field_projects.id", index=True)
+    field_finding_id: int = Field(foreign_key="field_findings.id", index=True)
+    actor_user_id: int = Field(foreign_key="users.id", index=True)
+    from_status: str | None = Field(default=None, max_length=32, description="approval_status previo (o null).")
+    to_status: str = Field(max_length=32, description="approved | rejected | pending")
+    note: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
+
+    created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
+
+
 class FieldFinding(SQLModel, table=True):
     __tablename__ = "field_findings"
 
@@ -143,3 +163,20 @@ class FieldLedgerEventPublic(SQLModel):
     event_type: str
     payload: Optional[dict[str, Any]]
     created_at: datetime
+
+
+class FieldFindingDecisionLogPublic(SQLModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    company_id: int
+    field_project_id: int
+    field_finding_id: int
+    actor_user_id: int
+    from_status: str | None
+    to_status: str
+    note: str | None
+    created_at: datetime
+    actor_display: str | None = Field(
+        default=None, description="Nombre + apellido o email del actor (rellenado en API)."
+    )
