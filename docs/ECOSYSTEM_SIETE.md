@@ -1,5 +1,7 @@
 # Ecosistema Siete (tenant / sub-tenant / productos)
 
+**Criterios de plataforma, ancla comercial (Field) y contrato mínimo compartido (hallazgos, auditoría, decisiones):** [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md)
+
 ## Tenant y sub-tenant
 
 - **Tenant** = `companies` (firma de investigación o cliente Siete).
