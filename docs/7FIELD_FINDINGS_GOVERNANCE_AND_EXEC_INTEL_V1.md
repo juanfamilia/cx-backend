@@ -7,6 +7,8 @@
 
 **Prioridades comerciales y narrativa ejecutiva (top 3 vendibles, Clever, ancla Field):** [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md).
 
+**Plan técnico de fases, arquitectura y tracción para arrancar implementación:** [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md).
+
 ---
 
 ## 1. Principio rector (producto)

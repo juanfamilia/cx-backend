@@ -6,6 +6,8 @@
 
 **Estrategia comercial y prioridades (top 3 vendibles):** [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md)
 
+**Plan de arquitectura, alcance y tracción para iniciar código:** [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md)
+
 ## Tenant y sub-tenant
 
 - **Tenant** = `companies` (firma de investigación o cliente Siete).
