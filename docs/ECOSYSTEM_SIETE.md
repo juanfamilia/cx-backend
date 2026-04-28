@@ -2,6 +2,8 @@
 
 **Criterios de plataforma, ancla comercial (Field) y contrato mínimo compartido (hallazgos, auditoría, decisiones):** [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md)
 
+**Hallazgos, tri‑estado operativo (STOP / FIX_NOW / MONITOR), versionado de scoring y Clever:** [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
+
 ## Tenant y sub-tenant
 
 - **Tenant** = `companies` (firma de investigación o cliente Siete).

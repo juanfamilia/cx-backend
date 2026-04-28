@@ -139,6 +139,7 @@ Cada módulo puede tener tablas propias, pero el **significado** exportable / cr
 
 - Tenant, flags de producto y API transversal: [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md)
 - Formato Field CSV: [FIELD_CSV_2026_1.md](FIELD_CSV_2026_1.md)
+- **7Field — hallazgos (criticidad operativa, STOP/FIX_NOW/MONITOR), gobierno de reglas, Clever Executive Intelligence:** [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
 
 ## 6. Versionado de este documento
 
