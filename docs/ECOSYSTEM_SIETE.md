@@ -4,6 +4,8 @@
 
 **Hallazgos, tri‑estado operativo (STOP / FIX_NOW / MONITOR), versionado de scoring y Clever:** [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
 
+**Estrategia comercial y prioridades (top 3 vendibles):** [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md)
+
 ## Tenant y sub-tenant
 
 - **Tenant** = `companies` (firma de investigación o cliente Siete).

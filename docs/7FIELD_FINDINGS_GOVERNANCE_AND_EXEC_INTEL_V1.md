@@ -5,6 +5,8 @@
 
 **No negociable:** el marco de investigación (RIF) vive como **núcleo de 7Field**; sin **shared contract**, no hay ecosistema. Ver constitución en el documento de plataforma.
 
+**Prioridades comerciales y narrativa ejecutiva (top 3 vendibles, Clever, ancla Field):** [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md).
+
 ---
 
 ## 1. Principio rector (producto)
