@@ -233,9 +233,52 @@ Sin eso → **spike exploratorio máximo 3 días**, no sprint blindado “de pro
 
 ---
 
+## 9. Objetivos primero — honestidad sobre el repositorio actual
+
+**Regla:** el éxito se mide por **cumplimiento de objetivos de negocio y contrato**, no por proteger el código existente. Si el diseño actual **impide** gobierno de reglas, comparabilidad histórica o Pre‑Field al mismo estándar que Field, **hay que revisar y cambiar** (esquema, servicios o límites del monolito) con decisión explícita; no “parchear forever”.
+
+### 9.1 Lo que el código actual sí soporta (línea base real, no marketing)
+
+- Proyectos Field, import CSV, corridas, hallazgos en `field_findings`, políticas versionadas por proyecto (`field_policy_sets`) en JSON.
+- Capa decisión Dooblo/async con motor de reglas **acotado** (p. ej. cuotas) en código Python (`app/integrations/field_decision_engine.py`), extensible pero **no** aún un **Rule Configuration Engine** gobernado como activo.
+- **Auditoría de decisiones humanas** sobre aprobación de hallazgos (`field_finding_decision_logs`) + API/UI recientes.
+- Multi‑tenant básico vía `company_id` en entidades Field.
+
+Esto **no es menor**: es una base para **Field Execution Control** y trazabilidad parcial.
+
+### 9.2 Brechas frente a los objetivos documentados (las que obligan revisión seria)
+
+| Objetivo (docs) | Estado típico en repo | Implicación |
+|-----------------|------------------------|-------------|
+| **Criticidad operativa** + **STOP / FIX_NOW / MONITOR** distintos de `severity` UI | Hallazgo tiene `severity` (info/warn/error), **sin** campos explícitos de criticidad ni gate operativo en BD | Requiere **evolución de modelo** + migración + mapping desde reglas; **no** bastan etiquetas solo en frontend. |
+| **Reglas de scoring como activos versionados** (`scoring_version_id`, rollback, audit de cambios) | Política en JSON por política/proyecto; **sin** tabla única de versiones de reglas/scoring con vigencia y aprobaciones como en [gobierno](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md) | Riesgo de **parámetros opacos** y comparabilidad débil; **decisión de producto**: modelo nuevo o evolución fuerte de `field_policy_sets` + tabla de governance. |
+| **Auto QA pre‑campo** integrado al mismo contrato de hallazgos | No hay flujo de **instrumento versionado** ni job de QA como ciudadano de primer clase enlazado a `study`↔`field_project` unificado | Pre‑Field **no puede ser solo carpeta de código**: hace falta **dominio + migraciones** (o integración explícita con otro módulo si se elige no monolito). |
+| **Estudio unificado** (programa / diseño) vs Field project | Existen otros estudios en otros productos (p. ej. rutas InS); **no** está garantizado un **vínculo canónico** estudio‑Field como única fuente de verdad | Si la narrativa comercial exige “este levantamiento opera bajo diseño X”, hay que **diseñar el vínculo** y evitar duplicar entidades incompatibles. |
+| **Cost of Error Calculator** | Sin modelo de parámetros económicos por tenant ni campos de estimación en hallazgos | Implementación nueva; depende de hallazgos gobernados para no ser fantasía. |
+| **Clever** sin caja negra | Sin barreras técnicas en código hasta donde alcance este repo — depende de política de datos + logging de uso | Producto + ingeniería deben imponer **contratos de entrada** antes de exponer a clientes regulados. |
+
+**Conclusión:** el repo **permite seguir construyendo Field** y endurecer contratos **incrementalmente**, pero **no** cumple ya, por sí solo, el documento de **gobierno pleno** ni Pre‑Field Auto QA **sin** trabajo de modelo de datos y refactor organizado. Ignorar esta brecha para “ship rápido” genera deuda que **destruye venta enterprise**.
+
+### 9.3 Cuándo aceptar refactor vs capa encima
+
+| Señal | Tendencia recomendada |
+|-------|------------------------|
+| Cada nuevo hallazgo requiere **`if` hardcodeado** y no admitís versionado | Refactor hacia **motor + versiones persistidas**. |
+| Equipo discute “¿qué política aplicó?” sin respuesta en BD | Parar features; implementar **trazabilidad de versión efectiva** en resultados. |
+| Pre‑Field se implementa como microservicio separado sin contrato compartido | **Integración explícita** (API interna + mismos IDs tenant/hallazgo) o decisión de **bounded context** documentada — no acoplamiento solo por conveniencia. |
+
+### 9.4 Acción recomendada antes de escalar inversión en código
+
+1. **Sesión de arquitectura** (medio día): revisar este § frente a backlog real; listar **decisiones de modelo** bloqueantes.
+2. **ADR cortos** (Architecture Decision Records): formato instrumento v1; tabla `rule_versions` vs extender políticas; vínculo estudio‑Field.
+3. **No comprometer** fechas comerciales en Auto QA / governance **sin** cerrar ADRs anteriores.
+
+---
+
 ## Versionado
 
 - **v1 (2026‑02‑23):** plan arquitectura + fases + tracción alineadas a código y a [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md).
 - **v1.1:** sección §2 **Flujo natural** — ciclo vivo del estudio vs orden de implementación (A→E).
+- **v1.2:** §9 **Objetivos primero** — honestidad repo vs documentos de gobierno y Pre‑Field.
 
 Referencias: [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md) · [FIELD_CSV_2026_1.md](FIELD_CSV_2026_1.md) según aplique ingest.
