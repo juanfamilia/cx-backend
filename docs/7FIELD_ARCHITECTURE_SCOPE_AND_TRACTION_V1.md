@@ -17,9 +17,43 @@
 
 ---
 
-## 2. Arquitectura objetivo (realista)
+## 2. Flujo natural
 
-### 2.1 Mapa de capas lógicas
+### 2.1 Ciclo del estudio (orden temporal en el mundo real)
+
+Así opera una firma cuando el producto está **completo** (referencia conceptual, no “todo existe en v1 del código”):
+
+1. **Define** el problema de negocio y el diseño (brief, muestra declarada, instrumento).
+2. **Valida** el instrumento **antes de despachar campo** → aquí encaja **Auto QA** + **sellado humano** (readiness): evitar capex perdido por instrumento contaminado.
+3. **Ejecuta** el levantamiento → **Field**: ingest CSV/conectores, reglas deterministas sobre filas/eventos, **hallazgos** y **scores** reproducibles (**versión de reglas**).
+4. **Controla** sin revisar todo: **priorización** de casos (backchecks, sospechas, fraude material) donde el volumen lo exija.
+5. **Decide** con trazabilidad: estados **STOP / FIX_NOW / MONITOR**, **decision logs**, ownership.
+6. **Cuantifica** pérdida o riesgo en **orden de magnitud económico** cuando el método lo permite → **Cost of Error**.
+7. **Sintetiza** para dirección **solo** sobre datos ya gobernados → **Clever** (Executive Intelligence), no sobre ruido bruto.
+
+En una frase (alineada con plataforma): **señal → riesgo → decisión → acción → aprendizaje**; el “aprendizaje” alimenta reglas/versiones posteriores, no parámetro oculto.
+
+### 2.2 Flujo natural de implementación (lo que viene primero en código)
+
+El **orden comercial top 3** (Auto QA · Backcheck · Cost of Error) no es siempre idéntico al **primer merge** cuando ya hay producto Field en uso:
+
+| Orden en la vida real (§2.1) | Qué paralelizar primero en ingeniería (este documento) |
+|------------------------------|---------------------------------------------------------|
+| Pre‑field Auto QA antes de ejecutar campo | Primero **Fase A**: núcleo Field + contrato ejecutable (**criticidad operativa**, `operational_gate`, versionado donde ya hay scoring) — porque es **fundación única de hallazgos y auditoría**. |
+| Control en ejecución + priorización de revisión | Luego **Fase C** (Backcheck Intelligence) cuando el núcleo y finding pipeline son **estables**. |
+| Hablar CFO | **Fase D** cuando hallazgos y supuestos de costo pueden **referenciar** reglas/versiones sin retrabajar. |
+
+**Auto QA (Fase B)** entra cuando la **fundación Hallazgos + Tenant + Decisiones** está cerrada suficientemente; si no, el pre‑campo emitiría señales **sin mismo contrato que Field** → se rompe narrativa enterprise.
+
+Clever (**Fase E**) es **naturalmente al final**: consume lo que los pasos previos ya **sellaron**.
+
+**Regla práctica:** el flujo natural de usuario es **PRE → FIELD → POST → ejecutivo**. El flujo natural **de arranque de código actual** sigue siendo **A → B → C → D → E** en las secciones siguientes — detallado en §4 (alcance por fases) y §5 (plan de trabajo).
+
+---
+
+## 3. Arquitectura objetivo (realista)
+
+### 3.1 Mapa de capas lógicas
 
 ```
                     ┌─────────────────────────────────────┐
@@ -46,7 +80,7 @@
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Responsabilidades por componente backend (orientación)
+### 3.2 Responsabilidades por componente backend (orientación)
 
 | Componente | Rol |
 |------------|-----|
@@ -56,12 +90,12 @@
 | **Rule / scoring governance** | `rule_versions` / `scoring_version_id`: **siempre** que el resultado sea comparable o contractualmente sensible ([gobierno](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)). |
 | **Auditoría** | Decision logs, uploads, cambios de reglas, uso de Clever sobre datos sensibles (evolucionar hacia política enterprise). |
 
-### 2.3 Multi‑tenant
+### 3.3 Multi‑tenant
 
 - `company_id` (y donde aplique `end_client`/proyecto) en todas las filas nuevas de negocio.
 - Overrides de reglas **solo** como entidades governadas con el mismo vigor que reglas globales.
 
-### 2.4 Estado actual en código (línea base real)
+### 3.4 Estado actual en código (línea base real)
 
 Útil para que el equipo no reinvente:
 
@@ -72,7 +106,7 @@ Este documento parte de esa base y define **qué viene después**, no reescribe 
 
 ---
 
-## 3. Alcance por fases (qué código, en qué orden)
+## 4. Alcance por fases (qué código, en qué orden)
 
 Los **tres pilares comerciales** ([estrategia](7FIELD_COMMERCIAL_STRATEGY_V1.md)) se traducen en **fases** que pueden solaparse en ingeniería, pero **prioridad nominal** así:
 
@@ -150,7 +184,7 @@ Entrada sólo **`findings` + scoring + contexto** según política ([gobierno](7
 
 ---
 
-## 4. Plan de trabajo sugerido (equipos pequeños)
+## 5. Plan de trabajo sugerido (equipos pequeños)
 
 Orden pragmático **para iniciar código ya**:
 
@@ -161,21 +195,21 @@ Orden pragmático **para iniciar código ya**:
 
 ---
 
-## 5. Tracción comercial por fase (qué vendes y qué muestras)
+## 6. Tracción comercial por fase (qué vendes y qué muestras)
 
 | Fase | Mensaje único ante cliente | Prueba rápida (demo / piloto) |
 |------|-----------------------------|--------------------------------|
 | **A** | “Sabemos frenar donde hay riesgo y dejamos rastro defendible.” | Flujo proyecto → hallazgo bloqueante → decisión registrada exportable. |
 | **B** | “Antes del campo sabemos si el instrumento nos va a hacer perder dinero.” | QA en archivo real del cliente → lista STOP/FIX_NOW. |
 | **C** | “No revisamos todo — priorizamos el fraude/el error caro primero.” | Rank de IDs con texto explicable **por pesos/reglas**. |
-| **D** | “Aquí están los pesos en dinero plausible.” | Misma lista con ** orden de magnitud** y supuestos. |
+| **D** | “Aquí están los pesos en dinero plausible.” | Misma lista con **orden de magnitud** y supuestos. |
 | **E** | “Menos tablas, historia ejecutiva desde lo ya probado.” | Generación texto/PDF desde bundle gobernado. |
 
 Sin fila usable en esa tabla para una capacidad nueva → **no entra sprint** antes de historia clara ([estrategia](7FIELD_COMMERCIAL_STRATEGY_V1.md) §1).
 
 ---
 
-## 6. Riesgos si se empieza “mal” código
+## 7. Riesgos si se empieza “mal” código
 
 | Riesgo | Mitigación mínima |
 |--------|-------------------|
@@ -185,7 +219,7 @@ Sin fila usable en esa tabla para una capacidad nueva → **no entra sprint** an
 
 ---
 
-## 7. Definition of Ready para el **primer sprint de nueva capacidad**
+## 8. Definition of Ready para el **primer sprint de nueva capacidad**
 
 Antes de abrir IDE en Fase B+:
 
@@ -202,5 +236,6 @@ Sin eso → **spike exploratorio máximo 3 días**, no sprint blindado “de pro
 ## Versionado
 
 - **v1 (2026‑02‑23):** plan arquitectura + fases + tracción alineadas a código y a [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md).
+- **v1.1:** sección §2 **Flujo natural** — ciclo vivo del estudio vs orden de implementación (A→E).
 
 Referencias: [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md) · [FIELD_CSV_2026_1.md](FIELD_CSV_2026_1.md) según aplique ingest.
