@@ -273,6 +273,8 @@ Esto **no es menor**: es una base para **Field Execution Control** y trazabilida
 2. **ADR cortos** (Architecture Decision Records): formato instrumento v1; tabla `rule_versions` vs extender políticas; vínculo estudio‑Field.
 3. **No comprometer** fechas comerciales en Auto QA / governance **sin** cerrar ADRs anteriores.
 
+**Decisiones estructurales cerradas** (motor de reglas, formato Auto QA, Study canónico, Readiness, Clever enforced): [7FIELD_STRUCTURAL_DECISIONS_V1.md](7FIELD_STRUCTURAL_DECISIONS_V1.md).
+
 ---
 
 ## Versionado

@@ -9,6 +9,8 @@
 
 **Plan técnico de fases, arquitectura y tracción para arrancar implementación:** [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md).
 
+**Decisiones estructurales cerradas (L1–L5, catálogo Auto QA bootstrap):** [7FIELD_STRUCTURAL_DECISIONS_V1.md](7FIELD_STRUCTURAL_DECISIONS_V1.md).
+
 ---
 
 ## 1. Principio rector (producto)

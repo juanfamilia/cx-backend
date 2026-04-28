@@ -142,6 +142,7 @@ Cada módulo puede tener tablas propias, pero el **significado** exportable / cr
 - **7Field — hallazgos (criticidad operativa, STOP/FIX_NOW/MONITOR), gobierno de reglas, Clever Executive Intelligence:** [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
 - **7Field — estrategia comercial (top 3 vendibles, narrativa inevitable, Clever, ancla Field):** [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md)
 - **7Field — plan de arquitectura, alcance por fases y tracción comercial (inicio de código):** [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md)
+- **7Field — decisiones estructurales cerradas (motor reglas, Study, Auto QA v1, Readiness, Clever enforcement):** [7FIELD_STRUCTURAL_DECISIONS_V1.md](7FIELD_STRUCTURAL_DECISIONS_V1.md)
 
 ## 6. Versionado de este documento
 

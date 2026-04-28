@@ -8,6 +8,8 @@
 
 **Plan de arquitectura, alcance y tracción para iniciar código:** [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md)
 
+**Decisiones estructurales cerradas (motor reglas, formato Auto QA, Study canónico, Readiness, límites Clever):** [7FIELD_STRUCTURAL_DECISIONS_V1.md](7FIELD_STRUCTURAL_DECISIONS_V1.md)
+
 ## Tenant y sub-tenant
 
 - **Tenant** = `companies` (firma de investigación o cliente Siete).
