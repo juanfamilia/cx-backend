@@ -33,6 +33,12 @@ class FieldProject(FieldProjectBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     company_id: int = Field(foreign_key="companies.id", index=True)
     client_id: int = Field(foreign_key="end_clients.id", index=True)
+    study_id: int | None = Field(
+        default=None,
+        foreign_key="field_studies.id",
+        index=True,
+        description="Estudio canónico Field (opcional durante migración legacy).",
+    )
 
     created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
     updated_at: datetime = Field(
@@ -59,6 +65,10 @@ class FieldProjectCreate(SQLModel):
         max_length=32,
         description="csv | dooblo — origen de datos que el operador declara al crear el proyecto.",
     )
+    study_id: int | None = Field(
+        default=None,
+        description="field_studies.id (misma empresa; mismo client_id que el estudio).",
+    )
 
     @field_validator("ingest_mode", mode="before")
     @classmethod
@@ -77,8 +87,18 @@ class FieldProjectPublic(FieldProjectBase):
     id: int
     company_id: int
     client_id: int
+    study_id: int | None = None
     created_at: datetime
     updated_at: datetime
+
+
+class FieldProjectPatch(SQLModel):
+    """Actualización parcial (solo campos enviados)."""
+
+    study_id: int | None = Field(
+        default=None,
+        description="Vincular a field_studies.id o null para quitar vínculo (misma empresa y cliente que el proyecto).",
+    )
 
 
 class FieldImportRunBase(SQLModel):

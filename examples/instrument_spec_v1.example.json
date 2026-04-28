@@ -1,0 +1,69 @@
+{
+  "instrument_spec_version": "2026.1-draft",
+  "title": "Example CX wave — instrument_spec sample",
+  "locale_default": "es-MX",
+  "blocks": [
+    {
+      "block_id": "B01",
+      "title": "Screening",
+      "items": [
+        {
+          "item_id": "Q1",
+          "text": "¿Ha visitado la tienda y compró refrescos en la misma visita?",
+          "response": {
+            "type": "single",
+            "options": ["Sí", "No"]
+          },
+          "_qa_notes": "QA_RULE_001: double-barrel (visita + compra) — split before fielding."
+        }
+      ]
+    },
+    {
+      "block_id": "B02",
+      "title": "Opinión",
+      "items": [
+        {
+          "item_id": "Q2",
+          "text": "La marca líder es obviamente la mejor opción para usted.",
+          "response": {
+            "type": "likert",
+            "scale_points": 5,
+            "labels": ["Totalmente en desacuerdo", "En desacuerdo", "Ni…", "De acuerdo", "Totalmente de acuerdo"]
+          },
+          "_qa_notes": "QA_RULE_002: leading / priming — review bilingual pattern list."
+        },
+        {
+          "item_id": "Q3",
+          "text": "Distribución muestral declarada",
+          "response": {
+            "type": "quotas",
+            "strata": [
+              { "name": "A", "target_pct": 40 },
+              { "name": "B", "target_pct": 40 },
+              { "name": "C", "target_pct": 40 }
+            ]
+          },
+          "_qa_notes": "QA_RULE_003: strata targets must sum to 100% where closed-world quotas apply."
+        },
+        {
+          "item_id": "Q4",
+          "text": "Satisfacción general",
+          "response": {
+            "type": "numeric",
+            "min": 1,
+            "max": 5,
+            "labels": ["Muy insatisfecho", "Insatisfecho"]
+          },
+          "_qa_notes": "QA_RULE_004: cardinality vs labels mismatch in same block."
+        }
+      ]
+    }
+  ],
+  "branching": {
+    "edges": [
+      { "from": "Q1", "when": { "equals": "Sí" }, "to": "Q2" },
+      { "from": "Q1", "when": { "equals": "No" }, "to": "MISSING_TARGET" }
+    ],
+    "_qa_notes": "QA_RULE_005: invalid graph (unknown jump target) — STOP."
+  }
+}

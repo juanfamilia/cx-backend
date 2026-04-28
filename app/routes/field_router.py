@@ -31,8 +31,10 @@ from app.models.field_decision_model import (
 from app.models.field_project_model import (
     FieldImportRunPublic,
     FieldProjectCreate,
+    FieldProjectPatch,
     FieldProjectPublic,
 )
+from app.models.field_study_model import FieldStudyCreate, FieldStudyPublic
 from app.services.field_decision_services import (
     create_external_source,
     create_policy_set,
@@ -53,7 +55,12 @@ from app.services.field_ledger_services import (
     list_ledger_events_for_project,
     list_rows_for_run,
 )
-from app.services.field_project_services import create_field_project, list_field_projects
+from app.services.field_project_services import (
+    create_field_project,
+    list_field_projects,
+    patch_field_project,
+)
+from app.services.field_study_services import create_field_study, list_field_studies
 from app.services.company_dooblo_service import (
     get_dooblo_creds_for_company,
     get_dooblo_settings_public,
@@ -456,6 +463,35 @@ async def field_access_probe(request: Request, session: AsyncSession = Depends(g
 
 
 @router.get(
+    "/studies",
+    response_model=list[FieldStudyPublic],
+    dependencies=[Depends(require_field_product_access)],
+)
+async def list_studies(
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: obligatorio."),
+    client_id: Optional[int] = Query(None, description="Filtrar por cliente final."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_field_studies(
+        session, request.state.user, company_id, client_id
+    )
+
+
+@router.post(
+    "/studies",
+    response_model=FieldStudyPublic,
+    dependencies=[Depends(require_field_product_access)],
+)
+async def create_study(
+    request: Request,
+    body: FieldStudyCreate,
+    session: AsyncSession = Depends(get_db),
+):
+    return await create_field_study(session, request.state.user, body)
+
+
+@router.get(
     "/projects",
     response_model=list[FieldProjectPublic],
     dependencies=[Depends(require_field_product_access)],
@@ -482,6 +518,21 @@ async def create_project(
     session: AsyncSession = Depends(get_db),
 ):
     return await create_field_project(session, request.state.user, body)
+
+
+@router.patch(
+    "/projects/{project_id}",
+    response_model=FieldProjectPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Actualización parcial del proyecto (p. ej. study_id para proyectos legacy).",
+)
+async def patch_project(
+    project_id: int,
+    request: Request,
+    body: FieldProjectPatch,
+    session: AsyncSession = Depends(get_db),
+):
+    return await patch_field_project(session, request.state.user, project_id, body)
 
 
 @router.get(

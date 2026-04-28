@@ -65,6 +65,8 @@ from app.models import (  # noqa: E402 — tras definir `engine` (metadata)
     ins_study_model,
     end_client_model,
     field_project_model,
+    field_study_model,
+    field_rule_configuration_model,
     field_decision_model,
     field_ledger_model,
     company_dooblo_model,

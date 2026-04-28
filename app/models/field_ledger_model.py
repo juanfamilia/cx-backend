@@ -89,6 +89,22 @@ class FieldFinding(SQLModel, table=True):
     approval_status: str | None = Field(default=None, max_length=32, index=True)
     reviewed_by_user_id: int | None = Field(default=None, foreign_key="users.id", index=True)
     reviewed_at: datetime | None = Field(default=None)
+    operational_criticality: str | None = Field(
+        default=None,
+        max_length=32,
+        description="critical | non_critical | … (motor de reglas / capa operativa).",
+    )
+    operational_gate: str | None = Field(
+        default=None,
+        max_length=64,
+        description="Identificador de puerta operativa evaluada (workflow).",
+    )
+    rule_configuration_version_id: int | None = Field(
+        default=None,
+        foreign_key="field_rule_configuration_versions.id",
+        index=True,
+        description="Versión de pack de reglas aplicada al emitir/evaluar el hallazgo.",
+    )
 
     created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
 
@@ -150,6 +166,9 @@ class FieldFindingPublic(SQLModel):
     approval_status: str | None
     reviewed_by_user_id: int | None
     reviewed_at: datetime | None
+    operational_criticality: str | None = None
+    operational_gate: str | None = None
+    rule_configuration_version_id: int | None = None
     created_at: datetime
 
 
