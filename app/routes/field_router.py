@@ -75,7 +75,7 @@ from app.services.company_dooblo_service import (
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.field_access import require_field_product_access
 from app.models.company_dooblo_model import CompanyDoobloPutBody
-from app.models.dooblo_catalog_model import RemoteFieldCatalogPage
+from app.models.dooblo_catalog_model import OrganizationStudioProjectsCatalogPage, RemoteFieldCatalogPage
 from app.integrations import dooblo_client as dooblo
 from app.integrations.dooblo_serialize import httpx_response_to_proxy_dict
 
@@ -230,9 +230,9 @@ async def field_dooblo_catalog_customers(
 
 @router.get(
     "/dooblo/catalog/organization-studio-projects",
-    response_model=RemoteFieldCatalogPage,
+    response_model=OrganizationStudioProjectsCatalogPage,
     dependencies=[Depends(require_field_product_access)],
-    summary="Catálogo: todos los proyectos Studio visibles (Customers × CustomerProjects).",
+    summary="Catálogo: proyectos Studio agregados por Customers × CustomerProjects (éxito parcial).",
 )
 async def field_dooblo_catalog_organization_studio_projects(
     request: Request,
@@ -240,11 +240,11 @@ async def field_dooblo_catalog_organization_studio_projects(
     page_size: int = Query(25, ge=1, le=100),
     q: Optional[str] = Query(None, description="Filtra por proyecto, ID o cliente (servidor)."),
     max_customers: int = Query(
-        50,
+        10,
         ge=1,
         le=200,
-        description="Máximo de clientes SurveyToGo a recorrer (cada uno implica llamadas CustomerProjects). "
-        "Valores altos pueden superar el tiempo máximo del proxy (~60s); baje este número si obtiene 504 o timeout.",
+        description="Máximo de clientes SurveyToGo a recorrer. Use valores bajos (p.ej. 5) para aislar fallos o "
+        "evitar timeout del proxy; suba si necesita cobertura mayor.",
     ),
     company_id: Optional[int] = Query(
         None, description="Superadmin: empresa cuyas credenciales Dooblo usar."

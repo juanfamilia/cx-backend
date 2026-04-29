@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 
 from typing import Any
 
@@ -17,7 +18,16 @@ from app.integrations.dooblo_catalog_normalize import (
     normalize_customers_payload,
     normalize_project_surveys_payload,
 )
-from app.models.dooblo_catalog_model import RemoteFieldCatalogItem, RemoteFieldCatalogPage
+from app.models.dooblo_catalog_model import (
+    FailedCustomerEntry,
+    OrganizationStudioProjectsCatalogPage,
+    RemoteFieldCatalogItem,
+    RemoteFieldCatalogPage,
+)
+
+log = logging.getLogger(__name__)
+
+_REASON_MAX_LEN = 3500
 
 _JSON_ACCEPT = {"Accept": "application/json, text/xml;q=0.9, */*;q=0.8"}
 
@@ -46,6 +56,13 @@ async def _catalog_dooblo_get(
         backoff = min(backoff * 1.65, 9.0)
     assert last is not None
     return last
+
+
+def _truncate_reason(s: str, max_len: int = _REASON_MAX_LEN) -> str:
+    t = (s or "").strip()
+    if len(t) <= max_len:
+        return t
+    return t[: max_len - 3] + "..."
 
 
 def _response_json_snippet(r: httpx.Response, limit: int = 800) -> str:
@@ -98,28 +115,76 @@ def _parse_customer_projects_response(r: httpx.Response) -> list[dict[str, str]]
 async def _fetch_customer_projects_normalized(
     creds: dooblo.DoobloCreds,
     customer_surveytogo_id: str,
+    *,
+    customer_display_name: str | None = None,
 ) -> tuple[list[dict[str, str]], str | None]:
     """
-    Llama CustomerProjects probando CustomerID y CustomerId.
+    GET CustomerProjects con CustomerID y CustomerId.
     Devuelve ([], None) si la API respondió 200 pero sin proyectos (válido).
-    Devuelve ([], mensaje) solo ante fallos duros (HTTP error o cuerpo ilegible).
+    Devuelve ([], mensaje) ante errores HTTP / parse / excepciones de red.
     """
+    disp = customer_display_name or ""
     errors: list[str] = []
     saw_soft_empty = False
+    endpoint = "CustomerProjects"
+
     for pname in ("CustomerID", "CustomerId"):
-        r2 = await _catalog_dooblo_get(
-            "CustomerProjects",
-            {pname: customer_surveytogo_id},
-            creds=creds,
+        try:
+            r2 = await _catalog_dooblo_get(
+                endpoint,
+                {pname: customer_surveytogo_id},
+                creds=creds,
+            )
+        except Exception as exc:
+            log.warning(
+                "dooblo_org_catalog %s exception customer_id=%s customer_name=%r "
+                "query_param=%s error=%r",
+                endpoint,
+                customer_surveytogo_id,
+                disp,
+                pname,
+                exc,
+                exc_info=True,
+            )
+            errors.append(f"{pname}: request exception {exc!r}")
+            continue
+
+        ct2 = (r2.headers.get("content-type") or "").lower()
+        body = r2.text or ""
+        snip = body[:600].replace("\n", " ") if body else ""
+        log.info(
+            "dooblo_org_catalog %s customer_id=%s customer_name=%r query_param=%s "
+            "http_status=%s content_type=%r body_prefix=%r",
+            endpoint,
+            customer_surveytogo_id,
+            disp,
+            pname,
+            r2.status_code,
+            ct2,
+            snip,
         )
+
         if r2.status_code >= 400:
             errors.append(f"{pname}: HTTP {r2.status_code} {_response_json_snippet(r2)}")
             continue
-        ct2 = (r2.headers.get("content-type") or "").lower()
-        body = r2.text or ""
-        rows = _parse_customer_projects_response(r2)
+
+        try:
+            rows = _parse_customer_projects_response(r2)
+        except Exception as exc:
+            log.warning(
+                "dooblo_org_catalog %s parse exception customer_id=%s query_param=%s error=%r",
+                endpoint,
+                customer_surveytogo_id,
+                pname,
+                exc,
+                exc_info=True,
+            )
+            errors.append(f"{pname}: parse exception {exc!r}")
+            continue
+
         if rows:
             return rows, None
+
         if r2.status_code == 200:
             if "json" in ct2 or body.strip().startswith("<") or body.strip().startswith("{"):
                 saw_soft_empty = True
@@ -220,10 +285,11 @@ async def list_dooblo_organization_studio_projects_catalog(
     page_size: int = 25,
     q: str | None = None,
     max_customers: int = 120,
-) -> RemoteFieldCatalogPage:
+) -> OrganizationStudioProjectsCatalogPage:
     """
     Agrega proyectos Studio visibles para el usuario API: Customers → CustomerProjects por cliente.
     Respeta ~2 req/s de SurveyToGo con pausa entre llamadas.
+    Un cliente fallido no aborta el barrido: se devuelve en `failed_customers`.
     """
     mc = min(max(1, max_customers), 200)
 
@@ -264,7 +330,7 @@ async def list_dooblo_organization_studio_projects_catalog(
 
     merged: list[dict[str, str]] = []
     seen_project: set[str] = set()
-    cp_diag: list[str] = []
+    failed_customers: list[FailedCustomerEntry] = []
 
     for idx, cust in enumerate(customers):
         cid_cust = cust["external_id"].strip()
@@ -272,9 +338,35 @@ async def list_dooblo_organization_studio_projects_catalog(
         if idx > 0:
             await asyncio.sleep(0.55)
 
-        rows_cp, err_cp = await _fetch_customer_projects_normalized(creds, cid_cust)
+        try:
+            rows_cp, err_cp = await _fetch_customer_projects_normalized(
+                creds,
+                cid_cust,
+                customer_display_name=cname,
+            )
+        except Exception as exc:
+            log.exception(
+                "dooblo_org_catalog iteration unexpected customer_id=%s customer_name=%r",
+                cid_cust,
+                cname,
+            )
+            failed_customers.append(
+                FailedCustomerEntry(
+                    customer_id=cid_cust,
+                    customer_name=cname or None,
+                    reason=_truncate_reason(f"unexpected: {exc!r}"),
+                )
+            )
+            continue
+
         if err_cp:
-            cp_diag.append(f"{cid_cust} ({cname}): {err_cp}")
+            failed_customers.append(
+                FailedCustomerEntry(
+                    customer_id=cid_cust,
+                    customer_name=cname or None,
+                    reason=_truncate_reason(err_cp),
+                )
+            )
 
         for proj in rows_cp:
             eid = proj["external_id"].strip()
@@ -289,16 +381,6 @@ async def list_dooblo_organization_studio_projects_catalog(
                     "studio_customer_name": cname,
                 }
             )
-
-    if not merged and customers and cp_diag:
-        detail = (
-            "Falló la agregación Customers × CustomerProjects (SurveyToGo). "
-            "Revise permisos del usuario REST, formato XML/JSON en CustomerProjects o aumente el tiempo máximo del proxy "
-            "si hay muchos clientes."
-            " Detalle: "
-            + " | ".join(cp_diag[:12])
-        )
-        raise HTTPException(status_code=424, detail=detail)
 
     chunk, total, page, page_size, has_more = _paginate_filtered_org_project_rows(
         merged, page=page, page_size=page_size, q=q
@@ -315,7 +397,7 @@ async def list_dooblo_organization_studio_projects_catalog(
         for x in chunk
     ]
 
-    return RemoteFieldCatalogPage(
+    return OrganizationStudioProjectsCatalogPage(
         provider="dooblo",
         items=items,
         total=total,
@@ -323,6 +405,7 @@ async def list_dooblo_organization_studio_projects_catalog(
         page_size=page_size,
         has_more=has_more,
         query_applied=(q or "").strip() or None,
+        failed_customers=failed_customers,
     )
 
 
