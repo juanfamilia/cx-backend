@@ -10,12 +10,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
 from app.core.config import settings
 
 _DEFAULT_TIMEOUT = 120.0
+
+
+def dooblo_path_segment(value: str) -> str:
+    """Codifica un segmento de ruta como el REST API Testbed oficial (HttpUtility.UrlPathEncode)."""
+    return quote((value or "").strip(), safe="-_.~")
 
 
 def canonical_dooblo_base_url(url: str) -> str:
@@ -83,8 +89,8 @@ async def dooblo_get(
     timeout: float = _DEFAULT_TIMEOUT,
 ) -> httpx.Response:
     """
-    GET `/{operation}` con query limpia y Basic auth.
-    `operation` sin slashes (ej. SurveyInterviewIDs).
+    GET `{base}/{operation}` con query opcional y Basic auth.
+    `operation` puede incluir sub-rutas (ej. CustomerProjects/<customerID>, como arma el Testbed de Dooblo).
     """
     c = _creds_effective(creds)
     op = operation.strip().lstrip("/").replace("..", "")
@@ -132,7 +138,8 @@ async def get_survey_interview_ids_by_last_modified(
 async def get_project_surveys(
     project_id: str, *, creds: DoobloCreds | None = None, timeout: float = _DEFAULT_TIMEOUT
 ) -> httpx.Response:
-    return await dooblo_get("ProjectSurveys", {"ProjectID": project_id}, creds=creds, timeout=timeout)
+    seg = dooblo_path_segment(project_id)
+    return await dooblo_get(f"ProjectSurveys/{seg}", None, creds=creds, timeout=timeout)
 
 
 async def get_survey_details(

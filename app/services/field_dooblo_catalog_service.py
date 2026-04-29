@@ -33,13 +33,15 @@ _JSON_ACCEPT = {"Accept": "application/json, text/xml;q=0.9, */*;q=0.8"}
 
 _MAX_429_RETRIES = 6
 
-# IIS/host pueden diferir en casing del segmento o nombre del query param.
-_CUSTOMER_PROJECT_HTTP_ATTEMPTS: tuple[tuple[str, str], ...] = (
+# Forma oficial (REST API Testbed Dooblo): GET …/CustomerProjects/{customerID} (segmento de ruta, no query).
+_CUSTOMER_PROJECT_PATH_PREFIXES: tuple[str, ...] = ("CustomerProjects", "customerprojects")
+
+# Respaldo por si algún host legacy aceptara solo query string (no documentado en Testbed).
+_CUSTOMER_PROJECT_QUERY_ATTEMPTS: tuple[tuple[str, str], ...] = (
+    ("CustomerProjects", "customerID"),
     ("CustomerProjects", "CustomerID"),
     ("CustomerProjects", "CustomerId"),
-    ("customerprojects", "CustomerID"),
-    ("customerprojects", "CustomerId"),
-    ("CustomerProjects", "customerID"),
+    ("customerprojects", "customerID"),
 )
 
 
@@ -128,7 +130,7 @@ async def _fetch_customer_projects_normalized(
     customer_display_name: str | None = None,
 ) -> tuple[list[dict[str, str]], str | None]:
     """
-    GET CustomerProjects (variantes de ruta y query según despliegue SurveyToGo/IIS).
+    GET CustomerProjects: primero ruta tipo Testbed (`…/CustomerProjects/{id}`), luego variantes query por compatibilidad.
     Devuelve ([], None) si la API respondió 200 pero sin proyectos (válido).
     Devuelve ([], mensaje) ante errores HTTP / parse / excepciones de red.
     """
@@ -136,8 +138,74 @@ async def _fetch_customer_projects_normalized(
     errors: list[str] = []
     saw_soft_empty = False
     saw_iis_html_404 = False
+    cid_seg = dooblo.dooblo_path_segment(customer_surveytogo_id)
 
-    for operation, pname in _CUSTOMER_PROJECT_HTTP_ATTEMPTS:
+    for prefix in _CUSTOMER_PROJECT_PATH_PREFIXES:
+        operation = f"{prefix}/{cid_seg}"
+        try:
+            r2 = await _catalog_dooblo_get(operation, None, creds=creds)
+        except Exception as exc:
+            log.warning(
+                "dooblo_org_catalog CustomerProjects exception customer_id=%s customer_name=%r "
+                "operation=%s path_style error=%r",
+                customer_surveytogo_id,
+                disp,
+                operation,
+                exc,
+                exc_info=True,
+            )
+            errors.append(f"{operation}: request exception {exc!r}")
+            continue
+
+        req_url = str(r2.request.url) if r2.request else "(unknown)"
+        ct2 = (r2.headers.get("content-type") or "").lower()
+        body = r2.text or ""
+        snip = body[:600].replace("\n", " ") if body else ""
+        log.info(
+            "dooblo_org_catalog CustomerProjects customer_id=%s customer_name=%r operation=%s "
+            "request_url=%s http_status=%s content_type=%r body_prefix=%r",
+            customer_surveytogo_id,
+            disp,
+            operation,
+            req_url,
+            r2.status_code,
+            ct2,
+            snip,
+        )
+
+        if r2.status_code >= 400:
+            snippet = _response_json_snippet(r2, 700)
+            errors.append(f"{operation}: HTTP {r2.status_code} {snippet}")
+            bl = body.lower()
+            if r2.status_code == 404 and (
+                "404 - file or directory not found" in bl or "<title>404" in bl
+            ):
+                saw_iis_html_404 = True
+            continue
+
+        try:
+            rows = _parse_customer_projects_response(r2)
+        except Exception as exc:
+            log.warning(
+                "dooblo_org_catalog CustomerProjects parse exception customer_id=%s operation=%s error=%r",
+                customer_surveytogo_id,
+                operation,
+                exc,
+                exc_info=True,
+            )
+            errors.append(f"{operation}: parse exception {exc!r}")
+            continue
+
+        if rows:
+            return rows, None
+
+        if r2.status_code == 200:
+            if "json" in ct2 or body.strip().startswith("<") or body.strip().startswith("{"):
+                saw_soft_empty = True
+            else:
+                errors.append(f"{operation}: respuesta 200 tipo no reconocido ({ct2})")
+
+    for operation, pname in _CUSTOMER_PROJECT_QUERY_ATTEMPTS:
         try:
             r2 = await _catalog_dooblo_get(
                 operation,
@@ -214,12 +282,11 @@ async def _fetch_customer_projects_normalized(
     msg = "; ".join(errors) if errors else "CustomerProjects sin datos interpretables"
     if saw_iis_html_404:
         msg += (
-            " | IIS/HTML 404: la URL llamada no existe en ese host. Confirme la URL base guardada (exactamente …/newapi "
-            "sin duplicar «newapi» en la ruta), que sea la misma que usa Customers y pruebe CustomerProjects en el "
-            "REST API Testbed de Dooblo. El cliente HTTP sigue redirecciones 301/302 automáticamente."
+            " | IIS/HTML 404: Dooblo arma la URL como segmento de ruta "
+            "(…/CustomerProjects/{customerID}), como el REST API Testbed; confirme URL base …/newapi sin duplicar "
+            "«newapi». Si Customers funciona y esto falla, compare request_url en logs con el Testbed."
         )
     return [], msg
-
 
 
 def _looks_like_standalone_email_not_customer_id(s: str) -> bool:
@@ -571,11 +638,11 @@ async def list_dooblo_project_surveys_catalog(
     if not pid:
         raise HTTPException(status_code=400, detail="project_id es obligatorio.")
 
-    r = await dooblo.dooblo_get(
-        "ProjectSurveys",
-        {"ProjectID": pid},
+    seg = dooblo.dooblo_path_segment(pid)
+    r = await _catalog_dooblo_get(
+        f"ProjectSurveys/{seg}",
+        None,
         creds=creds,
-        extra_headers=_JSON_ACCEPT,
     )
     if r.status_code >= 400:
         snippet = (r.text or "")[:2000]
