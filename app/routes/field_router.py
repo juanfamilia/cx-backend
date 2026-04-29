@@ -63,6 +63,7 @@ from app.services.field_project_services import (
 from app.services.field_dooblo_catalog_service import (
     list_dooblo_customer_projects_catalog,
     list_dooblo_customers_catalog,
+    list_dooblo_organization_studio_projects_catalog,
     list_dooblo_project_surveys_catalog,
 )
 from app.services.field_study_services import create_field_study, list_field_studies
@@ -224,6 +225,38 @@ async def field_dooblo_catalog_customers(
     creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
     return await list_dooblo_customers_catalog(
         creds, page=page, page_size=page_size, q=q
+    )
+
+
+@router.get(
+    "/dooblo/catalog/organization-studio-projects",
+    response_model=RemoteFieldCatalogPage,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Catálogo: todos los proyectos Studio visibles (Customers × CustomerProjects).",
+)
+async def field_dooblo_catalog_organization_studio_projects(
+    request: Request,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    q: Optional[str] = Query(None, description="Filtra por proyecto, ID o cliente (servidor)."),
+    max_customers: int = Query(
+        120,
+        ge=1,
+        le=200,
+        description="Máximo de clientes SurveyToGo a recorrer (cada uno implica una llamada CustomerProjects).",
+    ),
+    company_id: Optional[int] = Query(
+        None, description="Superadmin: empresa cuyas credenciales Dooblo usar."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    return await list_dooblo_organization_studio_projects_catalog(
+        creds,
+        page=page,
+        page_size=page_size,
+        q=q,
+        max_customers=max_customers,
     )
 
 

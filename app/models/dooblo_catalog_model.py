@@ -12,6 +12,14 @@ class RemoteFieldCatalogItem(BaseModel):
         default="studio_project",
         description="studio_project | survey | customer | … según proveedor.",
     )
+    studio_customer_id: str | None = Field(
+        default=None,
+        description="Si el ítem viene de agregación org-wide (SurveyToGo Customers × CustomerProjects).",
+    )
+    studio_customer_name: str | None = Field(
+        default=None,
+        description="Nombre del cliente SurveyToGo cuando aplica.",
+    )
 
 
 class RemoteFieldCatalogPage(BaseModel):
