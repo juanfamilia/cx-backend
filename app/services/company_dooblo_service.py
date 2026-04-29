@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool  # not needed if sync crypto
 
 from app.core.dooblo_crypto import decrypt_secret, encrypt_secret
-from app.integrations.dooblo_client import DoobloCreds, creds_from_settings
+from app.integrations.dooblo_client import DoobloCreds, canonical_dooblo_base_url, creds_from_settings
 from app.models.company_dooblo_model import CompanyDoobloSettings, DEFAULT_DOOBLO_BASE_URL
 from app.models.company_model import Company
 from app.models.user_model import User
@@ -39,9 +39,9 @@ async def get_dooblo_creds_for_company(
             password = await run_in_threadpool(decrypt_secret, row.password_ciphertext)
         except ValueError:
             return creds_from_settings()
-        base = (row.base_url or "").strip() or DEFAULT_DOOBLO_BASE_URL
+        base = canonical_dooblo_base_url((row.base_url or "").strip() or DEFAULT_DOOBLO_BASE_URL)
         return DoobloCreds(
-            base_url=base.rstrip("/"),
+            base_url=base,
             user=row.api_user.strip(),
             password=password,
         )
@@ -128,7 +128,7 @@ async def upsert_dooblo_settings(
     _assert_company_field_enabled(company)
 
     row = await get_dooblo_settings_row(session, company_id)
-    b = (base_url or "").strip() or DEFAULT_DOOBLO_BASE_URL
+    b = canonical_dooblo_base_url((base_url or "").strip() or DEFAULT_DOOBLO_BASE_URL)
     u = (api_user or "").strip()
     p_in = (password or "").strip()
 

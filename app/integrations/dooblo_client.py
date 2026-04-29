@@ -18,6 +18,14 @@ from app.core.config import settings
 _DEFAULT_TIMEOUT = 120.0
 
 
+def canonical_dooblo_base_url(url: str) -> str:
+    """Base newapi sin barra final; corrige /newapi/newapi duplicado por error de pegado."""
+    u = (url or "").strip().rstrip("/")
+    while "/newapi/newapi" in u:
+        u = u.replace("/newapi/newapi", "/newapi", 1)
+    return u.rstrip("/")
+
+
 @dataclass(frozen=True, slots=True)
 class DoobloCreds:
     base_url: str
@@ -36,7 +44,7 @@ def creds_from_settings() -> DoobloCreds | None:
     p = (settings.DOOBLO_PASSWORD or "").strip()
     if not base or not u or not p:
         return None
-    return DoobloCreds(base_url=base.rstrip("/"), user=u, password=p)
+    return DoobloCreds(base_url=canonical_dooblo_base_url(base), user=u, password=p)
 
 
 def _creds_effective(override: DoobloCreds | None) -> DoobloCreds:
@@ -47,7 +55,7 @@ def _creds_effective(override: DoobloCreds | None) -> DoobloCreds:
 
 
 def _base_for(creds: DoobloCreds) -> str:
-    return creds.base_url.strip().rstrip("/")
+    return canonical_dooblo_base_url(creds.base_url.strip())
 
 
 def _clean_params(
@@ -92,6 +100,7 @@ async def dooblo_get(
             headers=headers,
             auth=(c.user, c.password),
             timeout=timeout,
+            follow_redirects=True,
         )
 
 
