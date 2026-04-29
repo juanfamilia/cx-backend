@@ -9,6 +9,8 @@ _ID_KEYS = (
     "ProjectID",
     "CustomerProjectId",
     "StudioProjectId",
+    "StudioProjectGUID",
+    "ProjectGUID",
     "ID",
     "Id",
     "id",
@@ -45,6 +47,10 @@ _CUSTOMER_ID_KEYS = (
     "CustomerId",
     "customerID",
     "customerId",
+    "OrganizationCustomerID",
+    "OrgCustomerId",
+    "CustomerGUID",
+    "CustomerGuid",
     "ID",
     "Id",
     "id",
@@ -134,10 +140,19 @@ def normalize_customer_projects_payload(data: Any) -> list[dict[str, str]]:
             "Data",
             "Rows",
             "projects",
+            "d",
+            "result",
         ):
             inner = data.get(key)
             if isinstance(inner, list):
                 candidates.append(inner)
+            elif isinstance(inner, dict):
+                for nk in ("Project", "Projects", "CustomerProject", "Items", "Item"):
+                    nested = inner.get(nk)
+                    if isinstance(nested, list):
+                        candidates.append(nested)
+                    elif isinstance(nested, dict):
+                        candidates.append([nested])
         # algunos envoltorios devuelven un solo objeto
         single = _row_to_item(data)
         if single:

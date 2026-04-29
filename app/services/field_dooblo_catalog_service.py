@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import asyncio
 
+from typing import Any
+
+import httpx
 from fastapi import HTTPException
 
 from app.integrations import dooblo_client as dooblo
@@ -15,6 +18,94 @@ from app.integrations.dooblo_catalog_normalize import (
 from app.models.dooblo_catalog_model import RemoteFieldCatalogItem, RemoteFieldCatalogPage
 
 _JSON_ACCEPT = {"Accept": "application/json, text/xml;q=0.9, */*;q=0.8"}
+
+_MAX_429_RETRIES = 6
+
+
+async def _catalog_dooblo_get(
+    operation: str,
+    params: dict[str, Any] | None,
+    *,
+    creds: dooblo.DoobloCreds,
+) -> httpx.Response:
+    """GET catálogo con reintentos ante HTTP 429 (SurveyToGo ~2 req/s)."""
+    backoff = 1.1
+    last: httpx.Response | None = None
+    for attempt in range(_MAX_429_RETRIES):
+        last = await dooblo.dooblo_get(
+            operation,
+            params,
+            creds=creds,
+            extra_headers=_JSON_ACCEPT,
+        )
+        if last.status_code != 429:
+            return last
+        await asyncio.sleep(backoff)
+        backoff = min(backoff * 1.65, 9.0)
+    assert last is not None
+    return last
+
+
+def _response_json_snippet(r: httpx.Response, limit: int = 800) -> str:
+    t = (r.text or "").strip()
+    return t[:limit] if t else "(cuerpo vacío)"
+
+
+def _customers_raw_row_estimate(data: Any) -> int:
+    """Cuenta filas obvias en payload Customers antes de normalizar (detectar mismatch)."""
+    if isinstance(data, list):
+        return len(data)
+    if not isinstance(data, dict):
+        return 0
+    best = 0
+    for key in ("Customers", "customers", "CustomerList", "d", "result"):
+        v = data.get(key)
+        if isinstance(v, list):
+            best = max(best, len(v))
+        elif isinstance(v, dict):
+            for nk in ("Customer", "Customers", "Items", "Item", "Rows"):
+                nested = v.get(nk)
+                if isinstance(nested, list):
+                    best = max(best, len(nested))
+                elif isinstance(nested, dict):
+                    best = max(best, 1)
+    return best
+
+
+async def _fetch_customer_projects_normalized(
+    creds: dooblo.DoobloCreds,
+    customer_surveytogo_id: str,
+) -> tuple[list[dict[str, str]], str | None]:
+    """
+    Llama CustomerProjects probando CustomerID y CustomerId (según build newapi).
+    Devuelve (filas normalizadas, mensaje_error_si_la_respuesta_indica fallo).
+    """
+    errors: list[str] = []
+    for pname in ("CustomerID", "CustomerId"):
+        r2 = await _catalog_dooblo_get(
+            "CustomerProjects",
+            {pname: customer_surveytogo_id},
+            creds=creds,
+        )
+        if r2.status_code >= 400:
+            errors.append(f"{pname}: HTTP {r2.status_code} {_response_json_snippet(r2)}")
+            continue
+        ct2 = (r2.headers.get("content-type") or "").lower()
+        if "json" not in ct2:
+            errors.append(f"{pname}: contenido no JSON ({ct2})")
+            continue
+        try:
+            pdata = r2.json()
+        except Exception:
+            errors.append(f"{pname}: JSON inválido")
+            continue
+        rows = normalize_customer_projects_payload(pdata)
+        if rows:
+            return rows, None
+        errors.append(f"{pname}: JSON OK pero 0 proyectos tras normalizar")
+
+    return [], "; ".join(errors) if errors else "CustomerProjects sin datos"
+
 
 
 def _looks_like_standalone_email_not_customer_id(s: str) -> bool:
@@ -112,12 +203,7 @@ async def list_dooblo_organization_studio_projects_catalog(
     """
     mc = min(max(1, max_customers), 200)
 
-    r = await dooblo.dooblo_get(
-        "Customers",
-        None,
-        creds=creds,
-        extra_headers=_JSON_ACCEPT,
-    )
+    r = await _catalog_dooblo_get("Customers", None, creds=creds)
     if r.status_code >= 400:
         snippet = (r.text or "")[:2000]
         raise HTTPException(
@@ -139,8 +225,22 @@ async def list_dooblo_organization_studio_projects_catalog(
         ) from exc
 
     customers = normalize_customers_payload(data)[:mc]
+    raw_rows_hint = _customers_raw_row_estimate(data)
+    if not customers and raw_rows_hint > 0:
+        keys = list(data.keys())[:40] if isinstance(data, dict) else []
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "SurveyToGo devolvió datos en Customers pero no se pudieron interpretar las filas "
+                f"(aprox. {raw_rows_hint} entrada(s) detectada(s)). "
+                f"Claves JSON: {keys}. "
+                "Copie la respuesta del REST API Testbed (operation Customers) para soporte."
+            ),
+        )
+
     merged: list[dict[str, str]] = []
     seen_project: set[str] = set()
+    cp_diag: list[str] = []
 
     for idx, cust in enumerate(customers):
         cid_cust = cust["external_id"].strip()
@@ -148,23 +248,11 @@ async def list_dooblo_organization_studio_projects_catalog(
         if idx > 0:
             await asyncio.sleep(0.55)
 
-        r2 = await dooblo.dooblo_get(
-            "CustomerProjects",
-            {"CustomerID": cid_cust},
-            creds=creds,
-            extra_headers=_JSON_ACCEPT,
-        )
-        if r2.status_code >= 400:
-            continue
-        ct2 = (r2.headers.get("content-type") or "").lower()
-        if "json" not in ct2:
-            continue
-        try:
-            pdata = r2.json()
-        except Exception:
-            continue
+        rows_cp, err_cp = await _fetch_customer_projects_normalized(creds, cid_cust)
+        if err_cp:
+            cp_diag.append(f"{cid_cust} ({cname}): {err_cp}")
 
-        for proj in normalize_customer_projects_payload(pdata):
+        for proj in rows_cp:
             eid = proj["external_id"].strip()
             if eid in seen_project:
                 continue
@@ -177,6 +265,17 @@ async def list_dooblo_organization_studio_projects_catalog(
                     "studio_customer_name": cname,
                 }
             )
+
+    if not merged and customers:
+        detail = (
+            "SurveyToGo devolvió clientes pero ningún proyecto Studio tras CustomerProjects. "
+            "El usuario REST debe ser «REST_API_KEY/usuario» con permisos sobre esos proyectos "
+            "(no basta el correo de login de Studio si es distinto). "
+            "Verifique Customers y CustomerProjects en el REST API Testbed de Dooblo."
+        )
+        if cp_diag:
+            detail += " Detalle: " + " | ".join(cp_diag[:12])
+        raise HTTPException(status_code=502, detail=detail)
 
     chunk, total, page, page_size, has_more = _paginate_filtered_org_project_rows(
         merged, page=page, page_size=page_size, q=q
@@ -212,12 +311,7 @@ async def list_dooblo_customers_catalog(
     q: str | None = None,
 ) -> RemoteFieldCatalogPage:
     """Operation `Customers`: clientes SurveyToGo visibles para el usuario API (Basic auth)."""
-    r = await dooblo.dooblo_get(
-        "Customers",
-        None,
-        creds=creds,
-        extra_headers=_JSON_ACCEPT,
-    )
+    r = await _catalog_dooblo_get("Customers", None, creds=creds)
     if r.status_code >= 400:
         snippet = (r.text or "")[:2000]
         raise HTTPException(
@@ -239,6 +333,16 @@ async def list_dooblo_customers_catalog(
         ) from exc
 
     rows = normalize_customers_payload(data)
+    raw_rows_hint = _customers_raw_row_estimate(data)
+    if not rows and raw_rows_hint > 0:
+        keys = list(data.keys())[:40] if isinstance(data, dict) else []
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "SurveyToGo devolvió datos en Customers pero no se pudieron interpretar las filas "
+                f"(aprox. {raw_rows_hint} entrada(s)). Claves JSON: {keys}."
+            ),
+        )
     chunk, total, page, page_size, has_more = _paginate_filtered_rows(
         rows, page=page, page_size=page_size, q=q
     )
