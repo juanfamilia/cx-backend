@@ -60,6 +60,11 @@ from app.services.field_project_services import (
     list_field_projects,
     patch_field_project,
 )
+from app.services.field_dooblo_catalog_service import (
+    list_dooblo_customer_projects_catalog,
+    list_dooblo_customers_catalog,
+    list_dooblo_project_surveys_catalog,
+)
 from app.services.field_study_services import create_field_study, list_field_studies
 from app.services.company_dooblo_service import (
     get_dooblo_creds_for_company,
@@ -69,6 +74,7 @@ from app.services.company_dooblo_service import (
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.field_access import require_field_product_access
 from app.models.company_dooblo_model import CompanyDoobloPutBody
+from app.models.dooblo_catalog_model import RemoteFieldCatalogPage
 from app.integrations import dooblo_client as dooblo
 from app.integrations.dooblo_serialize import httpx_response_to_proxy_dict
 
@@ -196,6 +202,90 @@ async def field_dooblo_put_credentials(
         base_url=body.base_url,
         api_user=body.api_user,
         password=body.password,
+    )
+
+
+@router.get(
+    "/dooblo/catalog/customers",
+    response_model=RemoteFieldCatalogPage,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Catálogo paginado: clientes SurveyToGo (Customers) para el usuario API.",
+)
+async def field_dooblo_catalog_customers(
+    request: Request,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    q: Optional[str] = Query(None, description="Filtra por texto en nombre o ID (servidor)."),
+    company_id: Optional[int] = Query(
+        None, description="Superadmin: empresa cuyas credenciales Dooblo usar."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    return await list_dooblo_customers_catalog(
+        creds, page=page, page_size=page_size, q=q
+    )
+
+
+@router.get(
+    "/dooblo/catalog/customer-projects",
+    response_model=RemoteFieldCatalogPage,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Catálogo paginado: proyectos Studio del cliente (CustomerProjects / SurveyToGo) con filtro q.",
+)
+async def field_dooblo_catalog_customer_projects(
+    request: Request,
+    customer_id: str = Query(
+        ...,
+        min_length=1,
+        description="Customer ID en SurveyToGo (operation Customers). Obligatorio.",
+    ),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    q: Optional[str] = Query(None, description="Filtra por texto en nombre o ID (servidor)."),
+    company_id: Optional[int] = Query(
+        None, description="Superadmin: empresa cuyas credenciales Dooblo usar."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    return await list_dooblo_customer_projects_catalog(
+        creds,
+        customer_id=customer_id,
+        page=page,
+        page_size=page_size,
+        q=q,
+    )
+
+
+@router.get(
+    "/dooblo/catalog/project-surveys",
+    response_model=RemoteFieldCatalogPage,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Catálogo paginado: encuestas de un proyecto Studio (ProjectSurveys) con filtro q.",
+)
+async def field_dooblo_catalog_project_surveys(
+    request: Request,
+    project_id: str = Query(
+        ...,
+        min_length=1,
+        description="Studio ProjectID en la newapi Dooblo (mismo valor que ProjectSurveys).",
+    ),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    q: Optional[str] = Query(None, description="Filtra por texto en nombre o SurveyID (servidor)."),
+    company_id: Optional[int] = Query(
+        None, description="Superadmin: empresa cuyas credenciales Dooblo usar."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    creds = await _dooblo_creds_for_request_or_503(session, request, company_id)
+    return await list_dooblo_project_surveys_catalog(
+        creds,
+        project_id=project_id.strip(),
+        page=page,
+        page_size=page_size,
+        q=q,
     )
 
 
