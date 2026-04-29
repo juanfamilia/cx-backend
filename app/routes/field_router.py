@@ -240,10 +240,11 @@ async def field_dooblo_catalog_organization_studio_projects(
     page_size: int = Query(25, ge=1, le=100),
     q: Optional[str] = Query(None, description="Filtra por proyecto, ID o cliente (servidor)."),
     max_customers: int = Query(
-        120,
+        50,
         ge=1,
         le=200,
-        description="Máximo de clientes SurveyToGo a recorrer (cada uno implica una llamada CustomerProjects).",
+        description="Máximo de clientes SurveyToGo a recorrer (cada uno implica llamadas CustomerProjects). "
+        "Valores altos pueden superar el tiempo máximo del proxy (~60s); baje este número si obtiene 504 o timeout.",
     ),
     company_id: Optional[int] = Query(
         None, description="Superadmin: empresa cuyas credenciales Dooblo usar."

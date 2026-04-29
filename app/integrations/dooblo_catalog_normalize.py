@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import xml.etree.ElementTree as ET
 from typing import Any, Iterable
 
 _ID_KEYS = (
@@ -182,6 +183,68 @@ def normalize_customer_projects_payload(data: Any) -> list[dict[str, str]]:
                         out.append({"external_id": eid, "title": title})
                 if len(out) > 5000:
                     break
+
+    return out
+
+
+def _xml_local_tag(tag: str) -> str:
+    return tag.split("}")[-1]
+
+
+def normalize_customer_projects_xml(text: str) -> list[dict[str, str]]:
+    """
+    CustomerProjects a veces devuelve solo XML (la doc permite JSON o XML).
+    Extrae pares (project id, nombre) de forma tolerante a namespaces.
+    """
+    text = text.strip()
+    if not text.startswith("<"):
+        return []
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError:
+        return []
+
+    seen: set[str] = set()
+    out: list[dict[str, str]] = []
+
+    container_tags = frozenset(
+        x.lower()
+        for x in ("Project", "CustomerProject", "StudioProject", "customerProjects")
+    )
+    for elem in root.iter():
+        if _xml_local_tag(elem.tag).lower() not in container_tags:
+            continue
+        pid = None
+        pname = None
+        for ch in list(elem):
+            cn = _xml_local_tag(ch.tag).lower()
+            val = (ch.text or "").strip()
+            if not val:
+                continue
+            if cn in (
+                "projectid",
+                "customerprojectid",
+                "studioprojectid",
+                "id",
+            ):
+                pid = val
+            elif cn in ("projectname", "name", "title", "subject"):
+                pname = val
+        if pid and pid not in seen:
+            seen.add(pid)
+            out.append({"external_id": pid, "title": pname or "(sin nombre)"})
+
+    if out:
+        return out
+
+    for elem in root.iter():
+        cn = _xml_local_tag(elem.tag).lower()
+        if cn not in ("projectid", "customerprojectid", "studioprojectid"):
+            continue
+        val = (elem.text or "").strip()
+        if val and val not in seen:
+            seen.add(val)
+            out.append({"external_id": val, "title": "(sin nombre)"})
 
     return out
 

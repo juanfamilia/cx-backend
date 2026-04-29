@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 from typing import Any
 
@@ -12,6 +13,7 @@ from fastapi import HTTPException
 from app.integrations import dooblo_client as dooblo
 from app.integrations.dooblo_catalog_normalize import (
     normalize_customer_projects_payload,
+    normalize_customer_projects_xml,
     normalize_customers_payload,
     normalize_project_surveys_payload,
 )
@@ -72,15 +74,38 @@ def _customers_raw_row_estimate(data: Any) -> int:
     return best
 
 
+def _parse_customer_projects_response(r: httpx.Response) -> list[dict[str, str]]:
+    """Interpreta JSON y, si hace falta, XML (SurveyToGo puede devolver cualquiera)."""
+    ct = (r.headers.get("content-type") or "").lower()
+    body = r.text or ""
+    rows: list[dict[str, str]] = []
+    if "json" in ct and body.strip():
+        try:
+            data = json.loads(body)
+            rows = normalize_customer_projects_payload(data)
+        except (json.JSONDecodeError, TypeError, ValueError):
+            rows = []
+    if not rows and body.strip().startswith("{"):
+        try:
+            rows = normalize_customer_projects_payload(json.loads(body))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            pass
+    if not rows and body.strip().startswith("<"):
+        rows = normalize_customer_projects_xml(body)
+    return rows
+
+
 async def _fetch_customer_projects_normalized(
     creds: dooblo.DoobloCreds,
     customer_surveytogo_id: str,
 ) -> tuple[list[dict[str, str]], str | None]:
     """
-    Llama CustomerProjects probando CustomerID y CustomerId (según build newapi).
-    Devuelve (filas normalizadas, mensaje_error_si_la_respuesta_indica fallo).
+    Llama CustomerProjects probando CustomerID y CustomerId.
+    Devuelve ([], None) si la API respondió 200 pero sin proyectos (válido).
+    Devuelve ([], mensaje) solo ante fallos duros (HTTP error o cuerpo ilegible).
     """
     errors: list[str] = []
+    saw_soft_empty = False
     for pname in ("CustomerID", "CustomerId"):
         r2 = await _catalog_dooblo_get(
             "CustomerProjects",
@@ -91,20 +116,19 @@ async def _fetch_customer_projects_normalized(
             errors.append(f"{pname}: HTTP {r2.status_code} {_response_json_snippet(r2)}")
             continue
         ct2 = (r2.headers.get("content-type") or "").lower()
-        if "json" not in ct2:
-            errors.append(f"{pname}: contenido no JSON ({ct2})")
-            continue
-        try:
-            pdata = r2.json()
-        except Exception:
-            errors.append(f"{pname}: JSON inválido")
-            continue
-        rows = normalize_customer_projects_payload(pdata)
+        body = r2.text or ""
+        rows = _parse_customer_projects_response(r2)
         if rows:
             return rows, None
-        errors.append(f"{pname}: JSON OK pero 0 proyectos tras normalizar")
+        if r2.status_code == 200:
+            if "json" in ct2 or body.strip().startswith("<") or body.strip().startswith("{"):
+                saw_soft_empty = True
+            else:
+                errors.append(f"{pname}: respuesta 200 con tipo no reconocido ({ct2})")
 
-    return [], "; ".join(errors) if errors else "CustomerProjects sin datos"
+    if saw_soft_empty:
+        return [], None
+    return [], "; ".join(errors) if errors else "CustomerProjects sin datos interpretables"
 
 
 
@@ -229,7 +253,7 @@ async def list_dooblo_organization_studio_projects_catalog(
     if not customers and raw_rows_hint > 0:
         keys = list(data.keys())[:40] if isinstance(data, dict) else []
         raise HTTPException(
-            status_code=502,
+            status_code=424,
             detail=(
                 "SurveyToGo devolvió datos en Customers pero no se pudieron interpretar las filas "
                 f"(aprox. {raw_rows_hint} entrada(s) detectada(s)). "
@@ -266,16 +290,15 @@ async def list_dooblo_organization_studio_projects_catalog(
                 }
             )
 
-    if not merged and customers:
+    if not merged and customers and cp_diag:
         detail = (
-            "SurveyToGo devolvió clientes pero ningún proyecto Studio tras CustomerProjects. "
-            "El usuario REST debe ser «REST_API_KEY/usuario» con permisos sobre esos proyectos "
-            "(no basta el correo de login de Studio si es distinto). "
-            "Verifique Customers y CustomerProjects en el REST API Testbed de Dooblo."
+            "Falló la agregación Customers × CustomerProjects (SurveyToGo). "
+            "Revise permisos del usuario REST, formato XML/JSON en CustomerProjects o aumente el tiempo máximo del proxy "
+            "si hay muchos clientes."
+            " Detalle: "
+            + " | ".join(cp_diag[:12])
         )
-        if cp_diag:
-            detail += " Detalle: " + " | ".join(cp_diag[:12])
-        raise HTTPException(status_code=502, detail=detail)
+        raise HTTPException(status_code=424, detail=detail)
 
     chunk, total, page, page_size, has_more = _paginate_filtered_org_project_rows(
         merged, page=page, page_size=page_size, q=q
@@ -337,7 +360,7 @@ async def list_dooblo_customers_catalog(
     if not rows and raw_rows_hint > 0:
         keys = list(data.keys())[:40] if isinstance(data, dict) else []
         raise HTTPException(
-            status_code=502,
+            status_code=424,
             detail=(
                 "SurveyToGo devolvió datos en Customers pero no se pudieron interpretar las filas "
                 f"(aprox. {raw_rows_hint} entrada(s)). Claves JSON: {keys}."
@@ -400,33 +423,10 @@ async def list_dooblo_customer_projects_catalog(
             ),
         )
 
-    r = await dooblo.dooblo_get(
-        "CustomerProjects",
-        {"CustomerID": cid},
-        creds=creds,
-        extra_headers=_JSON_ACCEPT,
-    )
-    if r.status_code >= 400:
-        snippet = (r.text or "")[:2000]
-        raise HTTPException(
-            status_code=502,
-            detail=f"Dooblo CustomerProjects falló ({r.status_code}). {snippet}",
-        )
-    ct = (r.headers.get("content-type") or "").lower()
-    if "json" not in ct:
-        raise HTTPException(
-            status_code=502,
-            detail="Dooblo devolvió un cuerpo no JSON para CustomerProjects.",
-        )
-    try:
-        data = r.json()
-    except Exception as exc:
-        raise HTTPException(
-            status_code=502,
-            detail="Respuesta JSON inválida de CustomerProjects.",
-        ) from exc
+    rows, err = await _fetch_customer_projects_normalized(creds, cid)
+    if err:
+        raise HTTPException(status_code=424, detail=err)
 
-    rows = normalize_customer_projects_payload(data)
     chunk, total, page, page_size, has_more = _paginate_filtered_rows(
         rows, page=page, page_size=page_size, q=q
     )
