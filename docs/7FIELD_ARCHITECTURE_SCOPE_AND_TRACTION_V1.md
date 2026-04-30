@@ -80,7 +80,21 @@ Clever (**Fase E**) es **naturalmente al final**: consume lo que los pasos previ
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Responsabilidades por componente backend (orientación)
+### 3.2 Layer 2 — Field Execution Control (**core; no negociable**)
+
+Todo lo siguiente define el **mínimo conceptual y de producto** de la capa Field Execution Control. No se interpreta como roadmap opcional: las fases (§4) ordenan **cuándo** se cierra cada pieza en código, no si existe.
+
+| Área | Qué debe cubrir Layer 2 |
+|------|-------------------------|
+| **Cuotas y control operativo** | Control de cuota (coherencia, desvíos, políticas acordadas). |
+| **Calidad de respuesta / fraude de superficie** | Duración anormal; straight lining; patrones repetitivos; señales de falsificación potencial (determinista y explicable en v1). |
+| **Geolocalización** | GPS inconsistente o incompatible con reglas de campo (según datos disponibles por conector). |
+| **Riesgo agregado** | Scoring de riesgo reproducible; **riesgo por encuestador**, **por supervisor**, **por zona**, **por proyecto** (roll‑ups auditables). |
+| **Acción y gobierno** | Alertas **accionables** (no solo métricas); **trazabilidad** de regla/versión/supuesto donde aplique; **auditoría** humana y de sistema alineada a decision logs y hallazgos. |
+
+**Principio:** Pre‑Field (Layer 1+) y Post‑Field / Clever **no sustituyen** este núcleo: lo consumen o lo priorizan. Features que no enlazan hallazgos, scoring versionado cuando sea contractual, y auditoría **no cuentan** como Layer 2 completo.
+
+### 3.3 Responsabilidades por componente backend (orientación)
 
 | Componente | Rol |
 |------------|-----|
@@ -90,12 +104,12 @@ Clever (**Fase E**) es **naturalmente al final**: consume lo que los pasos previ
 | **Rule / scoring governance** | `rule_versions` / `scoring_version_id`: **siempre** que el resultado sea comparable o contractualmente sensible ([gobierno](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)). |
 | **Auditoría** | Decision logs, uploads, cambios de reglas, uso de Clever sobre datos sensibles (evolucionar hacia política enterprise). |
 
-### 3.3 Multi‑tenant
+### 3.4 Multi‑tenant
 
 - `company_id` (y donde aplique `end_client`/proyecto) en todas las filas nuevas de negocio.
 - Overrides de reglas **solo** como entidades governadas con el mismo vigor que reglas globales.
 
-### 3.4 Estado actual en código (línea base real)
+### 3.5 Estado actual en código (línea base real)
 
 Útil para que el equipo no reinvente:
 
@@ -240,7 +254,7 @@ Sin eso → **spike exploratorio máximo 3 días**, no sprint blindado “de pro
 ### 9.1 Lo que el código actual sí soporta (línea base real, no marketing)
 
 - Proyectos Field, import CSV, corridas, hallazgos en `field_findings`, políticas versionadas por proyecto (`field_policy_sets`) en JSON.
-- Capa decisión Dooblo/async con motor de reglas **acotado** (p. ej. cuotas) en código Python (`app/integrations/field_decision_engine.py`), extensible pero **no** aún un **Rule Configuration Engine** gobernado como activo.
+- Capa decisión Dooblo/async con motor de reglas **acotado** (p. ej. cuotas) en código Python (`app/integrations/field_decision_engine.py`; códigos canónicos Layer 2 en `app/integrations/field_finding_codes.py`), extensible pero **no** aún un **Rule Configuration Engine** gobernado como activo.
 - **Auditoría de decisiones humanas** sobre aprobación de hallazgos (`field_finding_decision_logs`) + API/UI recientes.
 - Multi‑tenant básico vía `company_id` en entidades Field.
 
@@ -282,5 +296,7 @@ Esto **no es menor**: es una base para **Field Execution Control** y trazabilida
 - **v1 (2026‑02‑23):** plan arquitectura + fases + tracción alineadas a código y a [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md).
 - **v1.1:** sección §2 **Flujo natural** — ciclo vivo del estudio vs orden de implementación (A→E).
 - **v1.2:** §9 **Objetivos primero** — honestidad repo vs documentos de gobierno y Pre‑Field.
+- **v1.3:** §3.2 **Layer 2 Field Execution Control** — alcance core no negociable (cuota, calidad respuesta, GPS, riesgo agregado, alertas, trazabilidad, auditoría).
+- **v1.4:** §9.1 referencia a `field_finding_codes.py`; contrato de códigos Layer 2 en código.
 
 Referencias: [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md) · [FIELD_CSV_2026_1.md](FIELD_CSV_2026_1.md) según aplique ingest.

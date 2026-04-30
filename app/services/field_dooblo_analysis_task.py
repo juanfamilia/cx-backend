@@ -14,10 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import AsyncSessionLocal
 from app.integrations import dooblo_client as dooblo
 from app.services.company_dooblo_service import get_dooblo_creds_for_company
-from app.integrations.field_decision_engine import (
-    build_findings_from_quota_response,
-    CODE_NO_SURVEY,
-)
+from app.integrations.field_decision_engine import collect_dooblo_analysis_finding_drafts
+from app.integrations.field_finding_codes import DOOBLO_NO_SURVEY_ID
 from app.integrations.dooblo_serialize import httpx_response_to_proxy_dict
 from app.models.field_decision_model import (
     SOURCE_TYPE_DOOBLO,
@@ -152,7 +150,7 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
         else:
             os_row.field_status = {"source_external_id": src.id, "external_survey_id": survey_id}
 
-    drafts = build_findings_from_quota_response(
+    drafts = collect_dooblo_analysis_finding_drafts(
         upstream_status=upstream,
         quota_payload=quota_payload,
         policy_config=policy_config,
@@ -215,7 +213,7 @@ async def _insert_no_survey_finding(session: AsyncSession, run: FieldSyncRun) ->
             field_policy_set_id=run.field_policy_set_id,
             idempotency_key=ikey,
             source=SOURCE_TYPE_DOOBLO_ANALYSIS,
-            code=CODE_NO_SURVEY,
+            code=DOOBLO_NO_SURVEY_ID,
             severity="error",
             case_id=None,
             wave_id=None,

@@ -1,13 +1,23 @@
 """
-Motor mínimo de reglas: transforma señales de Dooblo (y payload en JSON) + política
-en hallazgos defendibles. Extensible (GPS, operación) sin acoplar a un solo XML/JSON
-del upstream.
+Motor de reglas Field Execution Control (Layer 2): señales Dooblo + política → hallazgos.
+
+Extensible sin acoplar a un solo XML/JSON upstream. Los códigos viven en
+``field_finding_codes`` (contrato §3.2 arquitectura). El pipeline de análisis async
+debe pasar por ``collect_dooblo_analysis_finding_drafts`` para sumar reglas sin
+duplicar orden ni idempotencia.
 """
 
 from __future__ import annotations
 
 import math
 from typing import Any, TypedDict
+
+from app.integrations.field_finding_codes import (
+    DOOBLO_NO_SURVEY_ID,
+    DOOBLO_QUOTA_SNAPSHOT,
+    DOOBLO_QUOTA_UPSTREAM,
+    QUOTA_MAX_DEVIATION,
+)
 
 
 class FindingDraft(TypedDict, total=False):
@@ -20,11 +30,33 @@ class FindingDraft(TypedDict, total=False):
     evidence: dict[str, Any]
 
 
-# Códigos de la capa de decisión (distintos de los del CSV 202.6.1)
-CODE_DOOBLO_QUOTA_OK = "DOOBLO_QUOTA_SNAPSHOT"
-CODE_DOOBLO_QUOTA_ERROR = "DOOBLO_QUOTA_UPSTREAM"
-CODE_QUOTA_DEVIATION = "QUOTA_MAX_DEVIATION"
-CODE_NO_SURVEY = "DOOBLO_NO_SURVEY_ID"
+# Compatibilidad: imports antiguos desde este módulo
+CODE_DOOBLO_QUOTA_OK = DOOBLO_QUOTA_SNAPSHOT
+CODE_DOOBLO_QUOTA_ERROR = DOOBLO_QUOTA_UPSTREAM
+CODE_QUOTA_DEVIATION = QUOTA_MAX_DEVIATION
+CODE_NO_SURVEY = DOOBLO_NO_SURVEY_ID
+
+
+def collect_dooblo_analysis_finding_drafts(
+    *,
+    upstream_status: int,
+    quota_payload: Any,
+    policy_config: dict[str, Any],
+    sync_run_id: int,
+) -> list[FindingDraft]:
+    """
+    Punto único de ensamble para la corrida ``field_analysis`` vía Dooblo.
+
+    Hoy: cuota + desvío heurístico. Próximos builders (misma firma conceptual):
+    muestral export / duración / straight-lining / GPS / roll-ups de riesgo —
+    todos emiten ``FindingDraft`` con idempotency_key estable por sync_run.
+    """
+    return build_findings_from_quota_response(
+        upstream_status=upstream_status,
+        quota_payload=quota_payload,
+        policy_config=policy_config,
+        sync_run_id=sync_run_id,
+    )
 
 
 def _iter_numbers(obj: Any) -> list[float]:
@@ -69,6 +101,7 @@ def build_findings_from_quota_response(
                 "code": CODE_DOOBLO_QUOTA_ERROR,
                 "severity": "error",
                 "message": f"Dooblo devolvió estado HTTP {upstream_status} al consultar cuota.",
+                # Sufijo estable (histórico) — no cambiar sin migración de idempotencia
                 "idempotency_key": f"{base}:CODE_DOOBLO_QUOTA_ERROR",
                 "explanation": "No se pudo leer el estado de cuota en SurveyToGo; el análisis no sustituye control manual.",
                 "recommendation": "Revisar credenciales, survey ID, permisos o disponibilidad del API.",

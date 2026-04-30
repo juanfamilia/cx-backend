@@ -1,0 +1,42 @@
+"""
+Códigos canónicos de hallazgos — Field Execution Control (Layer 2).
+
+Contrato de producto: ``docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md`` §3.2.
+Solo parte de estos códigos está cableada al motor hoy; el resto queda reservado
+para duración, patrones, GPS, roll-ups de riesgo y reglas versionadas.
+"""
+
+from __future__ import annotations
+
+from typing import Final
+
+# --- Implementados hoy (análisis Dooblo async / cuotas) ---
+DOOBLO_QUOTA_SNAPSHOT: Final = "DOOBLO_QUOTA_SNAPSHOT"
+DOOBLO_QUOTA_UPSTREAM: Final = "DOOBLO_QUOTA_UPSTREAM"
+QUOTA_MAX_DEVIATION: Final = "QUOTA_MAX_DEVIATION"
+DOOBLO_NO_SURVEY_ID: Final = "DOOBLO_NO_SURVEY_ID"
+
+# --- Reservados: calidad de respuesta / fraude de superficie ---
+FIELD_DURATION_ANOMALY: Final = "FIELD_DURATION_ANOMALY"
+FIELD_STRAIGHT_LINING: Final = "FIELD_STRAIGHT_LINING"
+FIELD_PATTERN_REPETITIVE: Final = "FIELD_PATTERN_REPETITIVE"
+FIELD_FALSIFICATION_POTENTIAL: Final = "FIELD_FALSIFICATION_POTENTIAL"
+
+# --- Reservados: geolocalización ---
+FIELD_GPS_INCONSISTENT: Final = "FIELD_GPS_INCONSISTENT"
+
+# --- Reservados: scoring / riesgo agregado (roll-ups auditables) ---
+FIELD_RISK_SCORE_CASE: Final = "FIELD_RISK_SCORE_CASE"
+FIELD_RISK_BY_INTERVIEWER: Final = "FIELD_RISK_BY_INTERVIEWER"
+FIELD_RISK_BY_SUPERVISOR: Final = "FIELD_RISK_BY_SUPERVISOR"
+FIELD_RISK_BY_ZONE: Final = "FIELD_RISK_BY_ZONE"
+FIELD_RISK_BY_PROJECT: Final = "FIELD_RISK_BY_PROJECT"
+
+IMPLEMENTED_DOOBLO_ANALYSIS_CODES = frozenset(
+    {
+        DOOBLO_QUOTA_SNAPSHOT,
+        DOOBLO_QUOTA_UPSTREAM,
+        QUOTA_MAX_DEVIATION,
+        DOOBLO_NO_SURVEY_ID,
+    }
+)
