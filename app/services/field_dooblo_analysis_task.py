@@ -5,8 +5,10 @@ snapshot e idempotency findings. Invocable desde FastAPI BackgroundTasks.
 
 from __future__ import annotations
 
+import asyncio
 import traceback
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +19,17 @@ from app.services.company_dooblo_service import get_dooblo_creds_for_company
 from app.integrations.field_decision_engine import collect_dooblo_analysis_finding_drafts
 from app.integrations.field_finding_codes import DOOBLO_NO_SURVEY_ID
 from app.integrations.dooblo_serialize import httpx_response_to_proxy_dict
+from app.integrations.field_dooblo_gps_quality import (
+    gps_params_from_policy,
+    summarize_gps_rows,
+)
+from app.integrations.field_dooblo_response_quality import (
+    duration_bounds_from_policy,
+    extract_subject_ids_from_survey_interview_payload,
+    flatten_tabular_rows,
+    straight_lining_params_from_policy,
+    summarize_response_quality_rows,
+)
 from app.models.field_decision_model import (
     SOURCE_TYPE_DOOBLO,
     SOURCE_TYPE_DOOBLO_ANALYSIS,
@@ -35,6 +48,98 @@ from app.models.field_ledger_model import FieldFinding
 
 def _utc_naive() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+async def _fetch_dooblo_tabular_sample(
+    *,
+    survey_id: str,
+    creds: dooblo.DoobloCreds,
+    policy_config: dict[str, Any],
+) -> dict[str, Any]:
+    """~2 req/s: espera entre llamadas Dooblo y muestra acotada por política."""
+    await asyncio.sleep(0.55)
+    r_iv = await dooblo.get_survey_interview_ids(survey_id, creds=creds)
+    proxy_iv = httpx_response_to_proxy_dict(r_iv)
+    iv_status = int(proxy_iv.get("upstream_status") or 0)
+    iv_body = proxy_iv.get("data")
+    if iv_body is None and proxy_iv.get("raw") is not None:
+        iv_body = proxy_iv.get("raw")
+    ids = extract_subject_ids_from_survey_interview_payload(iv_body)
+
+    max_subj = policy_config.get("dooblo_tabular_max_subjects")
+    if max_subj is None:
+        max_subj = policy_config.get("response_quality_max_subjects", 30)
+    try:
+        max_subj_i = max(1, min(200, int(max_subj)))
+    except (TypeError, ValueError):
+        max_subj_i = 30
+    ids = ids[:max_subj_i]
+
+    op_status: int | None = None
+    simple_status: int | None = None
+    rows: list[dict[str, Any]] = []
+    used_fb = False
+
+    if ids and 200 <= iv_status < 300:
+        await asyncio.sleep(0.55)
+        subject_csv = ",".join(ids)
+        r_op = await dooblo.get_operation_data(survey_id, subject_csv, creds=creds)
+        proxy_op = httpx_response_to_proxy_dict(r_op)
+        op_status = int(proxy_op.get("upstream_status") or 0)
+        op_body = proxy_op.get("data")
+        rows = flatten_tabular_rows(op_body if op_body is not None else {})
+        if not rows and 200 <= op_status < 300:
+            await asyncio.sleep(0.55)
+            r_se = await dooblo.get_simple_export(survey_id, subject_csv, creds=creds)
+            proxy_se = httpx_response_to_proxy_dict(r_se)
+            simple_status = int(proxy_se.get("upstream_status") or 0)
+            se_body = proxy_se.get("data")
+            rows = flatten_tabular_rows(se_body if se_body is not None else {})
+            used_fb = True
+
+    rq_on = policy_config.get("response_quality_enabled", False)
+    if rq_on:
+        d_lo, d_hi = duration_bounds_from_policy(policy_config)
+        st_en, st_min, st_max, st_cells = straight_lining_params_from_policy(policy_config)
+        summary = summarize_response_quality_rows(
+            rows,
+            duration_min=d_lo,
+            duration_max=d_hi,
+            straight_enabled=st_en,
+            scale_min=st_min,
+            scale_max=st_max,
+            straight_min_cells=st_cells,
+        )
+    else:
+        summary = summarize_response_quality_rows(
+            rows,
+            duration_min=None,
+            duration_max=None,
+            straight_enabled=False,
+            scale_min=1.0,
+            scale_max=5.0,
+            straight_min_cells=999,
+        )
+
+    gps_summary = None
+    if policy_config.get("gps_quality_enabled", False):
+        max_km, null_flag, column_pairs = gps_params_from_policy(policy_config)
+        gps_summary = summarize_gps_rows(
+            rows,
+            max_internal_distance_km=max_km,
+            flag_null_island=null_flag,
+            column_pairs=column_pairs,
+        )
+
+    return {
+        "interview_ids_status": iv_status,
+        "operation_status": op_status,
+        "simple_export_status": simple_status,
+        "subject_sample_size": len(ids),
+        "used_simple_export_fallback": used_fb,
+        "summary": summary,
+        "gps_summary": gps_summary,
+    }
 
 
 async def run_dooblo_analysis_task(sync_run_id: int) -> None:
@@ -123,6 +228,16 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
     if quota_payload is None and "raw" in proxy:
         quota_payload = {"raw": proxy.get("raw")}
 
+    tabular_sample_ctx: dict[str, Any] | None = None
+    if policy_config.get("response_quality_enabled", False) or policy_config.get(
+        "gps_quality_enabled", False
+    ):
+        tabular_sample_ctx = await _fetch_dooblo_tabular_sample(
+            survey_id=survey_id,
+            creds=creds,
+            policy_config=policy_config,
+        )
+
     res_os = await session.execute(
         select(FieldOperationalSnapshot).where(
             FieldOperationalSnapshot.field_project_id == run.field_project_id
@@ -130,13 +245,31 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
     )
     os_row = res_os.scalars().first()
     q_state: dict = {"getSurveyQuotasStatus": proxy}
+    if tabular_sample_ctx is not None:
+        rq_blob = {
+            "interview_ids_status": tabular_sample_ctx["interview_ids_status"],
+            "operation_status": tabular_sample_ctx["operation_status"],
+            "simple_export_status": tabular_sample_ctx["simple_export_status"],
+            "subject_sample_size": tabular_sample_ctx["subject_sample_size"],
+            "used_simple_export_fallback": tabular_sample_ctx["used_simple_export_fallback"],
+            "summary": tabular_sample_ctx["summary"],
+            "gps_summary": tabular_sample_ctx.get("gps_summary"),
+        }
+        q_state["response_quality"] = rq_blob
+
     if os_row is None:
         os_row = FieldOperationalSnapshot(
             field_project_id=run.field_project_id,
             field_sync_run_id=run.id,
             field_policy_set_id=policy_id,
             quotas_state=q_state,
-            field_status={"source_external_id": src.id, "external_survey_id": survey_id},
+            field_status=(
+                {
+                    "source_external_id": src.id,
+                    "external_survey_id": survey_id,
+                    **({"response_quality": q_state["response_quality"]} if tabular_sample_ctx else {}),
+                }
+            ),
         )
         session.add(os_row)
     else:
@@ -144,17 +277,21 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
         os_row.field_policy_set_id = policy_id
         os_row.quotas_state = q_state
         os_row.last_calculated_at = _utc_naive()
-        if os_row.field_status and isinstance(os_row.field_status, dict):
-            new_fs = {**os_row.field_status, "source_external_id": src.id, "external_survey_id": survey_id}
-            os_row.field_status = new_fs
-        else:
-            os_row.field_status = {"source_external_id": src.id, "external_survey_id": survey_id}
+        base_fs = (
+            {**os_row.field_status, "source_external_id": src.id, "external_survey_id": survey_id}
+            if os_row.field_status and isinstance(os_row.field_status, dict)
+            else {"source_external_id": src.id, "external_survey_id": survey_id}
+        )
+        if tabular_sample_ctx is not None:
+            base_fs["response_quality"] = q_state["response_quality"]
+        os_row.field_status = base_fs
 
     drafts = collect_dooblo_analysis_finding_drafts(
         upstream_status=upstream,
         quota_payload=quota_payload,
         policy_config=policy_config,
         sync_run_id=run.id,
+        tabular_sample=tabular_sample_ctx,
     )
     for d in drafts:
         ikey = d["idempotency_key"]
@@ -187,7 +324,12 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
 
     run.status = SYNC_RUN_COMPLETED
     run.error_summary = None
-    run.total_records = 1
+    rq_rows = (
+        int(tabular_sample_ctx["summary"].get("row_count") or 0)
+        if tabular_sample_ctx is not None
+        else 0
+    )
+    run.total_records = 1 + rq_rows
     run.completed_at = _utc_naive()
     if policy:
         run.field_policy_set_id = policy.id
