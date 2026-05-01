@@ -34,6 +34,11 @@ from app.models.field_project_model import (
     FieldProjectPatch,
     FieldProjectPublic,
 )
+from app.models.field_execution_model import (
+    FieldMetricPublic,
+    FieldProjectSyncResponse,
+    FieldSurveyPublic,
+)
 from app.models.field_study_model import FieldStudyCreate, FieldStudyPublic
 from app.services.field_decision_services import (
     create_external_source,
@@ -54,6 +59,11 @@ from app.services.field_ledger_services import (
     list_import_runs_for_project,
     list_ledger_events_for_project,
     list_rows_for_run,
+)
+from app.services.field_execution_services import (
+    list_project_kpis,
+    list_project_surveys,
+    sync_field_project_from_sources,
 )
 from app.services.field_project_services import (
     create_field_project,
@@ -657,6 +667,48 @@ async def patch_project(
     session: AsyncSession = Depends(get_db),
 ):
     return await patch_field_project(session, request.state.user, project_id, body)
+
+
+@router.post(
+    "/projects/{project_id}/sync",
+    response_model=FieldProjectSyncResponse,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Sync MVP: materializa encuestas Field desde fuentes Dooblo activas y emite KPI completion_rate (proxy).",
+)
+async def post_project_execution_sync(
+    project_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    return await sync_field_project_from_sources(session, request.state.user, project_id)
+
+
+@router.get(
+    "/projects/{project_id}/kpis",
+    response_model=list[FieldMetricPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Último valor conocido por metric_code (MVP: completion_rate desde sync).",
+)
+async def get_project_kpis(
+    project_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_project_kpis(session, request.state.user, project_id)
+
+
+@router.get(
+    "/projects/{project_id}/surveys",
+    response_model=list[FieldSurveyPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Encuestas canónicas Field bajo el proyecto (post-sync).",
+)
+async def get_project_field_surveys(
+    project_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_project_surveys(session, request.state.user, project_id)
 
 
 @router.get(

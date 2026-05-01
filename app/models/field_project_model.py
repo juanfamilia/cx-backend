@@ -1,9 +1,11 @@
 """Siete Field — proyectos de control de levantamiento (CSV / conectores)."""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import ConfigDict, field_validator
 from sqlalchemy import Column, DateTime, Text, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
 
 
@@ -39,6 +41,13 @@ class FieldProject(FieldProjectBase, table=True):
         index=True,
         description="Estudio canónico Field (opcional durante migración legacy).",
     )
+
+    execution_metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSONB, nullable=False),
+        description='JSON operativo (p.ej. {"sample_target": 1200, "country": "DO"}).',
+    )
+    last_execution_sync_at: datetime | None = Field(default=None)
 
     created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
     updated_at: datetime = Field(
@@ -88,6 +97,8 @@ class FieldProjectPublic(FieldProjectBase):
     company_id: int
     client_id: int
     study_id: int | None = None
+    execution_metadata: dict[str, Any] = Field(default_factory=dict)
+    last_execution_sync_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -98,6 +109,10 @@ class FieldProjectPatch(SQLModel):
     study_id: int | None = Field(
         default=None,
         description="Vincular a field_studies.id o null para quitar vínculo (misma empresa y cliente que el proyecto).",
+    )
+    execution_metadata: dict[str, Any] | None = Field(
+        default=None,
+        description="Claves a fusionar sobre execution_metadata (p.ej. sample_target).",
     )
 
 

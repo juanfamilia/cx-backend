@@ -150,6 +150,15 @@ async def patch_field_project(
             )
         project.study_id = sid
 
+    if "execution_metadata" in payload:
+        raw = payload["execution_metadata"]
+        base = dict(project.execution_metadata or {})
+        if isinstance(raw, dict):
+            base.update(raw)
+            project.execution_metadata = base
+        elif raw is None:
+            project.execution_metadata = {}
+
     await session.commit()
     await session.refresh(project)
     return FieldProjectPublic.model_validate(project)
