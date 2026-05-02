@@ -634,6 +634,12 @@ async def create_study(
     "/projects",
     response_model=list[FieldProjectPublic],
     dependencies=[Depends(require_field_product_access)],
+    summary="Listar proyectos Field (metadatos CRUD)",
+    description=(
+        "Respuesta plana: nombre, cliente, estado, `ingest_mode`, fechas. "
+        "Para **centro de mando** (semáforo `health`, KPIs, conteos de hallazgos, vínculos Dooblo) "
+        "usar el mismo prefijo y query params con **GET /field/projects/overview**."
+    ),
 )
 async def list_projects(
     request: Request,

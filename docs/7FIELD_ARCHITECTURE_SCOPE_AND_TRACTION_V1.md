@@ -40,6 +40,18 @@
 - **Nuevas features** se aceptan si **encajan en la jerarquía** “Usuario → empresa → proyecto/campaña → salud (KPI + score + hallazgos)” o si son conectores; se rechazan (o se posponen) si convierten 7Field en **otra pantalla de captura**.
 - Los **3 clics** son **criterio de UX y de demo**: si una historia de usuario no puede demostrarse en ese marco, hay que recortar o reproyectar.
 
+### No confundir: lista CRUD vs overview
+
+| URL | Respuesta |
+|-----|-----------|
+| `GET /api/v1/field/projects?company_id=3` | Lista **plana** de proyectos (solo `FieldProject`: nombre, `client_id`, `status`, `ingest_mode`, fechas…). **No** incluye semáforo ni KPIs. |
+| `GET /api/v1/field/projects/overview?company_id=3` | Una **fila enriquecida por proyecto**: `health`, `health_reasons`, `kpis_latest`, hallazgos abiertos por severidad, última corrida de análisis, etc. |
+| `GET /api/v1/field/projects/{id}/overview` | **Drill-down** de un proyecto (misma fila + `top_findings`). |
+
+En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye a `GET /projects`).
+
+---
+
 ### Contrato API mínimo (mapeo a 3 clics)
 
 | Clic lógico | Qué hace el usuario | Backend (prefijo típico `/api/v1/field`) |
@@ -69,3 +81,4 @@
 - **v1–v1.4 (2026‑02‑23 → 2026‑05‑02):** versiones anteriores con mapas de capas, fases A–E, tracción por fase y §9 honestidad repo (archivo histórico en git).
 - **v2 (2026‑05‑02):** reescritura **simple**: premisa “no replicar captura”, flujo credenciales → GET empresa → estatus → drill campaña → salud (KPI + score + hallazgos), **regla de 3 clics**; detalle profundo movido a documentos enlazados.
 - **v2.1 (2026‑05‑02):** tabla **Contrato API mínimo** (3 clics) + nota scores; alineación con endpoints reales (`/projects/overview`, `/projects/{id}/overview`).
+- **v2.2 (2026‑05‑02):** tabla **No confundir** `GET /projects` vs `GET /projects/overview`; Swagger en `list_projects` apunta al overview.
