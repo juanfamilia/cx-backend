@@ -39,6 +39,7 @@ from app.models.field_execution_model import (
     FieldProjectSyncResponse,
     FieldSurveyPublic,
 )
+from app.models.field_overview_model import FieldProjectOverviewRow
 from app.models.field_study_model import FieldStudyCreate, FieldStudyPublic
 from app.services.field_decision_services import (
     create_external_source,
@@ -64,6 +65,10 @@ from app.services.field_execution_services import (
     list_project_kpis,
     list_project_surveys,
     sync_field_project_from_sources,
+)
+from app.services.field_overview_services import (
+    get_field_project_overview_drilldown,
+    list_field_projects_overview,
 )
 from app.services.field_project_services import (
     create_field_project,
@@ -641,6 +646,23 @@ async def list_projects(
     )
 
 
+@router.get(
+    "/projects/overview",
+    response_model=list[FieldProjectOverviewRow],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Resumen multi-proyecto: KPIs, hallazgos abiertos, vínculos Dooblo y semáforo de salud.",
+)
+async def list_projects_overview(
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: obligatorio."),
+    client_id: Optional[int] = Query(None, description="Filtrar por cliente final (opcional)."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_field_projects_overview(
+        session, request.state.user, company_id, client_id
+    )
+
+
 @router.post(
     "/projects",
     response_model=FieldProjectPublic,
@@ -667,6 +689,28 @@ async def patch_project(
     session: AsyncSession = Depends(get_db),
 ):
     return await patch_field_project(session, request.state.user, project_id, body)
+
+
+@router.get(
+    "/projects/{project_id}/overview",
+    response_model=FieldProjectOverviewRow,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Clic 3: salud del proyecto (semáforo, KPIs, conteos, muestra de hallazgos abiertos) en una sola respuesta.",
+)
+async def get_project_overview_drilldown(
+    project_id: int,
+    request: Request,
+    top_findings_limit: int = Query(
+        8,
+        ge=0,
+        le=50,
+        description="Hallazgos abiertos más recientes/severos; 0 omite la lista.",
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    return await get_field_project_overview_drilldown(
+        session, request.state.user, project_id, top_findings_limit=top_findings_limit
+    )
 
 
 @router.post(
