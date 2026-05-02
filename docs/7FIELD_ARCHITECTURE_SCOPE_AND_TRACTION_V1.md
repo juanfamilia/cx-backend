@@ -50,6 +50,8 @@
 
 En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye a `GET /projects`).
 
+**Cliente final (B2B2B):** la empresa de investigación (tenant `company_id`, p. ej. Alpha) crea **clientes finales** (`end_clients`: p. ej. Pepsi Dominicana). Cada proyecto Field lleva `client_id` apuntando a ese end client **de la misma empresa**. En overview: `client_display_name` usa **`external_ref`** si existe (clave operativa); si no, **`name`**. `client_name` y `client_external_ref` desglosan ambos campos. Si el `end_client` no pertenece al mismo `company_id` que el proyecto, el vínculo se considera inválido y se muestra `Cliente #id` para forzar corrección de datos.
+
 ---
 
 ### Contrato API mínimo (mapeo a 3 clics)
@@ -82,3 +84,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v2 (2026‑05‑02):** reescritura **simple**: premisa “no replicar captura”, flujo credenciales → GET empresa → estatus → drill campaña → salud (KPI + score + hallazgos), **regla de 3 clics**; detalle profundo movido a documentos enlazados.
 - **v2.1 (2026‑05‑02):** tabla **Contrato API mínimo** (3 clics) + nota scores; alineación con endpoints reales (`/projects/overview`, `/projects/{id}/overview`).
 - **v2.2 (2026‑05‑02):** tabla **No confundir** `GET /projects` vs `GET /projects/overview`; Swagger en `list_projects` apunta al overview.
+- **v2.3 (2026‑05‑02):** overview B2B2B — `client_display_name` desde `external_ref` o `name`; validación `end_clients.company_id` = `project.company_id`.

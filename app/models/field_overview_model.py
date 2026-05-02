@@ -19,7 +19,17 @@ class FieldProjectOverviewRow(SQLModel):
     model_config = ConfigDict(from_attributes=True)
 
     project: FieldProjectPublic
+    # Cliente final (B2B2B): fila en end_clients bajo la misma empresa que el proyecto.
+    # client_display_name prioriza external_ref (clave operativa de Alpha) y si no hay, name.
     client_display_name: str = ""
+    client_name: str | None = Field(
+        default=None,
+        description="Nombre de cuenta / marca (end_clients.name) cuando el vínculo es válido.",
+    )
+    client_external_ref: str | None = Field(
+        default=None,
+        description="Clave o referencia externa del cliente final (end_clients.external_ref).",
+    )
     study_display_name: str | None = None
 
     kpis_latest: list[FieldMetricPublic] = Field(default_factory=list)

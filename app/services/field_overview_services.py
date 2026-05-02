@@ -66,6 +66,36 @@ def _quota_signals(snapshot: FieldOperationalSnapshot | None) -> tuple[bool | No
     return upstream_ok, row_count
 
 
+def _labels_for_end_client(
+    ec: EndClient | None,
+    *,
+    project_company_id: int,
+    client_id: int,
+) -> tuple[str, str | None, str | None]:
+    """
+    Etiquetas de cliente final para el tablero Field.
+
+    - Solo tratamos como cliente final una fila end_clients no borrada y con el mismo
+      company_id que el proyecto (Alpha contrata Field; Pepsi es end_client de Alpha).
+    - client_display_name: external_ref si existe, si no name (lo que Alpha usa como «clave»).
+    """
+    if ec is None or ec.deleted_at is not None or ec.company_id != project_company_id:
+        suffix = f"#{client_id}"
+        return (
+            f"Cliente {suffix}",
+            None,
+            None,
+        )
+    name = (ec.name or "").strip()
+    ref = (ec.external_ref or "").strip()
+    display = ref if ref else name
+    return (
+        display or f"Cliente #{client_id}",
+        name or None,
+        ref or None,
+    )
+
+
 def _compute_health(
     *,
     ingest_mode: str,
@@ -143,7 +173,9 @@ async def _field_project_overview_rows(
             EndClient.deleted_at.is_(None),
         )
     )
-    client_map = {c.id: c.name for c in clients_res.scalars().all()}
+    client_by_id: dict[int, EndClient] = {
+        int(c.id): c for c in clients_res.scalars().all() if c.id is not None
+    }
 
     study_map: dict[int, str] = {}
     if study_ids:
@@ -342,10 +374,19 @@ async def _field_project_overview_rows(
             sample_target=sample_target,
         )
 
+        ec_row = client_by_id.get(proj.client_id)
+        client_display_name, client_name, client_external_ref = _labels_for_end_client(
+            ec_row,
+            project_company_id=proj.company_id,
+            client_id=proj.client_id,
+        )
+
         out.append(
             FieldProjectOverviewRow(
                 project=proj,
-                client_display_name=client_map.get(proj.client_id, "") or f"Cliente #{proj.client_id}",
+                client_display_name=client_display_name,
+                client_name=client_name,
+                client_external_ref=client_external_ref,
                 study_display_name=study_map.get(proj.study_id) if proj.study_id else None,
                 kpis_latest=kpis_list,
                 findings_open_by_severity=dict(fo),
