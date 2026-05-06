@@ -87,9 +87,14 @@ from app.services.company_dooblo_service import (
     get_dooblo_settings_public,
     upsert_dooblo_settings,
 )
+from app.services.company_qualtrics_service import (
+    get_qualtrics_settings_public,
+    upsert_qualtrics_settings,
+)
 from app.utils.deps import check_company_payment_status, get_auth_user
 from app.utils.field_access import require_field_product_access
 from app.models.company_dooblo_model import CompanyDoobloPutBody
+from app.models.company_qualtrics_model import CompanyQualtricsPutBody
 from app.models.dooblo_catalog_model import OrganizationStudioProjectsCatalogPage, RemoteFieldCatalogPage
 from app.integrations import dooblo_client as dooblo
 from app.integrations.dooblo_serialize import httpx_response_to_proxy_dict
@@ -218,6 +223,68 @@ async def field_dooblo_put_credentials(
         base_url=body.base_url,
         api_user=body.api_user,
         password=body.password,
+    )
+
+
+@router.get(
+    "/qualtrics/status",
+    dependencies=[Depends(require_field_product_access)],
+    summary="Estado de credenciales Qualtrics para la empresa (sin exponer token); probe opcional.",
+)
+async def field_qualtrics_status(
+    request: Request,
+    company_id: int | None = Query(
+        None, description="Superadmin: empresa objetivo. Otros roles usan su propia company."
+    ),
+    probe: bool = Query(
+        False,
+        description="Si true, valida token con GET /API/v3/surveys?pageSize=1 en el datacenter indicado.",
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    cid = _resolve_effective_company_id_for_field(request, company_id)
+    out = await get_qualtrics_settings_public(
+        session, request.state.user, cid, probe_remote=probe
+    )
+    return out
+
+
+@router.get(
+    "/qualtrics/credentials",
+    dependencies=[Depends(require_field_product_access)],
+    summary="Ver configuración Qualtrics por empresa (sin token).",
+)
+async def field_qualtrics_get_credentials(
+    request: Request,
+    company_id: int | None = Query(
+        None, description="Superadmin: ID de la empresa. Obligatorio para rol 0."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    cid = _resolve_effective_company_id_for_field(request, company_id)
+    return await get_qualtrics_settings_public(session, request.state.user, cid)
+
+
+@router.put(
+    "/qualtrics/credentials",
+    dependencies=[Depends(require_field_product_access)],
+    summary="Guardar o actualizar credenciales Qualtrics (token cifrado en base de datos).",
+)
+async def field_qualtrics_put_credentials(
+    request: Request,
+    body: CompanyQualtricsPutBody,
+    company_id: int | None = Query(
+        None, description="Superadmin: ID de la empresa. Obligatorio para rol 0."
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    cid = _resolve_effective_company_id_for_field(request, company_id)
+    return await upsert_qualtrics_settings(
+        session,
+        request.state.user,
+        cid,
+        base_url=body.base_url,
+        api_token=body.api_token,
     )
 
 

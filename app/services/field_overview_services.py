@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.end_client_model import EndClient
 from app.models.field_decision_model import (
     SOURCE_TYPE_DOOBLO,
+    SOURCE_TYPE_QUALTRICS,
     RUN_KIND_FIELD_ANALYSIS,
     FieldOperationalSnapshot,
     FieldProjectExternalSource,
@@ -104,6 +105,8 @@ def _compute_health(
     pending_review: int,
     active_dooblo: int,
     dooblo_with_survey: int,
+    active_qualtrics: int,
+    qualtrics_with_survey: int,
     last_analysis_status: str | None,
     last_sync_at: datetime | None,
     quota_upstream_ok: bool | None,
@@ -113,11 +116,19 @@ def _compute_health(
     reasons: list[str] = []
 
     if last_analysis_status == "failed":
-        reasons.append("Último análisis Dooblo terminó en fallo.")
+        reasons.append("Último análisis Field (motor automático) terminó en fallo.")
 
     if ingest_mode == "dooblo":
         if active_dooblo > 0 and dooblo_with_survey == 0:
             reasons.append("Hay fuentes Dooblo activas pero falta ID de encuesta en el vínculo.")
+        if _is_stale(last_sync_at, 7):
+            reasons.append("Sin sincronización de ejecución reciente (más de 7 días o nunca).")
+
+    if ingest_mode == "qualtrics":
+        if active_qualtrics > 0 and qualtrics_with_survey == 0:
+            reasons.append(
+                "Hay fuentes Qualtrics activas pero falta ID de encuesta (SV_…) en el vínculo."
+            )
         if _is_stale(last_sync_at, 7):
             reasons.append("Sin sincronización de ejecución reciente (más de 7 días o nunca).")
 
@@ -141,8 +152,14 @@ def _compute_health(
         or pending_review > 0
         or quota_upstream_ok is False
         or (ingest_mode == "dooblo" and active_dooblo > 0 and dooblo_with_survey == 0)
+        or (
+            ingest_mode == "qualtrics"
+            and active_qualtrics > 0
+            and qualtrics_with_survey == 0
+        )
         or (completion_rate is not None and sample_target and sample_target > 0 and completion_rate < 0.85)
         or (ingest_mode == "dooblo" and _is_stale(last_sync_at, 7))
+        or (ingest_mode == "qualtrics" and _is_stale(last_sync_at, 7))
     ):
         # Ámbar acumula también razones «suaves»
         if actionable_warn > 0:
@@ -227,13 +244,17 @@ async def _field_project_overview_rows(
         .all()
     )
     dooblo_counts: dict[int, dict[str, int]] = defaultdict(lambda: {"active": 0, "with_survey": 0})
+    qualtrics_counts: dict[int, dict[str, int]] = defaultdict(lambda: {"active": 0, "with_survey": 0})
     for s in src_rows:
-        if s.source_type != SOURCE_TYPE_DOOBLO:
-            continue
         pid = s.field_project_id
-        dooblo_counts[pid]["active"] += 1
-        if s.external_survey_id and str(s.external_survey_id).strip():
-            dooblo_counts[pid]["with_survey"] += 1
+        if s.source_type == SOURCE_TYPE_DOOBLO:
+            dooblo_counts[pid]["active"] += 1
+            if s.external_survey_id and str(s.external_survey_id).strip():
+                dooblo_counts[pid]["with_survey"] += 1
+        elif s.source_type == SOURCE_TYPE_QUALTRICS:
+            qualtrics_counts[pid]["active"] += 1
+            if s.external_survey_id and str(s.external_survey_id).strip():
+                qualtrics_counts[pid]["with_survey"] += 1
 
     # --- Hallazgos accionables (no aprobados) ---
     actionable_where = or_(
@@ -348,6 +369,7 @@ async def _field_project_overview_rows(
                 sample_target = None
 
         dc = dooblo_counts.get(pid, {"active": 0, "with_survey": 0})
+        qc = qualtrics_counts.get(pid, {"active": 0, "with_survey": 0})
         fo = findings_open.get(pid, {"error": 0, "warn": 0, "info": 0})
 
         analysis = latest_analysis.get(pid)
@@ -367,6 +389,8 @@ async def _field_project_overview_rows(
             pending_review=pending_review,
             active_dooblo=int(dc["active"]),
             dooblo_with_survey=int(dc["with_survey"]),
+            active_qualtrics=int(qc["active"]),
+            qualtrics_with_survey=int(qc["with_survey"]),
             last_analysis_status=analysis.status if analysis else None,
             last_sync_at=proj.last_execution_sync_at,
             quota_upstream_ok=q_ok,
@@ -394,6 +418,8 @@ async def _field_project_overview_rows(
                 surveys_linked_count=int(survey_counts.get(pid, 0)),
                 active_dooblo_sources=int(dc["active"]),
                 dooblo_sources_with_survey_id=int(dc["with_survey"]),
+                active_qualtrics_sources=int(qc["active"]),
+                qualtrics_sources_with_survey_id=int(qc["with_survey"]),
                 last_analysis_run_status=analysis.status if analysis else None,
                 last_analysis_run_at=analysis.started_at if analysis else None,
                 last_csv_import_status=imp.status if imp else None,

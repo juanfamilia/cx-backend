@@ -22,6 +22,7 @@ from app.models.field_decision_model import (
     SOURCE_TYPE_CSV,
     SOURCE_TYPE_DOOBLO,
     SOURCE_TYPE_MANUAL,
+    SOURCE_TYPE_QUALTRICS,
     SYNC_STRATEGY_FULL,
     SYNC_STRATEGY_INCREMENTAL,
     FieldFindingApprovalBody,
@@ -38,7 +39,9 @@ from app.models.user_model import User
 from app.services.field_project_services import assert_field_staff
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
-_VALID_SOURCE = frozenset({SOURCE_TYPE_DOOBLO, SOURCE_TYPE_CSV, SOURCE_TYPE_MANUAL, "api"})
+_VALID_SOURCE = frozenset(
+    {SOURCE_TYPE_DOOBLO, SOURCE_TYPE_QUALTRICS, SOURCE_TYPE_CSV, SOURCE_TYPE_MANUAL, "api"}
+)
 _VALID_SYNC = frozenset({SYNC_STRATEGY_FULL, SYNC_STRATEGY_INCREMENTAL, "none"})
 
 

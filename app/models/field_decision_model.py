@@ -18,6 +18,7 @@ from sqlmodel import Field, SQLModel
 # -- Valores lógicos (string en BD; no Enum nativo para menoscabar migraciones) --
 
 SOURCE_TYPE_DOOBLO = "dooblo"
+SOURCE_TYPE_QUALTRICS = "qualtrics"
 SOURCE_TYPE_CSV = "csv"
 SOURCE_TYPE_MANUAL = "manual"
 # Hallazgos / snapshot generados por motor de decisión (no solo proxy HTTP).

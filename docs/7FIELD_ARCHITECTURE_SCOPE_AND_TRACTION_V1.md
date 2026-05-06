@@ -9,6 +9,7 @@
 1. **7Field no replica** Dooblo, Qualtrics ni ninguna herramienta de captura. **Interpreta ejecución** a partir de datos que el cliente ya tiene en esos sistemas (u otros conectores).
 2. **Regla de 3 clics:** desde que el usuario entra con intención de ver campo, hasta tener **una lectura clara de “salud”** del negocio de campo, el flujo feliz no debe forzar más de **tres interacciones principales** (p. ej. login/config → lista/estatus → campaña/proyecto elegido). Todo lo demás es **profundización opcional**, no barrera.
 3. **“Salud”** aquí significa: **KPIs acordados** + **scores / riesgo** derivados de reglas versionadas y, cuando aplique, **hallazgos** que explican *por qué* algo está en rojo o ámbar — no una tabla infinita de respuestas crudas.
+4. **Misma lectura operativa para cualquier proveedor:** Dooblo, Qualtrics u otro sistema de levantamiento solo cambian la **tubería de ingesta**; quien use 7Field debe **entender lo mismo** — qué pasa en campo, salud del proyecto, alertas — sin vocabulario ni flujos de pantalla distintos por marca del EMS.
 
 ---
 
@@ -36,6 +37,14 @@
 
 ## Implicación para ingeniería y diseño
 
+### Conectores y dominio canónico
+
+- **Un solo mapa mental en producto:** proyecto Field → estatus / drill-down → KPIs + score + hallazgos. El proveedor externo no define una segunda “app” ni otra jerarquía de navegación.
+- **Dominio interno único:** IDs canónicos, KPIs, hallazgos, sync runs y snapshots hablan de **campo y negocio** (progreso, cuotas, calidad de superficie, etc.), no de nombres de endpoints del EMS.
+- **Conector delgado:** cada plataforma implementa el mismo contrato abstracto — *autenticar → enlazar encuesta/proyecto externo → traer muestra o agregados permitidos → normalizar* — y escribe en el modelo Field (`FieldProjectExternalSource`, etc.). La capa de decisión y la UI consumen **datos ya normalizados** (o agregados internos), no bifurcan la narrativa por vendor.
+- **Transparencia sin duplicar captura:** el usuario debe ver **cuándo** se actualizó la vista, **qué fuente** alimenta cada proyecto y si el pipeline falló o está desfasado; eso refuerza la confianza en “lo que está pasando en el campo” sin convertir 7Field en pantalla de edición del EMS.
+- **Implementación:** puede haber rutas o jobs nominados a un vendor mientras exista solo ese conector; la dirección es **interfaces explícitas por `source_type`** y UX única. Evitar que reglas o pantallas queden acopladas a un solo nombre de API en el contrato mental del usuario.
+
 - **APIs y jobs** deben servir primero ese recorrido: *listado + estatus → detalle de proyecto → KPIs + score + findings*, siempre **multi-tenant** y sin exponer más datos crudos de los necesarios para explicar el semáforo.
 - **Nuevas features** se aceptan si **encajan en la jerarquía** “Usuario → empresa → proyecto/campaña → salud (KPI + score + hallazgos)” o si son conectores; se rechazan (o se posponen) si convierten 7Field en **otra pantalla de captura**.
 - Los **3 clics** son **criterio de UX y de demo**: si una historia de usuario no puede demostrarse en ese marco, hay que recortar o reproyectar.
@@ -58,7 +67,7 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 
 | Clic lógico | Qué hace el usuario | Backend (prefijo típico `/api/v1/field`) |
 |-------------|---------------------|-------------------------------------------|
-| **1** | Entra y deja listo el conector | `PUT /dooblo/credentials` (u homólogo Qualtrics cuando exista); opcional `GET /dooblo/status`. |
+| **1** | Entra y deja listo el conector | Credenciales por proveedor, mismo contrato mental: Dooblo `PUT /field/dooblo/credentials`; Qualtrics `PUT /field/qualtrics/credentials` (token cifrado) + `GET /field/qualtrics/status` (`probe=true` valida contra API); prefijo `/api/v1/field`. |
 | **2** | Ve **estatus de todos los proyectos** / campañas (semáforo, KPIs ligeros) | `GET /projects/overview` — una sola respuesta agregada por tenant (filtros `company_id` / `client_id` si aplica). |
 | **3** | Hace drill-down en **una** campaña / proyecto (“Power BI”) | `GET /projects/{id}/overview` — salud + últimos KPIs + conteos de hallazgos + **muestra corta** de hallazgos abiertos (sin sustituir el listado paginado de `decision-layer/findings` si el usuario profundiza). |
 
@@ -85,3 +94,5 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v2.1 (2026‑05‑02):** tabla **Contrato API mínimo** (3 clics) + nota scores; alineación con endpoints reales (`/projects/overview`, `/projects/{id}/overview`).
 - **v2.2 (2026‑05‑02):** tabla **No confundir** `GET /projects` vs `GET /projects/overview`; Swagger en `list_projects` apunta al overview.
 - **v2.3 (2026‑05‑02):** overview B2B2B — `client_display_name` desde `external_ref` o `name`; validación `end_clients.company_id` = `project.company_id`.
+- **v2.4 (2026‑05‑06):** premisa **experiencia única** ante cualquier EMS de levantamiento; subsección **Conectores y dominio canónico**; clic 1 del contrato API formulado en genérico multi‑proveedor (paths actuales Dooblo como ejemplo).
+- **v2.5 (2026‑05‑06):** backend — credenciales Qualtrics por empresa (`company_qualtrics_settings`), rutas `/field/qualtrics/credentials` y `/field/qualtrics/status`; `source_type` **`qualtrics`** en fuentes externas; tabla clic 1 actualizada.

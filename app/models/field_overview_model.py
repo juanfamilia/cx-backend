@@ -41,6 +41,8 @@ class FieldProjectOverviewRow(SQLModel):
     surveys_linked_count: int = 0
     active_dooblo_sources: int = 0
     dooblo_sources_with_survey_id: int = 0
+    active_qualtrics_sources: int = 0
+    qualtrics_sources_with_survey_id: int = 0
 
     last_analysis_run_status: str | None = None
     last_analysis_run_at: datetime | None = None

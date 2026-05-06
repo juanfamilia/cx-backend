@@ -25,7 +25,7 @@ class FieldProjectBase(SQLModel):
     ingest_mode: str = Field(
         default="csv",
         max_length=32,
-        description="Origen principal declarado: csv (archivo) | dooblo (API SurveyToGo).",
+        description="Origen principal declarado: csv (archivo) | dooblo (SurveyToGo) | qualtrics (XM API).",
     )
 
 
@@ -85,8 +85,8 @@ class FieldProjectCreate(SQLModel):
         if v is None or (isinstance(v, str) and not v.strip()):
             return "csv"
         s = str(v).strip().lower()
-        if s not in ("csv", "dooblo"):
-            raise ValueError("ingest_mode debe ser csv o dooblo")
+        if s not in ("csv", "dooblo", "qualtrics"):
+            raise ValueError("ingest_mode debe ser csv, dooblo o qualtrics")
         return s
 
 
