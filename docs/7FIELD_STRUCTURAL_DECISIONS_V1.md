@@ -115,7 +115,8 @@ Todos los QA hallazgos comparten mismo **tipo contrato técnico** `source=instru
 | Acción siguientes 2‑4 semanas | Dueño típico |
 |------------------------------|---------------|
 | ADR físico ubicación nuevas tablas motor reglas naming | Backend lead |
-| JSON schema `instrument_spec@v1-draft` ejemplo file repo `examples/` **una** pieza muestra oficial | Backend + método |
+| JSON schema `instrument_spec` draft + ejemplo en `examples/` (**hecho:** `instrument_spec_v1.schema.json`, `instrument_spec_v1.example.json`) — evolucionar con Builder | Backend + método |
+| Modelo físico **InstrumentRevision** + QA findings + readiness signatures (ver [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md)) | Backend |
 | Modelo físico inicial `study` + migra backfill provisional `field_projects` | Backend |
 | Matriz Roles→Readiness permisos efectivos | Prod + seguridad |
 
@@ -123,4 +124,4 @@ Todos los QA hallazgos comparten mismo **tipo contrato técnico** `source=instru
 
 ---
 
-Referencias: [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md) · [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
+Referencias: [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md) · [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md) · [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)

@@ -184,6 +184,7 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 
 ## Documentación relacionada (detalle)
 
+- PRE-FIELD Intelligence (builder, framework, Auto QA, readiness, API blueprint): [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md)
 - Estrategia y pilares comerciales: [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md)
 - Gobierno de hallazgos, criticidad operativa, Clever: [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
 - Contrato mínimo de plataforma: [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md)
@@ -202,3 +203,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v2.4 (2026‑05‑06):** premisa **experiencia única** ante cualquier EMS de levantamiento; subsección **Conectores y dominio canónico**; clic 1 del contrato API formulado en genérico multi‑proveedor (paths actuales Dooblo como ejemplo).
 - **v2.5 (2026‑05‑06):** backend — credenciales Qualtrics por empresa (`company_qualtrics_settings`), rutas `/field/qualtrics/credentials` y `/field/qualtrics/status`; `source_type` **`qualtrics`** en fuentes externas; tabla clic 1 actualizada.
 - **v2.6 (2026‑05‑07):** **PRE-FIELD INTELLIGENCE** — árbol Instrument Builder, Framework Engine, Auto QA, Readiness Gate, Versioning, AI Assistance; principios “7Field no crea preguntas sueltas” / IA no decide metodología sola; framework híbrido; flujo Brief → scripting → revisión → QA → campo; roadmap comercial ordenado (Field Control → Auto QA → Backcheck → Cost of Error → Clever); posicionamiento **Governance of Research Execution**; **paridad Qualtrics ↔ Dooblo** como objetivo explícito de ingeniería con estado/reserva sobre análisis profundo.
+- **v2.7 (2026‑05‑06):** enlace a especificación detallada [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md); JSON Schema draft para `instrument_spec` en `examples/instrument_spec_v1.schema.json`.

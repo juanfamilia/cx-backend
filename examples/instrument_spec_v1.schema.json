@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://siete.cx/schemas/instrument_spec/v2026.1-draft",
+  "title": "7Field instrument_spec",
+  "description": "Formato canónico intermediario para Instrument Builder y Auto QA v1. Ver docs/7FIELD_STRUCTURAL_DECISIONS_V1.md (L2).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["instrument_spec_version", "title", "blocks"],
+  "properties": {
+    "instrument_spec_version": {
+      "type": "string",
+      "pattern": "^2026\\.\\d+-draft$",
+      "description": "Versión del contrato; incrementar al romper compatibilidad."
+    },
+    "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "locale_default": { "type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$" },
+    "study_type": {
+      "type": "string",
+      "enum": ["cx", "ua", "brand_tracking", "concept_test", "mystery_shopper", "focus_group", "other"]
+    },
+    "business_goal": { "type": "string", "maxLength": 2000 },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/block" }
+    },
+    "branching": { "$ref": "#/$defs/branching" }
+  },
+  "$defs": {
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["block_id", "title", "items"],
+      "properties": {
+        "block_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "section_kind": {
+          "type": "string",
+          "enum": ["introduction", "consent", "screener", "main", "demographics", "closing", "other"]
+        },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/item" }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["item_id", "text", "response"],
+      "properties": {
+        "item_id": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+        "text": { "type": "string", "minLength": 1 },
+        "response": { "$ref": "#/$defs/response" },
+        "_qa_notes": { "type": "string" }
+      }
+    },
+    "response": {
+      "oneOf": [
+        { "$ref": "#/$defs/responseSingle" },
+        { "$ref": "#/$defs/responseLikert" },
+        { "$ref": "#/$defs/responseNumeric" },
+        { "$ref": "#/$defs/responseQuotas" }
+      ]
+    },
+    "responseSingle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "options"],
+      "properties": {
+        "type": { "const": "single" },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "responseLikert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "scale_points", "labels"],
+      "properties": {
+        "type": { "const": "likert" },
+        "scale_points": { "type": "integer", "minimum": 2, "maximum": 11 },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "responseNumeric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "min", "max"],
+      "properties": {
+        "type": { "const": "numeric" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "responseQuotas": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "strata"],
+      "properties": {
+        "type": { "const": "quotas" },
+        "strata": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "target_pct"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "target_pct": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        }
+      }
+    },
+    "branching": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "when", "to"],
+            "properties": {
+              "from": { "type": "string" },
+              "when": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "to": { "type": "string" }
+            }
+          }
+        },
+        "_qa_notes": { "type": "string" }
+      }
+    }
+  }
+}
