@@ -20,8 +20,13 @@ jobs:
         run: uv sync --extra dev
 
       # Alcance acotado: el legado aún no pasa `ruff check app` completo.
-      - name: Ruff (instrument_spec + tests)
-        run: uv run ruff check app/services/instrument_spec_validate.py tests/
+      - name: Ruff (PRE-FIELD + tests)
+        run: >-
+          uv run ruff check
+          app/services/instrument_spec_validate.py
+          app/services/field_instrument_revision_services.py
+          app/models/field_instrument_revision_model.py
+          tests/
 
       - name: Pytest (contract + unit)
         run: uv run pytest tests/ -q

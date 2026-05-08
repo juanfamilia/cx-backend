@@ -5,6 +5,7 @@ Ver docs/7FIELD_STRUCTURAL_DECISIONS_V1.md (L2) y docs/7FIELD_PRE_FIELD_INTELLIG
 
 from __future__ import annotations
 
+import hashlib
 import json
 from functools import lru_cache
 from pathlib import Path
@@ -37,3 +38,15 @@ def validate_instrument_spec(instance: dict[str, Any]) -> list[str]:
         errors.append(f"{path}: {err.message}")
     errors.sort()
     return errors
+
+
+def canonical_instrument_spec_bytes(spec: dict[str, Any]) -> bytes:
+    """Serialización estable para hashing y auditoría (orden de claves fijo)."""
+    return json.dumps(spec, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode(
+        "utf-8"
+    )
+
+
+def compute_instrument_spec_content_hash(spec: dict[str, Any]) -> str:
+    """SHA-256 hex del JSON canónico (sirve para `content_hash` y trazabilidad)."""
+    return hashlib.sha256(canonical_instrument_spec_bytes(spec)).hexdigest()

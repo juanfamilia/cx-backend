@@ -40,6 +40,15 @@ from app.models.field_execution_model import (
     FieldSurveyPublic,
 )
 from app.models.field_overview_model import FieldProjectOverviewRow
+from app.models.field_instrument_revision_model import (
+    FieldInstrumentRevisionCreate,
+    FieldInstrumentRevisionPatch,
+    FieldInstrumentRevisionPublic,
+    FieldInstrumentRevisionValidateResponse,
+    FieldInstrumentRevisionWithSpec,
+    InstrumentSpecValidateBody,
+    InstrumentSpecValidationReport,
+)
 from app.models.field_study_model import FieldStudyCreate, FieldStudyPublic
 from app.services.field_decision_services import (
     create_external_source,
@@ -80,6 +89,14 @@ from app.services.field_dooblo_catalog_service import (
     list_dooblo_customers_catalog,
     list_dooblo_organization_studio_projects_catalog,
     list_dooblo_project_surveys_catalog,
+)
+from app.services.field_instrument_revision_services import (
+    create_instrument_revision,
+    get_instrument_revision,
+    list_instrument_revisions_for_study,
+    patch_instrument_revision,
+    validate_instrument_revision_and_persist,
+    validate_instrument_spec_inline,
 )
 from app.services.field_study_services import create_field_study, list_field_studies
 from app.services.company_dooblo_service import (
@@ -695,6 +712,132 @@ async def create_study(
     session: AsyncSession = Depends(get_db),
 ):
     return await create_field_study(session, request.state.user, body)
+
+
+# --- PRE-FIELD: revisiones instrument_spec + validación schema (gobernanza previa al campo)
+
+
+@router.post(
+    "/instrument-spec/validate",
+    response_model=InstrumentSpecValidationReport,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Validar instrument_spec contra schema oficial (sin persistencia)",
+    description=(
+        "Ejecuta el mismo motor JSON Schema que Auto QA v1; útil para el Builder antes "
+        "de guardar revisión o para pegados rápidos. Respuesta incluye `content_hash` "
+        "canónico para auditoría."
+    ),
+)
+async def validate_instrument_spec_http(
+    request: Request,
+    body: InstrumentSpecValidateBody,
+):
+    return await validate_instrument_spec_inline(request.state.user, body.spec)
+
+
+@router.get(
+    "/studies/{study_id}/instrument-revisions",
+    response_model=list[FieldInstrumentRevisionPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Listar revisiones de instrumento del estudio",
+)
+async def list_study_instrument_revisions(
+    study_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(
+        None,
+        description="Rol 0: obligatorio si no hay empresa en el perfil; opcional si ya tiene empresa.",
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_instrument_revisions_for_study(
+        session, request.state.user, study_id, company_id
+    )
+
+
+@router.post(
+    "/studies/{study_id}/instrument-revisions",
+    response_model=FieldInstrumentRevisionPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Crear revisión borrador (instrument_spec)",
+    description=(
+        "Crea una revisión `draft` versionada por `revision_label` único por estudio "
+        "(auto `vN` si se omite). `spec` opcional: si falta, plantilla mínima válida por schema."
+    ),
+)
+async def create_study_instrument_revision(
+    study_id: int,
+    request: Request,
+    body: FieldInstrumentRevisionCreate,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await create_instrument_revision(
+        session, request.state.user, study_id, body, company_id
+    )
+
+
+@router.get(
+    "/instrument-revisions/{revision_id}",
+    response_model=FieldInstrumentRevisionWithSpec,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Detalle de revisión incluyendo instrument_spec completo",
+)
+async def get_instrument_revision_detail(
+    revision_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    pub, spec = await get_instrument_revision(
+        session,
+        request.state.user,
+        revision_id,
+        company_id,
+        include_spec=True,
+    )
+    assert spec is not None
+    return FieldInstrumentRevisionWithSpec(**{**pub.model_dump(), "spec": spec})
+
+
+@router.patch(
+    "/instrument-revisions/{revision_id}",
+    response_model=FieldInstrumentRevisionPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Actualizar borrador (reemplazo de spec o metadata)",
+    description="Solo revisiones `draft`. Para cerrar sin borrar: `status=archived`.",
+)
+async def patch_instrument_revision_http(
+    revision_id: int,
+    request: Request,
+    body: FieldInstrumentRevisionPatch,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await patch_instrument_revision(
+        session, request.state.user, revision_id, body, company_id
+    )
+
+
+@router.post(
+    "/instrument-revisions/{revision_id}/validate",
+    response_model=FieldInstrumentRevisionValidateResponse,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Validar revisión persistida y registrar auditoría schema",
+    description=(
+        "Ejecuta JSON Schema, guarda `last_validation_*` y devuelve informe completo. "
+        "No sustituye Readiness Gate ni publicación en EMS."
+    ),
+)
+async def validate_stored_instrument_revision(
+    revision_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await validate_instrument_revision_and_persist(
+        session, request.state.user, revision_id, company_id
+    )
 
 
 @router.get(

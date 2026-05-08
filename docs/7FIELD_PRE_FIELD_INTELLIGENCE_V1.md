@@ -131,24 +131,32 @@ Errores y pérdidas en ejecución siguen en **Field Control** ya implementado; P
 
 ---
 
-## 7. Blueprint de API REST (propuesto)
+## 7. API REST (`/api/v1/field`)
 
-Prefijo coherente con existente: **`/api/v1/field`**. Nombres orientativos hasta OpenAPI formal:
+**Implementado (persistencia + auditoría schema):** tabla `field_instrument_revisions`, multi-tenant por `company_id` + FK a `field_studies`, índice único parcial `(study_id, revision_label)` sobre filas activas, campos `last_validation_*` tras `POST .../validate`.
 
 | Método | Ruta | Propósito |
 |--------|------|-----------|
-| `GET` | `/field/framework-templates` | Catálogo plantillas por `study_type` (versionado). |
-| `GET` | `/field/studies/{study_id}/instrument-revisions` | Listar revisiones del estudio. |
-| `POST` | `/field/studies/{study_id}/instrument-revisions` | Crear borrador (desde plantilla o vacío estructurado). |
-| `GET` | `/field/instrument-revisions/{id}` | Obtener revisión + spec. |
-| `PATCH` | `/field/instrument-revisions/{id}` | Actualizar borrador (si estado lo permite). |
-| `POST` | `/field/instrument-revisions/{id}/validate` | Validación schema `instrument_spec`. |
-| `POST` | `/field/instrument-revisions/{id}/qa-run` | Ejecutar motor QA determinístico (+ opcional IA async job). |
-| `GET` | `/field/instrument-revisions/{id}/qa-findings` | Resultados QA paginados. |
-| `POST` | `/field/instrument-revisions/{id}/readiness-sign` | Registrar firma L4. |
-| `GET` | `/field/instrument-revisions/{id}/readiness` | Estado agregado readiness. |
+| `POST` | `/field/instrument-spec/validate` | Validación JSON Schema **stateless** (`InstrumentSpecValidationReport`: `ok`, `schema_issues`, `content_hash`). |
+| `GET` | `/field/studies/{study_id}/instrument-revisions` | Lista revisiones activas del estudio (sin `spec` completo; liviano). |
+| `POST` | `/field/studies/{study_id}/instrument-revisions` | Crea `draft`; `spec` opcional o plantilla mínima válida; `revision_label` opcional (`vN`). |
+| `GET` | `/field/instrument-revisions/{revision_id}` | Detalle + **`spec`** completo (`FieldInstrumentRevisionWithSpec`). |
+| `PATCH` | `/field/instrument-revisions/{revision_id}` | Solo `draft`: reemplazo de `spec`, metadata; `status=archived` para cerrar (edición bloqueada después). |
+| `POST` | `/field/instrument-revisions/{revision_id}/validate` | Ejecuta schema, persiste auditoría (`last_validation_at`, `last_validation_ok`, `issue_count`, `content_hash`) y devuelve informe. |
 
-**Seguridad:** mismos patrones multi-tenant que Field (`company_id`, `require_field_product_access`), sin exposición de PII en capas de sugerencia IA.
+**Parámetro recurrente:** `company_id` query para **rol 0** cuando aplique la misma regla que el resto de Field.
+
+**Backlog (siguiente oleada):**
+
+| Método | Ruta | Propósito |
+|--------|------|-----------|
+| `GET` | `/field/framework-templates` | Catálogo plantillas por `study_type`. |
+| `POST` | `/field/instrument-revisions/{id}/qa-run` | Motor QA_RULE_* determinístico + hallazgos tipados. |
+| `GET` | `/field/instrument-revisions/{id}/qa-findings` | Paginación hallazgos QA. |
+| `POST` | `/field/instrument-revisions/{id}/readiness-sign` | Firma L4. |
+| `GET` | `/field/instrument-revisions/{id}/readiness` | Estado readiness agregado. |
+
+**Seguridad:** `require_field_product_access`, staff Field (`assert_field_staff`), sin exposición PII en esta capa.
 
 ---
 
@@ -170,11 +178,11 @@ No vender PRE-FIELD aislado primero. Historia acordada: **Field Control → Auto
 
 | # | Ítem | Notas |
 |---|------|--------|
-| 1 | Tablas `instrument_revisions`, `instrument_qa_findings`, `readiness_signatures` | Alinear FK con `field_studies`, índices por tenant |
+| 1 | Tablas `instrument_revisions`, `instrument_qa_findings`, `readiness_signatures` | **`field_instrument_revisions`** implementada; QA findings + readiness pendientes |
 | 2 | Motor QA_RULE_001–005 sobre JSON cargado | Tests unitarios con `instrument_spec_v1.example.json` |
-| 3 | Servicio `validate_instrument_spec` | JSON Schema en CI |
+| 3 | Servicio `validate_instrument_spec` | JSON Schema en CI + **`POST .../validate`** y **`POST .../instrument-spec/validate`** |
 | 4 | Seed de `framework_templates` mínimo (CX + uno cuanti genérico) | |
-| 5 | OpenAPI tags **Siete Field — PRE-FIELD** | |
+| 5 | OpenAPI tags **Siete Field — PRE-FIELD** | Rutas documentadas en mismo tag `Siete Field` |
 | 6 | Job opcional IA | Cola async, mismo contrato de hallazgo |
 | 7 | Enlace `FieldProject.study_id` población desde UI estudio | Ya soportado en PATCH proyecto |
 
@@ -184,4 +192,5 @@ No vender PRE-FIELD aislado primero. Historia acordada: **Field Control → Auto
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.1** | 2026-05-08 | API implementada: revisiones persistidas, validate stateful/stateless, auditoría `last_validation_*`; migración `field_instrument_revisions`. |
 | **v1.0** | 2026-05-06 | Primera especificación: módulos, dominio, API blueprint, límites, alineación L2–L5 y ejemplo/schema `instrument_spec`. |
