@@ -1,0 +1,27 @@
+# Contrato de código + artefactos Field (instrument_spec).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync dev dependencies
+        run: uv sync --extra dev
+
+      # Alcance acotado: el legado aún no pasa `ruff check app` completo.
+      - name: Ruff (instrument_spec + tests)
+        run: uv run ruff check app/services/instrument_spec_validate.py tests/
+
+      - name: Pytest (contract + unit)
+        run: uv run pytest tests/ -q

@@ -20,3 +20,12 @@ Con el mismo Python donde instalaste dependencias (`uv sync`, `pip install -e .`
 ```bash
 python -m alembic upgrade head
 ```
+
+## CI / contrato PRE-FIELD
+
+GitHub Actions (`/.github/workflows/ci.yml`) ejecuta Pytest; el test `tests/test_instrument_spec_contract.py` valida el ejemplo oficial contra `examples/instrument_spec_v1.schema.json`. Localmente:
+
+```bash
+uv sync --extra dev
+uv run pytest tests/ -q
+```
