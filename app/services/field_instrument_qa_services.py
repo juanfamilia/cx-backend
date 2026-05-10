@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import desc
 from sqlmodel import select
@@ -38,6 +39,12 @@ async def execute_instrument_qa_bootstrap_run(
     await assert_field_staff(user)
     cid = _effective_company_id(user, company_id)
     rev = await _get_revision_writable(session, revision_id, cid)
+
+    if rev.status != "draft":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="solo revisiones en borrador admiten nueva corrida QA",
+        )
 
     spec: dict[str, Any] = dict(rev.spec_json) if isinstance(rev.spec_json, dict) else {}
     content_hash = compute_instrument_spec_content_hash(spec)

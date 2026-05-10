@@ -54,6 +54,15 @@ from app.models.field_instrument_revision_model import (
     InstrumentSpecValidationReport,
 )
 from app.models.field_study_model import FieldStudyCreate, FieldStudyPublic
+from app.models.field_readiness_model import (
+    FieldReadinessPolicyPublic,
+    FieldReadinessPolicyUpsert,
+    FieldReadinessSignatoryCreate,
+    FieldReadinessSignatoryPublic,
+    ReadinessGatePublic,
+    ReadinessSignBody,
+    ReadinessSignResult,
+)
 from app.services.field_decision_services import (
     create_external_source,
     create_policy_set,
@@ -105,6 +114,15 @@ from app.services.field_instrument_revision_services import (
     patch_instrument_revision,
     validate_instrument_revision_and_persist,
     validate_instrument_spec_inline,
+)
+from app.services.field_readiness_services import (
+    create_readiness_signatory,
+    get_readiness_for_revision,
+    get_readiness_policy_for_reader,
+    list_readiness_signatories,
+    sign_readiness_for_revision,
+    soft_delete_readiness_signatory,
+    upsert_company_readiness_policy,
 )
 from app.services.field_study_services import create_field_study, list_field_studies
 from app.services.company_dooblo_service import (
@@ -885,6 +903,129 @@ async def list_instrument_revision_qa_runs(
 ):
     return await list_instrument_qa_runs(
         session, request.state.user, revision_id, company_id, limit=limit
+    )
+
+
+# --- Readiness Gate L4 (política, signatarios, firmas)
+
+
+@router.get(
+    "/readiness-policy",
+    response_model=FieldReadinessPolicyPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Política Readiness de la empresa (bloqueos + roles exigidos)",
+)
+async def get_field_readiness_policy(
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await get_readiness_policy_for_reader(
+        session, request.state.user, company_id
+    )
+
+
+@router.put(
+    "/readiness-policy",
+    response_model=FieldReadinessPolicyPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Actualizar política Readiness (superadmin o gerente empresa)",
+)
+async def put_field_readiness_policy(
+    request: Request,
+    body: FieldReadinessPolicyUpsert,
+    company_id: Optional[int] = Query(None, description="Rol 0: empresa objetivo."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await upsert_company_readiness_policy(
+        session, request.state.user, company_id, body
+    )
+
+
+@router.get(
+    "/readiness-signatories",
+    response_model=list[FieldReadinessSignatoryPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Signatarios autorizados por rol (cuando ``enforce_signatory_grants``)",
+)
+async def get_field_readiness_signatories(
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: empresa objetivo."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_readiness_signatories(session, request.state.user, company_id)
+
+
+@router.post(
+    "/readiness-signatories",
+    response_model=FieldReadinessSignatoryPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Alta signatario (superadmin o gerente empresa)",
+)
+async def post_field_readiness_signatory(
+    request: Request,
+    body: FieldReadinessSignatoryCreate,
+    company_id: Optional[int] = Query(None, description="Rol 0: empresa objetivo."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await create_readiness_signatory(
+        session, request.state.user, company_id, body
+    )
+
+
+@router.delete(
+    "/readiness-signatories/{signatory_id}",
+    status_code=204,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Baja lógica signatario",
+)
+async def delete_field_readiness_signatory(
+    signatory_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: empresa objetivo."),
+    session: AsyncSession = Depends(get_db),
+):
+    await soft_delete_readiness_signatory(
+        session, request.state.user, company_id, signatory_id
+    )
+
+
+@router.get(
+    "/instrument-revisions/{revision_id}/readiness",
+    response_model=ReadinessGatePublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Estado Readiness agregado (gates + firmas + política efectiva)",
+)
+async def get_instrument_revision_readiness(
+    revision_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await get_readiness_for_revision(
+        session, request.state.user, revision_id, company_id
+    )
+
+
+@router.post(
+    "/instrument-revisions/{revision_id}/readiness-sign",
+    response_model=ReadinessSignResult,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Registrar firma nominal L4 (snapshot hash + último QA run)",
+    description=(
+        "Requiere gates en verde según política. Si tras firmar se cumplen todos los roles "
+        "requeridos, la revisión pasa a estado ``approved``."
+    ),
+)
+async def post_instrument_revision_readiness_sign(
+    revision_id: int,
+    request: Request,
+    body: ReadinessSignBody,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await sign_readiness_for_revision(
+        session, request.state.user, revision_id, body, company_id
     )
 
 

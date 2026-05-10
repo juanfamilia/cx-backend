@@ -16,7 +16,7 @@ class FieldInstrumentRevisionBase(SQLModel):
     status: str = Field(
         default="draft",
         max_length=32,
-        description="draft | archived — approved/readiness en fases posteriores.",
+        description="draft | approved | archived — approved tras Readiness completo.",
     )
     framework_template_id: str | None = Field(default=None, max_length=128)
     notes: str | None = Field(default=None, sa_column=Column(Text, nullable=True))

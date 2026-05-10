@@ -289,6 +289,12 @@ async def validate_instrument_revision_and_persist(
     cid = _effective_company_id(user, company_id)
     row = await _get_revision_writable(session, revision_id, cid)
 
+    if row.status != "draft":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="solo revisiones en borrador admiten validación schema persistente",
+        )
+
     spec = _assert_spec_object(dict(row.spec_json))
     report = build_instrument_spec_validation_report(spec)
 

@@ -206,3 +206,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v2.7 (2026‑05‑06):** enlace a especificación detallada [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md); JSON Schema draft para `instrument_spec` en `examples/instrument_spec_v1.schema.json`.
 - **v2.8 (2026‑05‑08):** PRE-FIELD API robusta — revisiones `instrument_spec` persistidas, validación stateless y con auditoría; ver doc PRE-FIELD §7.
 - **v2.9 (2026‑05‑08):** motor Auto QA bootstrap **QA_RULE_001–005** (`instrument_qa_runtime`) + histórico `field_instrument_qa_runs`.
+- **v3.0 (2026‑05‑09):** **Readiness Gate L4** — políticas de bloqueo por empresa, signatarios opcionales obligatorios, firmas con snapshot y estado `approved` en revisión.

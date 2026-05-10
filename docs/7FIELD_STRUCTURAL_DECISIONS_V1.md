@@ -73,6 +73,8 @@ Mapeos numéricos a roles RBAC concretos (0/1/nuevos flags) los define **tabla m
 
 Sin conjunto aplicable configurado ⇒ **bloqueado** transición ejecutable a **Field live** donde producto así lo aplique (`readiness_blocked` estado explícito).
 
+**Implementación backend (v1):** política tenant `company_field_readiness_policy`, matriz de signatarios `field_readiness_signatories` (cuando `enforce_signatory_grants`), firmas `field_readiness_signatures` con snapshot de `content_hash` y último `qa_run_id`; rutas `GET/PUT /field/readiness-policy`, signatarios, `GET/POST .../readiness` + `readiness-sign`; revisión → `approved` al cerrar gates. Overrides contractuales L3 — backlog.
+
 ---
 
 ## L5 — Clever — límites **obligatorios**, no texto en manual
