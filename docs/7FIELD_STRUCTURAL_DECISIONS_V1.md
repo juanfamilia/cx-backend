@@ -106,6 +106,8 @@ Hasta tener este catálogo **implementable**, Auto QA permanece iniciativa no te
 
 **Posterior backlog no bloqueante v1 inicial:** fatiga tiempo estimativa (monitorea), mejoras orden bloques (**MONITOR**).
 
+**Implementación backend:** motor determinístico QA_RULE_001–005 (`instrument_qa_runtime`, ruleset `QA_RULESET_BOOTSTRAP_V1`) — ver servicio `instrument_qa_rules_v1` y rutas `POST /field/instrument-revisions/{id}/qa-run`.
+
 Todos los QA hallazgos comparten mismo **tipo contrato técnico** `source=instrument_qa_runtime` hasta split futuro granular.
 
 ---
@@ -116,7 +118,7 @@ Todos los QA hallazgos comparten mismo **tipo contrato técnico** `source=instru
 |------------------------------|---------------|
 | ADR físico ubicación nuevas tablas motor reglas naming | Backend lead |
 | JSON schema `instrument_spec` draft + ejemplo en `examples/` (**hecho:** `instrument_spec_v1.schema.json`, `instrument_spec_v1.example.json`) — evolucionar con Builder | Backend + método |
-| Modelo físico **InstrumentRevision** + QA findings + readiness signatures (ver [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md)) | Backend |
+| Modelo físico **InstrumentRevision** + QA runs + readiness signatures (ver [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md)) | Backend |
 | Modelo físico inicial `study` + migra backfill provisional `field_projects` | Backend |
 | Matriz Roles→Readiness permisos efectivos | Prod + seguridad |
 

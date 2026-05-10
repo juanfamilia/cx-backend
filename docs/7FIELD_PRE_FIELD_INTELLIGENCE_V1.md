@@ -133,7 +133,7 @@ Errores y pérdidas en ejecución siguen en **Field Control** ya implementado; P
 
 ## 7. API REST (`/api/v1/field`)
 
-**Implementado (persistencia + auditoría schema):** tabla `field_instrument_revisions`, multi-tenant por `company_id` + FK a `field_studies`, índice único parcial `(study_id, revision_label)` sobre filas activas, campos `last_validation_*` tras `POST .../validate`.
+**Implementado (persistencia + auditoría schema):** tabla `field_instrument_revisions`, multi-tenant por `company_id` + FK a `field_studies`, índice único parcial `(study_id, revision_label)` sobre filas activas, campos `last_validation_*` tras `POST .../validate`. **Auto QA bootstrap:** tabla `field_instrument_qa_runs`, motor determinístico **QA_RULE_001–005** (`QA_RULESET_BOOTSTRAP_V1`), hallazgos `source=instrument_qa_runtime`.
 
 | Método | Ruta | Propósito |
 |--------|------|-----------|
@@ -143,6 +143,8 @@ Errores y pérdidas en ejecución siguen en **Field Control** ya implementado; P
 | `GET` | `/field/instrument-revisions/{revision_id}` | Detalle + **`spec`** completo (`FieldInstrumentRevisionWithSpec`). |
 | `PATCH` | `/field/instrument-revisions/{revision_id}` | Solo `draft`: reemplazo de `spec`, metadata; `status=archived` para cerrar (edición bloqueada después). |
 | `POST` | `/field/instrument-revisions/{revision_id}/validate` | Ejecuta schema, persiste auditoría (`last_validation_at`, `last_validation_ok`, `issue_count`, `content_hash`) y devuelve informe. |
+| `POST` | `/field/instrument-revisions/{revision_id}/qa-run` | Ejecuta QA_RULE_001–005 y guarda corrida (`InstrumentQAExecuteResponse`: conteos STOP/FIX_NOW + lista hallazgos + snapshot JSON). |
+| `GET` | `/field/instrument-revisions/{revision_id}/qa-runs` | Historial de corridas QA (`limit` 1–100; últimas primero). |
 
 **Parámetro recurrente:** `company_id` query para **rol 0** cuando aplique la misma regla que el resto de Field.
 
@@ -151,8 +153,7 @@ Errores y pérdidas en ejecución siguen en **Field Control** ya implementado; P
 | Método | Ruta | Propósito |
 |--------|------|-----------|
 | `GET` | `/field/framework-templates` | Catálogo plantillas por `study_type`. |
-| `POST` | `/field/instrument-revisions/{id}/qa-run` | Motor QA_RULE_* determinístico + hallazgos tipados. |
-| `GET` | `/field/instrument-revisions/{id}/qa-findings` | Paginación hallazgos QA. |
+| Políticas tenant | Motor QA ampliado | Pesos por severidad, lexicones versionados, reglas MONITOR (fatiga, orden bloques), IA async. |
 | `POST` | `/field/instrument-revisions/{id}/readiness-sign` | Firma L4. |
 | `GET` | `/field/instrument-revisions/{id}/readiness` | Estado readiness agregado. |
 
@@ -179,7 +180,7 @@ No vender PRE-FIELD aislado primero. Historia acordada: **Field Control → Auto
 | # | Ítem | Notas |
 |---|------|--------|
 | 1 | Tablas `instrument_revisions`, `instrument_qa_findings`, `readiness_signatures` | **`field_instrument_revisions`** implementada; QA findings + readiness pendientes |
-| 2 | Motor QA_RULE_001–005 sobre JSON cargado | Tests unitarios con `instrument_spec_v1.example.json` |
+| 2 | Motor QA_RULE_001–005 sobre JSON cargado | **Implementado** — `app/services/instrument_qa_rules_v1.py` + `POST .../qa-run` |
 | 3 | Servicio `validate_instrument_spec` | JSON Schema en CI + **`POST .../validate`** y **`POST .../instrument-spec/validate`** |
 | 4 | Seed de `framework_templates` mínimo (CX + uno cuanti genérico) | |
 | 5 | OpenAPI tags **Siete Field — PRE-FIELD** | Rutas documentadas en mismo tag `Siete Field` |
@@ -192,5 +193,6 @@ No vender PRE-FIELD aislado primero. Historia acordada: **Field Control → Auto
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.2** | 2026-05-08 | QA_RULE_001–005 bootstrap: motor determinístico, tabla `field_instrument_qa_runs`, `POST/GET .../qa-run(s)`. |
 | **v1.1** | 2026-05-08 | API implementada: revisiones persistidas, validate stateful/stateless, auditoría `last_validation_*`; migración `field_instrument_revisions`. |
 | **v1.0** | 2026-05-06 | Primera especificación: módulos, dominio, API blueprint, límites, alineación L2–L5 y ejemplo/schema `instrument_spec`. |

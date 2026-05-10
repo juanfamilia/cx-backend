@@ -25,7 +25,10 @@ jobs:
           uv run ruff check
           app/services/instrument_spec_validate.py
           app/services/field_instrument_revision_services.py
+          app/services/instrument_qa_rules_v1.py
+          app/services/field_instrument_qa_services.py
           app/models/field_instrument_revision_model.py
+          app/models/field_instrument_qa_run_model.py
           tests/
 
       - name: Pytest (contract + unit)

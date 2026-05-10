@@ -40,6 +40,10 @@ from app.models.field_execution_model import (
     FieldSurveyPublic,
 )
 from app.models.field_overview_model import FieldProjectOverviewRow
+from app.models.field_instrument_qa_run_model import (
+    FieldInstrumentQARunPublic,
+    InstrumentQAExecuteResponse,
+)
 from app.models.field_instrument_revision_model import (
     FieldInstrumentRevisionCreate,
     FieldInstrumentRevisionPatch,
@@ -89,6 +93,10 @@ from app.services.field_dooblo_catalog_service import (
     list_dooblo_customers_catalog,
     list_dooblo_organization_studio_projects_catalog,
     list_dooblo_project_surveys_catalog,
+)
+from app.services.field_instrument_qa_services import (
+    execute_instrument_qa_bootstrap_run,
+    list_instrument_qa_runs,
 )
 from app.services.field_instrument_revision_services import (
     create_instrument_revision,
@@ -837,6 +845,46 @@ async def validate_stored_instrument_revision(
 ):
     return await validate_instrument_revision_and_persist(
         session, request.state.user, revision_id, company_id
+    )
+
+
+@router.post(
+    "/instrument-revisions/{revision_id}/qa-run",
+    response_model=InstrumentQAExecuteResponse,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Ejecutar motor QA_RULE_001–005 (bootstrap) y persistir corrida",
+    description=(
+        "Reglas determinísticas sobre `instrument_spec` vigente: doble varilla, leading/lexicón, "
+        "cuotas, escalas y grafo de routing. Severidades STOP / FIX_NOW. "
+        "Histórico en `field_instrument_qa_runs` (`source=instrument_qa_runtime`)."
+    ),
+)
+async def run_instrument_revision_qa_bootstrap(
+    revision_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await execute_instrument_qa_bootstrap_run(
+        session, request.state.user, revision_id, company_id
+    )
+
+
+@router.get(
+    "/instrument-revisions/{revision_id}/qa-runs",
+    response_model=list[FieldInstrumentQARunPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Historial de corridas QA bootstrap para la revisión",
+)
+async def list_instrument_revision_qa_runs(
+    revision_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    limit: int = Query(20, ge=1, le=100),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_instrument_qa_runs(
+        session, request.state.user, revision_id, company_id, limit=limit
     )
 
 
