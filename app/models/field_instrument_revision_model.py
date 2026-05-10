@@ -64,11 +64,37 @@ class FieldInstrumentRevisionCreate(SQLModel):
         description="Si se omite, se asigna label único por estudio (vN).",
     )
     framework_template_id: str | None = PydanticField(default=None, max_length=128)
+    framework_template_slug: str | None = PydanticField(
+        default=None,
+        max_length=128,
+        description="Catálogo `GET /field/framework-templates`; si hay `spec`, este campo solo traza (`framework_template_id`).",
+    )
+    framework_template_version: str | None = PydanticField(
+        default=None,
+        max_length=32,
+        description="Versión de catálogo (p.ej. `2026.1`); por defecto `2026.1` cuando hay slug.",
+    )
     notes: str | None = None
 
     @field_validator("revision_label", mode="before")
     @classmethod
     def _strip_label(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s if s else None
+
+    @field_validator("framework_template_slug", mode="before")
+    @classmethod
+    def _strip_framework_slug(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s if s else None
+
+    @field_validator("framework_template_version", mode="before")
+    @classmethod
+    def _strip_framework_version(cls, v: object) -> str | None:
         if v is None:
             return None
         s = str(v).strip()

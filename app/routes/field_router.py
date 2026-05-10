@@ -53,6 +53,7 @@ from app.models.field_instrument_revision_model import (
     InstrumentSpecValidateBody,
     InstrumentSpecValidationReport,
 )
+from app.models.field_framework_template_model import FieldFrameworkTemplatePublic
 from app.models.field_study_model import FieldStudyCreate, FieldStudyPublic
 from app.models.field_readiness_model import (
     FieldReadinessPolicyPublic,
@@ -82,6 +83,10 @@ from app.services.field_ledger_services import (
     list_import_runs_for_project,
     list_ledger_events_for_project,
     list_rows_for_run,
+)
+from app.services.field_framework_template_services import (
+    FRAMEWORK_TEMPLATE_STUDY_TYPES,
+    list_field_framework_templates_for_api,
 )
 from app.services.field_execution_services import (
     list_project_kpis,
@@ -762,6 +767,39 @@ async def validate_instrument_spec_http(
 
 
 @router.get(
+    "/framework-templates",
+    response_model=list[FieldFrameworkTemplatePublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Catálogo Framework Library (plantillas PRE-FIELD)",
+    description=(
+        "Plantillas metodológicas activas (`coverage_rules`, `stub_spec_json`). "
+        "Filtro opcional por `study_type` alineado al enum de `instrument_spec`."
+    ),
+)
+async def list_framework_templates(
+    request: Request,
+    study_type: Optional[str] = Query(
+        None,
+        description="Filtra por tipo de estudio exacto (p. ej. cx, ua, brand_tracking).",
+    ),
+    session: AsyncSession = Depends(get_db),
+):
+    if study_type is not None:
+        st = study_type.strip().lower()
+        if st not in FRAMEWORK_TEMPLATE_STUDY_TYPES:
+            raise HTTPException(
+                status_code=422,
+                detail="study_type debe ser uno del enum instrument_spec (cx, ua, brand_tracking, …).",
+            )
+        study_type_norm = st
+    else:
+        study_type_norm = None
+    return await list_field_framework_templates_for_api(
+        session, request.state.user, study_type=study_type_norm
+    )
+
+
+@router.get(
     "/studies/{study_id}/instrument-revisions",
     response_model=list[FieldInstrumentRevisionPublic],
     dependencies=[Depends(require_field_product_access)],
@@ -788,7 +826,10 @@ async def list_study_instrument_revisions(
     summary="Crear revisión borrador (instrument_spec)",
     description=(
         "Crea una revisión `draft` versionada por `revision_label` único por estudio "
-        "(auto `vN` si se omite). `spec` opcional: si falta, plantilla mínima válida por schema."
+        "(auto `vN` si se omite). Si no envía `spec`, puede usar plantilla de catálogo con "
+        "`framework_template_slug` (+ `framework_template_version`, por defecto `2026.1`) "
+        "o la plantilla mínima interna. Si envía `spec` y un slug válido, persiste trazabilidad "
+        "en `framework_template_id` como `slug@version`."
     ),
 )
 async def create_study_instrument_revision(

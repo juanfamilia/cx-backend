@@ -21,6 +21,7 @@ from app.models.field_instrument_revision_model import (
 )
 from app.models.field_study_model import FieldStudy
 from app.models.user_model import User
+from app.services.field_framework_template_services import get_field_framework_template_by_slug_version
 from app.services.field_study_services import assert_field_staff
 from app.services.instrument_spec_validate import (
     compute_instrument_spec_content_hash,
@@ -161,9 +162,34 @@ async def create_instrument_revision(
     cid = _effective_company_id(user, company_id)
     await _get_study_for_company(session, study_id, cid)
 
-    spec = _assert_spec_object(
-        body.spec if body.spec is not None else DEFAULT_INSTRUMENT_SPEC_STUB
-    )
+    slug = body.framework_template_slug
+    need_stub_from_template = body.spec is None
+    tpl_row = None
+    tpl_ref: str | None = None
+    if slug:
+        ver = (body.framework_template_version or "2026.1").strip()
+        tpl_row = await get_field_framework_template_by_slug_version(session, slug, ver)
+        if tpl_row is None:
+            if need_stub_from_template:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Plantilla framework no encontrada o inactiva",
+                )
+            tpl_row = None
+        else:
+            tpl_ref = f"{tpl_row.slug}@{tpl_row.framework_version}"
+
+    if body.spec is not None:
+        spec = _assert_spec_object(body.spec)
+    elif tpl_row is not None:
+        if tpl_row.stub_spec_json is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Plantilla sin stub_spec_json",
+            )
+        spec = _assert_spec_object(dict(tpl_row.stub_spec_json))
+    else:
+        spec = _assert_spec_object(DEFAULT_INSTRUMENT_SPEC_STUB)
     title, ver_decl = _derive_spec_metadata(spec)
     content_hash = compute_instrument_spec_content_hash(spec)
 
@@ -176,7 +202,9 @@ async def create_instrument_revision(
         company_id=cid,
         revision_label=label,
         status="draft",
-        framework_template_id=(body.framework_template_id or "").strip() or None,
+        framework_template_id=tpl_ref
+        if tpl_ref is not None
+        else ((body.framework_template_id or "").strip() or None),
         notes=(body.notes or "").strip() or None,
         title=title,
         instrument_spec_version_declared=ver_decl,

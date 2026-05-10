@@ -133,13 +133,14 @@ Errores y pérdidas en ejecución siguen en **Field Control** ya implementado; P
 
 ## 7. API REST (`/api/v1/field`)
 
-**Implementado (persistencia + auditoría schema):** tabla `field_instrument_revisions`, multi-tenant por `company_id` + FK a `field_studies`, índice único parcial `(study_id, revision_label)` sobre filas activas, campos `last_validation_*` tras `POST .../validate`. **Auto QA bootstrap:** tabla `field_instrument_qa_runs`, motor determinístico **QA_RULE_001–005** (`QA_RULESET_BOOTSTRAP_V1`). **Readiness Gate L4:** `company_field_readiness_policy`, `field_readiness_signatories`, `field_readiness_signatures` (snapshot `spec_hash` + `qa_run_id`); revisión pasa a **`approved`** cuando política + QA + schema + firmas requeridas están en verde.
+**Implementado (persistencia + auditoría schema):** tabla `field_instrument_revisions`, multi-tenant por `company_id` + FK a `field_studies`, índice único parcial `(study_id, revision_label)` sobre filas activas, campos `last_validation_*` tras `POST .../validate`. **Auto QA bootstrap:** tabla `field_instrument_qa_runs`, motor determinístico **QA_RULE_001–005** (`QA_RULESET_BOOTSTRAP_V1`). **Readiness Gate L4:** `company_field_readiness_policy`, `field_readiness_signatories`, `field_readiness_signatures` (snapshot `spec_hash` + `qa_run_id`); revisión pasa a **`approved`** cuando política + QA + schema + firmas requeridas están en verde. **Framework Library:** tabla `field_framework_templates`, seed versionado (`2026.1`), **`GET /field/framework-templates`** y borrador desde catálogo vía `framework_template_slug` en **`POST .../instrument-revisions`**.
 
 | Método | Ruta | Propósito |
 |--------|------|-----------|
 | `POST` | `/field/instrument-spec/validate` | Validación JSON Schema **stateless** (`InstrumentSpecValidationReport`: `ok`, `schema_issues`, `content_hash`). |
+| `GET` | `/field/framework-templates` | Catálogo de plantillas activas (`coverage_rules`, `stub_spec_json`); query opcional `study_type` (enum `instrument_spec`). |
 | `GET` | `/field/studies/{study_id}/instrument-revisions` | Lista revisiones activas del estudio (sin `spec` completo; liviano). |
-| `POST` | `/field/studies/{study_id}/instrument-revisions` | Crea `draft`; `spec` opcional o plantilla mínima válida; `revision_label` opcional (`vN`). |
+| `POST` | `/field/studies/{study_id}/instrument-revisions` | Crea `draft`; `spec` opcional, **stub desde Framework Library** (`framework_template_slug` + versión), plantilla mínima interna, o mixto (`spec` + slug para trazabilidad `slug@version`); `revision_label` opcional (`vN`). |
 | `GET` | `/field/instrument-revisions/{revision_id}` | Detalle + **`spec`** completo (`FieldInstrumentRevisionWithSpec`). |
 | `PATCH` | `/field/instrument-revisions/{revision_id}` | Solo `draft`: reemplazo de `spec`, metadata; `status=archived` para cerrar (edición bloqueada después). |
 | `POST` | `/field/instrument-revisions/{revision_id}/validate` | Ejecuta schema, persiste auditoría (`last_validation_at`, `last_validation_ok`, `issue_count`, `content_hash`) y devuelve informe. |
@@ -188,7 +189,7 @@ No vender PRE-FIELD aislado primero. Historia acordada: **Field Control → Auto
 | 1 | Tablas persistencia PRE-FIELD | **`field_instrument_revisions`**, **`field_instrument_qa_runs`**, Readiness (`policy`, `signatories`, `signatures`). Tabla aparte `instrument_qa_findings` normalizada — backlog opcional |
 | 2 | Motor QA_RULE_001–005 sobre JSON cargado | **Implementado** — `app/services/instrument_qa_rules_v1.py` + `POST .../qa-run` |
 | 3 | Firmas Readiness L4 + políticas bloqueo | **Implementado** — tablas `company_field_readiness_policy`, `field_readiness_signatories`, `field_readiness_signatures`; evaluador `field_readiness_evaluator` |
-| 4 | Seed de `framework_templates` mínimo (CX + uno cuanti genérico) | |
+| 4 | Seed `field_framework_templates` + catálogo API | **Implementado** — migración `z1y2x3w4v5u6`, `GET /field/framework-templates`, creación borrador con `framework_template_slug` |
 | 5 | OpenAPI tags **Siete Field — PRE-FIELD** | Rutas documentadas en mismo tag `Siete Field` |
 | 6 | Job opcional IA | Cola async, mismo contrato de hallazgo |
 | 7 | Enlace `FieldProject.study_id` población desde UI estudio | Ya soportado en PATCH proyecto |
@@ -199,6 +200,7 @@ No vender PRE-FIELD aislado primero. Historia acordada: **Field Control → Auto
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.4** | 2026-05-10 | Framework Library: tabla `field_framework_templates`, `GET /field/framework-templates`, borrador desde plantilla (`framework_template_slug`). |
 | **v1.3** | 2026-05-09 | Readiness Gate L4: política por empresa, signatarios, firmas con snapshot, estado agregado y transición `approved`. |
 | **v1.2** | 2026-05-08 | QA_RULE_001–005 bootstrap: motor determinístico, tabla `field_instrument_qa_runs`, `POST/GET .../qa-run(s)`. |
 | **v1.1** | 2026-05-08 | API implementada: revisiones persistidas, validate stateful/stateless, auditoría `last_validation_*`; migración `field_instrument_revisions`. |
