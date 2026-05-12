@@ -7,7 +7,7 @@ Prefijo: `/api/v1/field`
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
@@ -54,6 +54,11 @@ from app.models.field_instrument_revision_model import (
     InstrumentSpecValidationReport,
 )
 from app.models.field_framework_template_model import FieldFrameworkTemplatePublic
+from app.models.field_framework_waiver_model import (
+    FieldFrameworkWaiverCreate,
+    FieldFrameworkWaiverPublic,
+)
+from app.models.field_study_brief_model import FieldStudyBriefPatch, FieldStudyBriefPublic
 from app.models.field_study_model import FieldStudyCreate, FieldStudyPublic
 from app.models.field_readiness_model import (
     FieldReadinessPolicyPublic,
@@ -128,6 +133,16 @@ from app.services.field_readiness_services import (
     sign_readiness_for_revision,
     soft_delete_readiness_signatory,
     upsert_company_readiness_policy,
+)
+from app.services.field_framework_waiver_services import (
+    create_framework_waiver_for_revision,
+    list_framework_waivers_for_revision,
+)
+from app.services.field_study_brief_services import (
+    approve_field_study_brief_client,
+    approve_field_study_brief_internal,
+    get_field_study_brief_public,
+    patch_field_study_brief,
 )
 from app.services.field_study_services import create_field_study, list_field_studies
 from app.services.company_dooblo_service import (
@@ -745,6 +760,91 @@ async def create_study(
     return await create_field_study(session, request.state.user, body)
 
 
+@router.get(
+    "/studies/{study_id}/brief",
+    response_model=FieldStudyBriefPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Brief PRE-FIELD del estudio (lineage / snapshots)",
+)
+async def get_study_brief(
+    study_id: int,
+    request: Request,
+    response: Response,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    out = await get_field_study_brief_public(
+        session, request.state.user, study_id, company_id
+    )
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
+    return out
+
+
+@router.patch(
+    "/studies/{study_id}/brief",
+    response_model=FieldStudyBriefPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Actualizar payload/score del brief (no permite si ya aprobado)",
+)
+async def patch_study_brief(
+    study_id: int,
+    request: Request,
+    response: Response,
+    body: FieldStudyBriefPatch,
+    company_id: Optional[int] = Query(None),
+    session: AsyncSession = Depends(get_db),
+):
+    out = await patch_field_study_brief(
+        session, request.state.user, study_id, body, company_id
+    )
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
+    return out
+
+
+@router.post(
+    "/studies/{study_id}/brief/approve-internal",
+    response_model=FieldStudyBriefPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Marcar brief aprobado internamente (gate opcional Readiness)",
+)
+async def approve_study_brief_internal_route(
+    study_id: int,
+    request: Request,
+    response: Response,
+    company_id: Optional[int] = Query(None),
+    session: AsyncSession = Depends(get_db),
+):
+    out = await approve_field_study_brief_internal(
+        session, request.state.user, study_id, company_id
+    )
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
+    return out
+
+
+@router.post(
+    "/studies/{study_id}/brief/approve-client",
+    response_model=FieldStudyBriefPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Marcar visto bueno cliente (B2B2B; requiere approved_internal)",
+)
+async def approve_study_brief_client_route(
+    study_id: int,
+    request: Request,
+    response: Response,
+    company_id: Optional[int] = Query(None),
+    session: AsyncSession = Depends(get_db),
+):
+    out = await approve_field_study_brief_client(
+        session, request.state.user, study_id, company_id
+    )
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
+    return out
+
+
 # --- PRE-FIELD: revisiones instrument_spec + validación schema (gobernanza previa al campo)
 
 
@@ -882,6 +982,41 @@ async def patch_instrument_revision_http(
     session: AsyncSession = Depends(get_db),
 ):
     return await patch_instrument_revision(
+        session, request.state.user, revision_id, body, company_id
+    )
+
+
+@router.get(
+    "/instrument-revisions/{revision_id}/framework-waivers",
+    response_model=list[FieldFrameworkWaiverPublic],
+    dependencies=[Depends(require_field_product_access)],
+    summary="Listar waivers de framework ligados a esta revisión",
+)
+async def list_revision_framework_waivers(
+    revision_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await list_framework_waivers_for_revision(
+        session, request.state.user, revision_id, company_id
+    )
+
+
+@router.post(
+    "/instrument-revisions/{revision_id}/framework-waivers",
+    response_model=FieldFrameworkWaiverPublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Registrar waiver explícito (solo revisión draft)",
+)
+async def create_revision_framework_waiver(
+    revision_id: int,
+    request: Request,
+    body: FieldFrameworkWaiverCreate,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await create_framework_waiver_for_revision(
         session, request.state.user, revision_id, body, company_id
     )
 

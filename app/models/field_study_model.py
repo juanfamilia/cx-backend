@@ -9,6 +9,11 @@ from sqlmodel import Field, SQLModel
 
 class FieldStudyBase(SQLModel):
     name: str = Field(max_length=500)
+    primary_language: str | None = Field(
+        default=None,
+        max_length=16,
+        description="BCP-47 corto (ej. es, es-MX); null hasta configurarlo.",
+    )
     description: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     status: str = Field(
         default="draft",

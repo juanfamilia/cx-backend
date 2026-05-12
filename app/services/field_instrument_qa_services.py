@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import desc
 from sqlmodel import select
 
+from app.models.field_instrument_revision_model import FieldInstrumentRevision
 from app.models.field_instrument_qa_run_model import (
     FieldInstrumentQARun,
     FieldInstrumentQARunPublic,
@@ -68,6 +69,12 @@ async def execute_instrument_qa_bootstrap_run(
     session.add(row)
     await session.commit()
     await session.refresh(row)
+
+    rev_row = await session.get(FieldInstrumentRevision, revision_id)
+    if rev_row is not None:
+        rev_row.last_ruleset_version = QA_RULESET_BOOTSTRAP_V1
+        await session.commit()
+        await session.refresh(rev_row)
 
     findings_pub = [
         InstrumentQAFindingPublic(

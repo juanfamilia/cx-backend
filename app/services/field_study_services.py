@@ -10,6 +10,7 @@ from app.services.field_project_services import (
     _company_id_for_write,
     assert_field_staff,
 )
+from app.services.field_study_brief_services import ensure_field_study_brief_row
 from app.utils.exeptions import PermissionDeniedException
 
 
@@ -67,4 +68,5 @@ async def create_field_study(
     session.add(row)
     await session.commit()
     await session.refresh(row)
+    await ensure_field_study_brief_row(session, row.id, cid)
     return FieldStudyPublic.model_validate(row)

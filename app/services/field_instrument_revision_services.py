@@ -22,6 +22,7 @@ from app.models.field_instrument_revision_model import (
 from app.models.field_study_model import FieldStudy
 from app.models.user_model import User
 from app.services.field_framework_template_services import get_field_framework_template_by_slug_version
+from app.services.field_study_brief_services import ensure_field_study_brief_row
 from app.services.field_study_services import assert_field_staff
 from app.services.instrument_spec_validate import (
     compute_instrument_spec_content_hash,
@@ -98,7 +99,8 @@ async def _get_study_for_company(
     study_id: int,
     company_id: int,
 ) -> FieldStudy:
-    st = await session.get(FieldStudy, study_id)
+    stmt = select(FieldStudy).where(FieldStudy.id == study_id)
+    st = (await session.execute(stmt)).scalar_one_or_none()
     if st is None:
         raise NotFoundException("Estudio Field no encontrado")
     if st.company_id != company_id:
@@ -193,6 +195,14 @@ async def create_instrument_revision(
     title, ver_decl = _derive_spec_metadata(spec)
     content_hash = compute_instrument_spec_content_hash(spec)
 
+    brief_row = await ensure_field_study_brief_row(session, study_id, cid)
+
+    framework_catalog_version: str | None = None
+    if tpl_row is not None:
+        framework_catalog_version = tpl_row.framework_version
+    elif body.framework_template_version:
+        framework_catalog_version = body.framework_template_version.strip()
+
     label = body.revision_label
     if label is None:
         label = await _allocate_revision_label(session, study_id)
@@ -208,6 +218,8 @@ async def create_instrument_revision(
         notes=(body.notes or "").strip() or None,
         title=title,
         instrument_spec_version_declared=ver_decl,
+        brief_snapshot_hash=brief_row.body_hash or "",
+        framework_catalog_version=framework_catalog_version,
         spec_json=spec,
         content_hash=content_hash,
         created_by_user_id=user.id,

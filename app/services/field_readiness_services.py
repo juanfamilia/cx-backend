@@ -13,6 +13,7 @@ from sqlmodel import select
 
 from app.models.field_instrument_qa_run_model import FieldInstrumentQARun
 from app.models.field_instrument_revision_model import FieldInstrumentRevisionPublic
+from app.models.field_study_brief_model import FieldStudyBrief
 from app.models.field_readiness_model import (
     CompanyFieldReadinessPolicy,
     FieldReadinessPolicyPublic,
@@ -38,6 +39,7 @@ from app.services.field_readiness_evaluator import (
     RevisionGateSnapshot,
     evaluate_readiness_gates,
 )
+from app.services.field_study_brief_services import brief_allows_readiness
 from app.services.field_study_services import assert_field_staff
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
@@ -67,6 +69,7 @@ def _policy_row_to_view(row: CompanyFieldReadinessPolicy) -> ReadinessPolicyView
         block_on_qa_fix_now=row.block_on_qa_fix_now,
         require_qa_run=row.require_qa_run,
         enforce_signatory_grants=row.enforce_signatory_grants,
+        require_brief_approved=getattr(row, "require_brief_approved", False),
     )
 
 
@@ -82,6 +85,7 @@ def _policy_row_to_public(row: CompanyFieldReadinessPolicy) -> FieldReadinessPol
         block_on_qa_fix_now=row.block_on_qa_fix_now,
         require_qa_run=row.require_qa_run,
         enforce_signatory_grants=row.enforce_signatory_grants,
+        require_brief_approved=getattr(row, "require_brief_approved", False),
     )
 
 
@@ -97,6 +101,7 @@ def _default_policy_public(company_id: int) -> FieldReadinessPolicyPublic:
         block_on_qa_fix_now=False,
         require_qa_run=True,
         enforce_signatory_grants=False,
+        require_brief_approved=False,
     )
 
 
@@ -132,6 +137,7 @@ async def upsert_company_readiness_policy(
             block_on_qa_fix_now=base.block_on_qa_fix_now,
             require_qa_run=base.require_qa_run,
             enforce_signatory_grants=base.enforce_signatory_grants,
+            require_brief_approved=base.require_brief_approved,
             updated_by_user_id=user.id,
         )
         session.add(row)
@@ -303,12 +309,17 @@ async def build_readiness_gate(
         last_validation_content_hash=rev_row.last_validation_content_hash,
     )
 
+    brief_stmt = select(FieldStudyBrief).where(FieldStudyBrief.study_id == rev_row.study_id)
+    brief_row = (await session.execute(brief_stmt)).scalar_one_or_none()
+    brief_ok = brief_allows_readiness(brief_row)
+
     ev = evaluate_readiness_gates(
         policy=policy_view,
         revision=rev_snap,
         qa=qa_snap,
         active_signatures=active_sig,
         signatory_user_ids_by_role=matrix,
+        brief_ready_for_readiness=brief_ok,
     )
 
     sig_pub = await _signature_rows_public(session, rid, cid)
@@ -371,6 +382,7 @@ async def get_readiness_for_revision(
             block_on_qa_fix_now=False,
             require_qa_run=True,
             enforce_signatory_grants=False,
+            require_brief_approved=False,
         )
     )
 
@@ -420,6 +432,7 @@ async def sign_readiness_for_revision(
             block_on_qa_fix_now=False,
             require_qa_run=True,
             enforce_signatory_grants=False,
+            require_brief_approved=False,
         )
     )
 

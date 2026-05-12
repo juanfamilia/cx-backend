@@ -24,6 +24,12 @@ class CompanyFieldReadinessPolicy(SQLModel, table=True):
     block_on_qa_fix_now: bool = Field(default=False)
     require_qa_run: bool = Field(default=True)
     enforce_signatory_grants: bool = Field(default=False)
+    require_brief_approved: bool = Field(
+        default=False,
+        description=(
+            "Si true, Readiness bloquea hasta brief del Study en approved_internal o approved."
+        ),
+    )
 
     updated_at: datetime = Field(
         sa_column=Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -73,6 +79,7 @@ class FieldReadinessPolicyPublic(SQLModel):
     block_on_qa_fix_now: bool
     require_qa_run: bool
     enforce_signatory_grants: bool
+    require_brief_approved: bool
 
 
 class FieldReadinessPolicyUpsert(SQLModel):
@@ -87,6 +94,7 @@ class FieldReadinessPolicyUpsert(SQLModel):
     block_on_qa_fix_now: bool | None = None
     require_qa_run: bool | None = None
     enforce_signatory_grants: bool | None = None
+    require_brief_approved: bool | None = None
 
 
 class FieldReadinessSignatoryPublic(SQLModel):

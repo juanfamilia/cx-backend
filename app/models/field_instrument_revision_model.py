@@ -22,6 +22,9 @@ class FieldInstrumentRevisionBase(SQLModel):
     notes: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     title: str | None = Field(default=None, max_length=500)
     instrument_spec_version_declared: str | None = Field(default=None, max_length=64)
+    brief_snapshot_hash: str = Field(default="", max_length=128)
+    framework_catalog_version: str | None = Field(default=None, max_length=32)
+    last_ruleset_version: str | None = Field(default=None, max_length=64)
 
 
 class FieldInstrumentRevision(FieldInstrumentRevisionBase, table=True):

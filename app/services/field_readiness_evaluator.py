@@ -28,6 +28,7 @@ class ReadinessPolicyView:
     block_on_qa_fix_now: bool
     require_qa_run: bool
     enforce_signatory_grants: bool
+    require_brief_approved: bool
 
 
 @dataclass(frozen=True)
@@ -79,6 +80,7 @@ def evaluate_readiness_gates(
     qa: QARunGateSnapshot,
     active_signatures: dict[str, tuple[str, int | None]],
     signatory_user_ids_by_role: dict[str, frozenset[int]] | None,
+    brief_ready_for_readiness: bool = True,
 ) -> ReadinessEvaluation:
     """
     active_signatures: firma vigente por rol -> (snapshot_spec_hash, snapshot_qa_run_id).
@@ -88,6 +90,9 @@ def evaluate_readiness_gates(
 
     if revision.status == "archived":
         blocking.append("revision_archived")
+
+    if policy.require_brief_approved and not brief_ready_for_readiness:
+        blocking.append("brief_not_approved")
 
     required = required_roles_for_policy(policy)
 
