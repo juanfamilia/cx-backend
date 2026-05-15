@@ -1,0 +1,4 @@
+case_id,wave_id,interviewer_id,disposition,started_at,completed_at,duration_sec,quota_cell,lat,lon,flags
+CASE-001,W2026-A,INT-01,completa,2026-04-22T09:00:00,2026-04-22T09:18:30,1110,Q1,18.47,-69.93,ok
+CASE-002,W2026-A,INT-01,completa,2026-04-22T10:05:00,2026-04-22T10:22:15,1035,Q2,18.48,-69.92,
+CASE-003,W2026-B,INT-02,abandono,2026-04-22T11:00:00,2026-04-22T11:05:00,300,,,,

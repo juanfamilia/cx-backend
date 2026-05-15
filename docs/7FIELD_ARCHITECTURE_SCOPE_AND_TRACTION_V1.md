@@ -11,6 +11,7 @@
 3. **“Salud”** aquí significa: **KPIs acordados** + **scores / riesgo** derivados de reglas versionadas y, cuando aplique, **hallazgos** que explican *por qué* algo está en rojo o ámbar — no una tabla infinita de respuestas crudas.
 4. **Misma lectura operativa para cualquier proveedor:** Dooblo, Qualtrics u otro sistema de levantamiento solo cambian la **tubería de ingesta**; quien use 7Field debe **entender lo mismo** — qué pasa en campo, salud del proyecto, alertas — sin vocabulario ni flujos de pantalla distintos por marca del EMS.
 5. **Antes de campo — instrumento gobernado:** el ciclo natural del estudio incluye **diseño y validación del instrumento** (cuestionario cuantitativo o guía cualitativa). 7Field debe ayudar a **construir, validar y auditar** ese artefacto con un **framework híbrido** (reglas determinísticas + buenas prácticas + IA asistiva + versionado + readiness humano). Esto **no** sustituye el EMS de captura ni convierte a 7Field en “otra app de encuestas”; refuerza **gobierno de la ejecución de investigación** de punta a punta.
+6. **Producto ancla y contrato único de observabilidad:** **7Field** es la capa de **control operacional** — QA, readiness, riesgo y gobierno sobre estudios y ejecución de campo — **no** una plataforma de captura. **Principio rector:** todo lo relevante debe poder converger en **hallazgos auditables bajo el mismo contrato** (PRE-FIELD, Field, scoring, IA, Readiness, intelligence ejecutiva). **No** subsistemas aislados sin camino de auditoría compartido. El espinazo comercial sigue siendo **Auto QA → Backcheck Intelligence → Cost of Error → Clever** gobernado; el resto lo refuerza.
 
 ---
 
@@ -60,6 +61,18 @@ No solo IA; no solo reglas. **Sí:** framework metodológico explícito **+** re
 **Brief → scripting guiado → revisión manual → QA / errores → listo para campo → levantamiento → pérdidas y calidad en ejecución**
 
 (La parte “campo → pérdidas” sigue siendo el Field operativo ya descrito arriba; PRE-FIELD cubre lo anterior al despliegue.)
+
+### Flujo PRE-FIELD en tres capas (experiencia objetivo)
+
+La pantalla / producto **PRE-FIELD** queda **oficialmente** organizado en tres frentes — sin saltarse etapas ni mezclar brief con instrumento técnico ni IA sin marco:
+
+| Capa | Nombre oficial | Propósito | Principio |
+|------|----------------|-----------|-----------|
+| **1** | **Brief** | Entender **todo lo que el cliente desea** (brief contratable): objetivos, público, hipótesis, restricciones, entregables, tipo de estudio tentativo. | No avanzar a instrumentación hasta brief **suficiente** (mínimos por tipo + score + aprobación humana). |
+| **2** | **Técnico / instrumento versionado** | **Versionado**, **asignación** a estudio/proyecto Field (tenant, cliente), `instrument_spec`, Framework Library, validación de esquema, Auto QA, Readiness L4. | Auditabilidad y modelo canónico; sin improvisación fuera de revisiones. |
+| **3** | **Inteligencia + Banco de guías** | Sugerencias acotadas al **framework explícito** (y waivers ligados a **revisión**); biblioteca reutilizable tras aprobaciones; ver [ADR 001](adr/001-pre-field-brief-framework-ai-guide-bank-governance.md). | La IA **complementa** criterio humano; **no** decide método solo; UX **operacional y auditada**, no “AI playground”. |
+
+La ingeniería actual cubre **sobre todo la capa 2**. Las capas **1 y 3** y el banco son roadmap de datos y políticas; **prioridad inmediata**: consolidar snapshots, hashes, lineage, gates servidor, trazabilidad IA y metadata de storage **antes** de ampliar superficie visual (orden **A→G** en ADR y modelo canónico).
 
 ### Árbol de módulos PRE-FIELD
 
@@ -184,6 +197,8 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 
 ## Documentación relacionada (detalle)
 
+- PRE-FIELD — **gobierno cerrado** (ADR): [adr/001-pre-field-brief-framework-ai-guide-bank-governance.md](adr/001-pre-field-brief-framework-ai-guide-bank-governance.md)
+- PRE-FIELD — **modelo canónico** (entidades, gates, bounded contexts): [7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md](7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md)
 - PRE-FIELD Intelligence (builder, framework, Auto QA, readiness, API blueprint): [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md)
 - Estrategia y pilares comerciales: [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md)
 - Gobierno de hallazgos, criticidad operativa, Clever: [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
@@ -207,3 +222,6 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v2.8 (2026‑05‑08):** PRE-FIELD API robusta — revisiones `instrument_spec` persistidas, validación stateless y con auditoría; ver doc PRE-FIELD §7.
 - **v2.9 (2026‑05‑08):** motor Auto QA bootstrap **QA_RULE_001–005** (`instrument_qa_runtime`) + histórico `field_instrument_qa_runs`.
 - **v3.0 (2026‑05‑09):** **Readiness Gate L4** — políticas de bloqueo por empresa, signatarios opcionales obligatorios, firmas con snapshot y estado `approved` en revisión.
+- **v3.1 (2026‑05‑11):** PRE-FIELD — **flujo explícito en tres capas** (brief → técnico/versionado → inteligencia asistida acotada a framework) + **banco de guías** tras aprobación cliente; alineación roadmap vs implementación actual (capa 2 prioritaria).
+- **v3.3 (2026‑05‑11):** Principio **hallazgos auditables mismo contrato** (premisa 6); PRE-FIELD nombres oficiales tres capas; prioridad **A→G** y waiver por revisión remitidos a ADR/modelo canónico.
+- **v3.2 (2026‑05‑11):** PRE-FIELD — **ADR 001** (brief, framework obligatorio, trazabilidad IA, banco de guías, gates) + **modelo canónico** enlazado desde esta doc maestra.
