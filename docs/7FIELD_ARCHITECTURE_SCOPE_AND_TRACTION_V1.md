@@ -127,6 +127,22 @@ La IA correcta es **contextual, metodológica, consultiva, operacional y acciona
 - “Esperábamos fricción aquí y el abandono es mayor.”
 - “Las respuestas abiertas sugieren ansiedad.”
 
+### Contrato análisis (backend) ↔ presentación (frontend)
+
+**Backend** (motores de reglas, validación de esquema, QA, heurísticas, scoring, IA acotada donde aplique) es responsable de **analizar** el instrumento y el contexto del estudio y de producir salidas **auditables**. Dimensiones de referencia (no exhaustivas; el catálogo fino vive en especificación del motor):
+
+- **longitud** (instrumento, bloques, ítems),
+- **fatiga** (carga y ritmo para quien responde),
+- **sesgo** (formulación, orden, priming / leading),
+- **redundancia**,
+- **orden** (secuencia frente a intención metodológica y de negocio),
+- **consistencia** (lógica, saltos, coherencia interna),
+- **cobertura metodológica** (alineación con brief, tipo de estudio y framework vigente),
+- **validaciones** (esquema, reglas QA, gates),
+- **riesgos operacionales**.
+
+**Frontend** **no** debe duplicar ese análisis para “simular” inteligencia: **solo presenta insights en lenguaje humano** (tarjetas, callouts, narrativa del recorrido) a partir de datos y resultados ya calculados en API/backend — más **mapear, ordenar y copy** que motor nuevo. El detalle técnico (reglas, hashes, JSON, lineage) permanece en **«Detalles técnicos»** u equivalente.
+
 ### Dirección visual futura — Journey Intelligence
 
 El siguiente salto **no** es drag/drop complejo ni un builder gigante como protagonista.
@@ -146,7 +162,7 @@ Producto visual objetivo: **Journey Intelligence** (preview elegante del recorri
 
 **Primitivas y experiencias dedicadas** (evitar reciclar layouts “admin” genéricos como base visual): `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`, `field-participant-journey-preview`, y hacia donde apunte el roadmap: `guided-brief-flow`, `framework-recommendation-cards`, `insight-callouts`, `study-review-experience`, `operational-priority-cards` (nombres orientativos; selectores Angular coherentes con el repo).
 
-**Evitar:** templates enormes llenos de `@if`; lógica de IA mezclada en HTML; helpers gigantes; interfaces duplicadas; tablas complejas en superficie; utilities Tailwind caóticos repetidos.
+**Evitar:** templates enormes llenos de `@if`; lógica de IA mezclada en HTML; **heurísticas de instrumento duplicadas** que debieran vivir en backend (ver § Contrato análisis backend ↔ frontend); helpers gigantes; interfaces duplicadas; tablas complejas en superficie; utilities Tailwind caóticos repetidos.
 
 **Sistema visual:** spacing consistente; tipografía que respire; menos bold; menos uppercase; menos ruido visual.
 
@@ -157,6 +173,8 @@ Producto visual objetivo: **Journey Intelligence** (preview elegante del recorri
 **Sí** usar: heurísticas; clasificación contextual; extracción de intención; agrupación semántica; riesgos metodológicos; señales operacionales; resúmenes ejecutivos. Preferir **recomendaciones pequeñas y accionables** sobre generación masiva.
 
 Python para: heurísticas metodológicas, scoring, señales, NLP liviano, embeddings, clasificación, clustering, detección de patrones, resúmenes — **sin** pipelines gigantes prematuros.
+
+El **contrato** frente al frontend está en § **Contrato análisis (backend) ↔ presentación (frontend)** arriba: el análisis profundo vive aquí; la UI solo humaniza lo ya derivado.
 
 Preferir **servicios pequeños**, outputs **auditables**, **prompts acotados**, **reglas explícitas + IA contextual**.
 
@@ -389,4 +407,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v3.4 (2026‑05‑06):** **Estrella norte** — continuidad PRE-FIELD ↔ FIELD como un solo flujo inteligente (intención viva en campo); anti‑patrones UX vs dirección deseada; rol consultivo de la IA; checklist por pantalla/feature; demo wow correcto; percepción “capa inteligente” sin competir en captura; consistencia con seniority LATAM vía producto, no copy explícito.
 - **v3.5 (2026‑05‑06):** prioridad del **siguiente salto visual/producto**: recorrido preview + narrativa participante + riesgos contextuales + señales automáticas + continuidad viva en Field + insights accionables + acompañamiento — explícitamente **no** drag/drop/builder como eje del valor.
 - **v3.7 (2026‑05‑06):** playbook **[7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md)** — secuencia obligatoria Journey Intelligence → preview visual → continuidad PRE‑FIELD→FIELD → IA consultiva → UX → progressive disclosure → Angular → Python → regla de percepción; enlace desde cabecera y documentación relacionada.
-- **v3.8 (2026‑05‑16):** dirección **metodología + UX moderna + operational intelligence + copilot IA + storytelling premium**; referencias UX gold standard (Notion AI, Linear, Stripe, Dovetail, Maze, Airtable Interfaces, FigJam/Figma Slides) y metodológicas (Ipsos, Kantar, NielsenIQ, Gallup, Bain CX, XM Institute, Forrester, ESOMAR, MRS, UX research, JTBD, CX maturity); traducción a guidance sin teoría pesada; PRE‑FIELD/FIELD/IA/visual ampliados; primitivas Angular dedicadas (`guided-brief-flow`, `framework-recommendation-cards`, etc.); checklist pantalla (premium/inteligente/complejidad visible/demo).
+- **v3.9 (2026‑05‑16):** § **Contrato análisis (backend) ↔ presentación (frontend)** — backend analiza longitud, fatiga, sesgo, redundancia, orden, consistencia, cobertura metodológica, validaciones y riesgos operacionales; frontend solo presenta insights humanos (sin duplicar motor).

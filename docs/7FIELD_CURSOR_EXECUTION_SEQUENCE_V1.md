@@ -119,6 +119,8 @@ La superficie principal debe sentirse **simple, guiada y premium**.
 
 Python apoya: scoring; heurísticas; QA inteligente; recomendaciones; contextualización; embeddings **cuando** haya valor claro.
 
+**Contrato con la UI:** el **backend analiza** (longitud, fatiga, sesgo, redundancia, orden, consistencia, cobertura metodológica, validaciones, riesgos operacionales); el **frontend solo presenta insights humanos** a partir de API/servicios — no duplicar el motor en Angular salvo formateo trivial.
+
 **No** crear complejidad técnica antes de que exista **valor perceptible** en UI/demo.
 
 Servicios pequeños; outputs auditables; reglas explícitas + IA acotada (alineado al doc maestro).
@@ -142,4 +144,5 @@ Si **no** genera ninguna con honestidad: **no priorizarla** todavía.
 
 ## Versionado
 
+- **v1.1 (2026‑05‑16):** §8 — contrato backend analiza / frontend solo insights humanos (longitud, fatiga, sesgo, redundancia, orden, consistencia, cobertura, validaciones, riesgos operacionales).
 - **v1 (2026‑05‑06):** secuencia inicial obligatoria Cursor (Journey Intelligence → preview → continuidad → IA consultiva → UX → disclosure → Angular → Python → regla de percepción).

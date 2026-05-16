@@ -13,8 +13,8 @@ alwaysApply: true
 4. **IA consultiva** — copilot senior; **no** pipeline/schema/validator/rule package en superficie.
 5. **UX** — premium, aireada, una acción principal; **no** ERP/consola legacy.
 6. **Progressive disclosure** — técnico solo en **Detalles técnicos**.
-7. **Angular** — smart/dumb; experiencias dedicadas (ver doc maestro: `guided-brief-flow`, `framework-recommendation-cards`, `field-participant-journey-preview`, …); sin mega-templates.
-8. **Python/backend** — heurísticas auditables, servicios pequeños; sin complejidad antes de valor visible.
+7. **Angular / frontend** — smart/dumb; experiencias dedicadas; **solo presentación humana** de insights (copy/cards); **no** duplicar motor de análisis del instrumento — ver doc § contrato backend ↔ frontend.
+8. **Python / backend** — heurísticas auditables; **analiza** longitud, fatiga, sesgo, redundancia, orden, consistencia, cobertura metodológica, validaciones, riesgos operacionales; servicios pequeños; sin complejidad antes de valor visible.
 9. **Priorizar** si genera percepción: entiende mi estudio / piensa mejor / ejecuta mejor / premium / avanzado pero fácil.
 
 ---
@@ -27,7 +27,7 @@ Combinar: **research methodology** (patrones reales del sector) + **UX moderna**
 
 **Referencias metodológicas — patrones, no teoría en UI:** Ipsos, Kantar, NielsenIQ, Gallup, Bain CX, XM Institute, Forrester, ESOMAR, MRS, UX research, JTBD, CX maturity (y equivalentes serios). Traducir a: decisiones guiadas, warnings, preguntas inteligentes, señales visuales — tono **consultor senior + metodología + operaciones**.
 
-Doc maestro: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico**.
+Doc maestro: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico** (incl. § **Contrato análisis backend ↔ presentación frontend**).
 
 ---
 
