@@ -16,6 +16,15 @@
 4. **Percepción deseada:** mezcla creíble de **consultor senior + director metodológico + operaciones inteligentes**.
 5. **Continuidad PRE-FIELD → FIELD.** El mismo bundle de contexto (journey, riesgos, prioridades, señales) debe poder **serializarse y reusarse** en overview/decisión Field cuando exista vínculo estudio–proyecto.
 
+### 1.1 Readiness oficial vs QA dinámico (semántica única)
+
+| Concepto | Qué es | UI / API |
+|----------|--------|----------|
+| **Readiness + validaciones persistidas** | Estado **oficial**, auditado: política empresa, firmas, última validación de **esquema** (`last_validation_*`), corrida QA **persistida** (`field_instrument_qa_runs`) donde aplique. | Etiquetas tipo «última validación guardada», panel Readiness, gates L4. |
+| **QA / study-intelligence en vivo** | Pasada **consultiva** sobre el `instrument_spec` y brief **actuales** (`GET .../study-intelligence`): QA_RULE bootstrap instantáneo + heurísticas journey sin sustituir el ledger oficial. | Etiquetas tipo «Recomendación actual» / motor dinámico; **no** mezclar copy ni semáforos con el estado Readiness sin aclarar. |
+
+**Regla:** nunca presentar ambos como la misma fuente de verdad. Si en el futuro se unifica lectura operativa, debe ser decisión explícita de producto + migración de contrato.
+
 ---
 
 ## 2. Capas de servicio (paquete Python)
@@ -136,5 +145,6 @@ Nombres en **snake_case** alineados a tablas futuras. Claves foráneas típicas:
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.2** | 2026‑05‑16 | §1.1 semántica Readiness oficial vs QA/study-intelligence dinámico (sin mezclar en UI). |
 | **v1.1** | 2026‑05‑16 | P1: endpoint `study-intelligence`, pipeline + `journey_heuristics` + esquemas Pydantic; P1 marcado entregado en §7. |
 | **v1.0** | 2026‑05‑16 | Blueprint motor backend: capas, entidades, prompts centralizados, continuidad Field, export/mappings, fases P0–P4. |
