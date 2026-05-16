@@ -51,6 +51,20 @@ No: *“estoy operando un framework complejo”.* En mercados como República Do
 
 **Demo “wow” correcto:** pegar un brief → recibir **estructura inteligente** → sentir **acompañamiento** → detectar **riesgos** → visualizar el **recorrido del participante** → ver rápido **qué falta** → pasar **naturalmente** a campo; luego FIELD **entiende el contexto** de ese estudio. El wow incorrecto: builder gigante, cientos de opciones, estudios completos generados sin control.
 
+### Siguiente gran salto visual / producto (prioridad explícita)
+
+El siguiente salto **no** debe centrarse en **drag/drop** ni en un builder tipo lienzo como protagonista del valor percibido.
+
+**Sí** debe centrarse en:
+
+- **Preview elegante del recorrido** del instrumento / participante.
+- **Narrativa visual del participante** (qué vive, en qué orden, con qué fricción esperada).
+- **Riesgos contextuales** ligados al brief y al tipo de estudio — no avisos genéricos.
+- **Señales automáticas** (patrones, umbrales, reglas + IA consultiva) que reduzcan carga cognitiva.
+- **Continuidad viva en Field**: lo decidido en PRE-FIELD visible y útil durante ejecución.
+- **Insights accionables** (qué hacer ahora, por qué importa, enlace a regla / versión cuando aplique).
+- **Sensación de acompañamiento** — guiado, humano, premium — sin convertir la UX en panel operativo denso.
+
 ### Rol de la IA
 
 La IA debe sentirse **contextual, útil, consultiva, metodológica y operacional**. **No** autónoma al punto del caos ni generando estudios enteros sin control humano explícito: acelera y advierte **dentro** del framework y gates ya definidos en este documento.
@@ -281,3 +295,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v3.2 (2026‑05‑11):** PRE-FIELD — **ADR 001** (brief, framework obligatorio, trazabilidad IA, banco de guías, gates) + **modelo canónico** enlazado desde esta doc maestra.
 - **v3.3 (2026‑05‑11):** Principio **hallazgos auditables mismo contrato** (premisa 6); PRE-FIELD nombres oficiales tres capas; prioridad **A→G** y waiver por revisión remitidos a ADR/modelo canónico.
 - **v3.4 (2026‑05‑06):** **Estrella norte** — continuidad PRE-FIELD ↔ FIELD como un solo flujo inteligente (intención viva en campo); anti‑patrones UX vs dirección deseada; rol consultivo de la IA; checklist por pantalla/feature; demo wow correcto; percepción “capa inteligente” sin competir en captura; consistencia con seniority LATAM vía producto, no copy explícito.
+- **v3.5 (2026‑05‑06):** prioridad del **siguiente salto visual/producto**: recorrido preview + narrativa participante + riesgos contextuales + señales automáticas + continuidad viva en Field + insights accionables + acompañamiento — explícitamente **no** drag/drop/builder como eje del valor.
