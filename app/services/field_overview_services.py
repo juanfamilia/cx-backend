@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.end_client_model import EndClient
@@ -21,6 +21,7 @@ from app.models.field_decision_model import (
 from app.models.field_execution_model import FieldMetric, FieldMetricPublic, FieldSurvey
 from app.models.field_ledger_model import FieldFinding, FieldFindingPublic
 from app.models.field_overview_model import FieldProjectOverviewRow
+from app.models.field_participant_journey_model import FieldParticipantJourney
 from app.models.field_project_model import FieldImportRun, FieldProjectPublic
 from app.models.field_study_model import FieldStudy
 from app.models.user_model import User
@@ -30,6 +31,7 @@ from app.services.field_project_services import (
     assert_field_staff,
     list_field_projects,
 )
+from app.study_intelligence.schemas import StudyIntelligenceBundlePublic
 
 
 def _utc_naive_now() -> datetime:
@@ -491,4 +493,23 @@ async def get_field_project_overview_drilldown(
         )
         res = await session.execute(stmt)
         row.top_findings = [FieldFindingPublic.model_validate(f) for f in res.scalars().all()]
+
+    if pub.study_id is not None:
+        pj_stmt = (
+            select(FieldParticipantJourney)
+            .where(
+                FieldParticipantJourney.study_id == pub.study_id,
+                FieldParticipantJourney.company_id == proj_orm.company_id,
+            )
+            .order_by(desc(FieldParticipantJourney.updated_at))
+            .limit(1)
+        )
+        pj_snap = (await session.execute(pj_stmt)).scalar_one_or_none()
+        if pj_snap is not None and pj_snap.bundle_snapshot_json:
+            try:
+                row.study_intelligence = StudyIntelligenceBundlePublic.model_validate(
+                    pj_snap.bundle_snapshot_json
+                )
+            except Exception:
+                row.study_intelligence = None
     return row

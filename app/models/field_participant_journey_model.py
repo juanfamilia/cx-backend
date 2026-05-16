@@ -37,6 +37,18 @@ class FieldParticipantJourney(SQLModel, table=True):
         sa_column=Column(JSONB, nullable=False),
     )
 
+    bundle_snapshot_json: dict[str, Any] | None = Field(
+        default=None,
+        sa_column=Column(JSONB, nullable=True),
+        description="Último `StudyIntelligenceBundlePublic` serializado (insights, señales, journey).",
+    )
+    field_instrument_qa_run_id: int | None = Field(
+        default=None,
+        foreign_key="field_instrument_qa_runs.id",
+        index=True,
+        description="Corrida Auto QA más reciente para la revisión al persistir (referencia blanda).",
+    )
+
     created_at: datetime = Field(sa_column=Column(DateTime, server_default=func.now()))
     updated_at: datetime = Field(
         sa_column=Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -61,3 +73,5 @@ class FieldJourneyPhase(SQLModel, table=True):
         default_factory=list,
         sa_column=Column(JSONB, nullable=False),
     )
+    experience_arc_key: str = Field(default="", max_length=64)
+    experience_arc_title: str = Field(default="", max_length=128)

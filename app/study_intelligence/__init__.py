@@ -20,9 +20,8 @@ from app.study_intelligence.layers import StudyIntelligenceService
 from app.study_intelligence.pipeline import (
     assemble_study_intelligence_bundle,
     build_study_intelligence_bundle_for_revision,
-    bundle_to_public,
 )
-from app.study_intelligence.schemas import StudyIntelligenceBundlePublic
+from app.study_intelligence.schemas import StudyIntelligenceBundlePublic, bundle_to_public
 
 __all__ = [
     "ExpectedDropoutZone",

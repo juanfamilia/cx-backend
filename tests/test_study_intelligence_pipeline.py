@@ -7,12 +7,10 @@ from datetime import datetime, timezone
 from app.models.field_instrument_revision_model import FieldInstrumentRevisionPublic
 from app.services.field_instrument_revision_services import DEFAULT_INSTRUMENT_SPEC_STUB
 from app.services.instrument_qa_rules_v1 import run_instrument_qa_rules_bootstrap
+from app.study_intelligence.constants import STUDY_INTELLIGENCE_ENGINE_VERSION
 from app.study_intelligence.journey_heuristics import phase_index_for_block_title
-from app.study_intelligence.pipeline import (
-    STUDY_INTELLIGENCE_ENGINE_VERSION,
-    assemble_study_intelligence_bundle,
-    bundle_to_public,
-)
+from app.study_intelligence.pipeline import assemble_study_intelligence_bundle
+from app.study_intelligence.schemas import bundle_to_public
 
 
 def _revision_stub(**kwargs: object) -> FieldInstrumentRevisionPublic:
@@ -62,6 +60,7 @@ def test_assemble_bundle_has_six_phases_and_engine_version():
     )
     assert bundle.participant_journey is not None
     assert len(bundle.participant_journey.phases) == 6
+    assert bundle.participant_journey.phases[0].experience_arc_key == "entrada"
 
     pub = bundle_to_public(bundle)
     assert pub.engine_version == STUDY_INTELLIGENCE_ENGINE_VERSION

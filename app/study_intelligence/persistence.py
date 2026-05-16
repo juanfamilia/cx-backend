@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from sqlalchemy import delete
+from sqlalchemy import delete, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from app.models.field_instrument_qa_run_model import FieldInstrumentQARun
 from app.models.field_instrument_revision_model import FieldInstrumentRevisionPublic
 from app.models.field_participant_journey_model import FieldJourneyPhase, FieldParticipantJourney
-from app.study_intelligence.contracts import StudyIntelligenceBundle
 from app.study_intelligence.constants import STUDY_INTELLIGENCE_ENGINE_VERSION
+from app.study_intelligence.contracts import StudyIntelligenceBundle
+from app.study_intelligence.schemas import bundle_to_public
 
 
 async def upsert_participant_journey_snapshot(
@@ -31,6 +33,18 @@ async def upsert_participant_journey_snapshot(
     )
     existing = (await session.execute(stmt)).scalar_one_or_none()
 
+    qa_stmt = (
+        select(FieldInstrumentQARun)
+        .where(
+            FieldInstrumentQARun.revision_id == revision_pub.id,
+            FieldInstrumentQARun.company_id == revision_pub.company_id,
+        )
+        .order_by(desc(FieldInstrumentQARun.created_at))
+        .limit(1)
+    )
+    qa_run = (await session.execute(qa_stmt)).scalar_one_or_none()
+    qa_run_id = qa_run.id if qa_run is not None else None
+
     if existing is not None:
         await session.execute(
             delete(FieldJourneyPhase).where(
@@ -45,6 +59,7 @@ async def upsert_participant_journey_snapshot(
         row.engine_version = STUDY_INTELLIGENCE_ENGINE_VERSION
         row.ruleset_versions_json = list(bundle.ruleset_versions)
         row.contextual_scores_json = dict(bundle.contextual_scores)
+        row.field_instrument_qa_run_id = qa_run_id
         session.add(row)
         await session.flush()
         journey_id = row.id
@@ -59,12 +74,17 @@ async def upsert_participant_journey_snapshot(
             engine_version=STUDY_INTELLIGENCE_ENGINE_VERSION,
             ruleset_versions_json=list(bundle.ruleset_versions),
             contextual_scores_json=dict(bundle.contextual_scores),
+            field_instrument_qa_run_id=qa_run_id,
         )
         session.add(row)
         await session.flush()
         journey_id = row.id
 
     assert journey_id is not None
+    snap = bundle_to_public(bundle, participant_journey_snapshot_id=journey_id)
+    row.bundle_snapshot_json = snap.model_dump(mode="json")
+    session.add(row)
+
     for ph in pj.phases:
         session.add(
             FieldJourneyPhase(
@@ -74,6 +94,8 @@ async def upsert_participant_journey_snapshot(
                 title=ph.title,
                 narrative_summary=ph.narrative_summary,
                 block_ids_json=list(ph.block_ids),
+                experience_arc_key=ph.experience_arc_key or "",
+                experience_arc_title=ph.experience_arc_title or "",
             )
         )
 

@@ -11,6 +11,7 @@ from sqlmodel import Field, SQLModel
 from app.models.field_execution_model import FieldMetricPublic
 from app.models.field_ledger_model import FieldFindingPublic
 from app.models.field_project_model import FieldProjectPublic
+from app.study_intelligence.schemas import StudyIntelligenceBundlePublic
 
 
 class FieldProjectOverviewRow(SQLModel):
@@ -57,6 +58,9 @@ class FieldProjectOverviewRow(SQLModel):
 
     # Muestra corta para drill-down (clic 3); vacío en listado multi-proyecto.
     top_findings: list[FieldFindingPublic] = Field(default_factory=list)
+
+    # Study Intelligence persistido (PRE-FIELD lineage): solo drill-down cuando hay `study_id` + snapshot.
+    study_intelligence: StudyIntelligenceBundlePublic | None = None
 
     # Resumen compacto de snapshot (cuota / muestra tabular) para UI sin parsear JSON profundo
     quota_upstream_ok: bool | None = None

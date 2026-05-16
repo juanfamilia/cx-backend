@@ -167,6 +167,27 @@ def early_positive_lean(block_pairs: list[tuple[str | None, str]]) -> bool:
     return False
 
 
+def _experience_arc_for_phase(
+    phase_key: str,
+    *,
+    sensitive_hint: str | None,
+    exp_heavy: bool,
+) -> tuple[str, str]:
+    """Clave + etiqueta humana del arco experiencial (sin acentos en la clave)."""
+    if phase_key == "experience":
+        if sensitive_hint or exp_heavy:
+            return ("friccion", "Fricción")
+        return ("exploracion", "Exploración")
+    arcs: dict[str, tuple[str, str]] = {
+        "intro": ("entrada", "Entrada"),
+        "screening": ("confianza", "Confianza"),
+        "satisfaction": ("satisfaccion", "Satisfacción"),
+        "demographics": ("validacion", "Validación"),
+        "close": ("cierre", "Cierre"),
+    }
+    return arcs[phase_key]
+
+
 def build_journey_phases(spec: dict[str, Any], brief_blob: str) -> tuple[tuple[JourneyPhase, ...], dict[str, Any]]:
     """Devuelve fases + flags heurísticos para fatiga/insights."""
     pairs = extract_block_pairs(spec)
@@ -214,6 +235,12 @@ def build_journey_phases(spec: dict[str, Any], brief_blob: str) -> tuple[tuple[J
                 "puede añadirlos o renombrarlos para alinear el relato."
             )
 
+        arc_key, arc_title = _experience_arc_for_phase(
+            defn["id"],
+            sensitive_hint=sensitive_hint,
+            exp_heavy=exp_heavy,
+        )
+
         phases.append(
             JourneyPhase(
                 phase_key=defn["id"],
@@ -221,6 +248,8 @@ def build_journey_phases(spec: dict[str, Any], brief_blob: str) -> tuple[tuple[J
                 title=defn["title"],
                 narrative_summary=narrative_summary,
                 block_ids=bids,
+                experience_arc_key=arc_key,
+                experience_arc_title=arc_title,
             )
         )
 

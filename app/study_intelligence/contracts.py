@@ -29,6 +29,9 @@ class JourneyPhase:
     title: str
     narrative_summary: str | None
     block_ids: tuple[str, ...] = ()
+    #: Arco experiencial (entrada, confianza, exploración / fricción, …) — distinto del bloque estructural `phase_key`.
+    experience_arc_key: str = ""
+    experience_arc_title: str = ""
 
 
 @dataclass(frozen=True)

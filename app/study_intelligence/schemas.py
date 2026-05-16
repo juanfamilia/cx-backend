@@ -6,7 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.study_intelligence.contracts import InsightPriority
+from app.study_intelligence.constants import STUDY_INTELLIGENCE_ENGINE_VERSION
+from app.study_intelligence.contracts import InsightPriority, StudyIntelligenceBundle
 
 
 class JourneyPhasePublic(BaseModel):
@@ -17,6 +18,8 @@ class JourneyPhasePublic(BaseModel):
     title: str
     narrative_summary: str | None = None
     block_ids: list[str] = Field(default_factory=list)
+    experience_arc_key: str | None = None
+    experience_arc_title: str | None = None
 
 
 class ParticipantJourneyPublic(BaseModel):
@@ -105,3 +108,100 @@ class StudyIntelligenceBundlePublic(BaseModel):
     expected_dropout_zones: list[ExpectedDropoutZonePublic] = Field(default_factory=list)
     insight_cards: list[InsightCardPublic] = Field(default_factory=list)
     contextual_scores: dict[str, Any] = Field(default_factory=dict)
+
+
+def bundle_to_public(
+    contract: StudyIntelligenceBundle,
+    *,
+    participant_journey_snapshot_id: int | None = None,
+) -> StudyIntelligenceBundlePublic:
+    pj = contract.participant_journey
+    pj_pub = None
+    if pj is not None:
+        pj_pub = ParticipantJourneyPublic(
+            study_id=pj.study_id,
+            instrument_revision_id=pj.instrument_revision_id,
+            brief_snapshot_hash=pj.brief_snapshot_hash,
+            instrument_spec_content_hash=pj.instrument_spec_content_hash,
+            framework_catalog_version=pj.framework_catalog_version,
+            phases=[
+                JourneyPhasePublic(
+                    phase_key=p.phase_key,
+                    order_index=p.order_index,
+                    title=p.title,
+                    narrative_summary=p.narrative_summary,
+                    block_ids=list(p.block_ids),
+                    experience_arc_key=(p.experience_arc_key or None),
+                    experience_arc_title=(p.experience_arc_title or None),
+                )
+                for p in pj.phases
+            ],
+        )
+
+    return StudyIntelligenceBundlePublic(
+        engine_version=STUDY_INTELLIGENCE_ENGINE_VERSION,
+        ruleset_versions=list(contract.ruleset_versions),
+        participant_journey_snapshot_id=participant_journey_snapshot_id,
+        participant_journey=pj_pub,
+        operational_risks=[
+            OperationalRiskPublic(
+                code=r.code,
+                message_human=r.message_human,
+                severity=r.severity,
+                linked_block_id=r.linked_block_id,
+                linked_item_id=r.linked_item_id,
+                source_rule_id=r.source_rule_id,
+            )
+            for r in contract.operational_risks
+        ],
+        methodological_signals=[
+            MethodologicalSignalPublic(
+                code=m.code,
+                message_human=m.message_human,
+                severity=m.severity,
+                linked_block_id=m.linked_block_id,
+                framework_rule_ref=m.framework_rule_ref,
+            )
+            for m in contract.methodological_signals
+        ],
+        fatigue_risks=[
+            FatigueRiskPublic(
+                code=f.code,
+                message_human=f.message_human,
+                level=f.level,
+                linked_block_id=f.linked_block_id,
+            )
+            for f in contract.fatigue_risks
+        ],
+        sensitivity_areas=[
+            SensitivityAreaPublic(
+                code=s.code,
+                label_human=s.label_human,
+                rationale_human=s.rationale_human,
+                linked_block_ids=list(s.linked_block_ids),
+            )
+            for s in contract.sensitivity_areas
+        ],
+        expected_dropout_zones=[
+            ExpectedDropoutZonePublic(
+                phase_key=z.phase_key,
+                linked_block_id=z.linked_block_id,
+                message_human=z.message_human,
+                confidence=z.confidence,
+            )
+            for z in contract.expected_dropout_zones
+        ],
+        insight_cards=[
+            InsightCardPublic(
+                insight_id=i.insight_id,
+                headline=i.headline,
+                body=i.body,
+                priority=i.priority,
+                tone=i.tone,
+                trace_rule_ids=list(i.trace_rule_ids),
+                trace_heuristic_ids=list(i.trace_heuristic_ids),
+            )
+            for i in contract.insight_cards
+        ],
+        contextual_scores=dict(contract.contextual_scores),
+    )
