@@ -29,6 +29,8 @@ Combinar: **research methodology** (patrones reales del sector) + **UX moderna**
 
 Doc maestro: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico** (incl. § **Contrato análisis backend ↔ presentación frontend**).
 
+Motor backend inteligencia (recommendation engine, insights, QA heurísticas, operacional, facade): `docs/7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md` · paquete `app/study_intelligence/` — prompts solo en `prompt_registry.py`.
+
 ---
 
 ## Checklist por pantalla / feature

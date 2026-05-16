@@ -121,6 +121,8 @@ Python apoya: scoring; heurísticas; QA inteligente; recomendaciones; contextual
 
 **Contrato con la UI:** el **backend analiza** (longitud, fatiga, sesgo, redundancia, orden, consistencia, cobertura metodológica, validaciones, riesgos operacionales); el **frontend solo presenta insights humanos** a partir de API/servicios — no duplicar el motor en Angular salvo formateo trivial.
 
+**Arquitectura del motor:** [7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md](7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md) — paquete `app/study_intelligence/` (`contracts`, `layers.StudyIntelligenceService`, `prompt_registry`); implementación incremental P0→P4.
+
 **No** crear complejidad técnica antes de que exista **valor perceptible** en UI/demo.
 
 Servicios pequeños; outputs auditables; reglas explícitas + IA acotada (alineado al doc maestro).
@@ -144,5 +146,6 @@ Si **no** genera ninguna con honestidad: **no priorizarla** todavía.
 
 ## Versionado
 
+- **v1.2 (2026‑05‑16):** §8 — enlace blueprint motor backend (`7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md`, `app/study_intelligence/`).
 - **v1.1 (2026‑05‑16):** §8 — contrato backend analiza / frontend solo insights humanos (longitud, fatiga, sesgo, redundancia, orden, consistencia, cobertura, validaciones, riesgos operacionales).
 - **v1 (2026‑05‑06):** secuencia inicial obligatoria Cursor (Journey Intelligence → preview → continuidad → IA consultiva → UX → disclosure → Angular → Python → regla de percepción).
