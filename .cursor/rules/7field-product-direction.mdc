@@ -1,0 +1,33 @@
+---
+description: 7Field north star — PRE-FIELD↔FIELD continuity, UX bar, IA posture, feature checklist
+alwaysApply: true
+---
+
+# 7Field — dirección de producto
+
+Fuente canónica en este repo: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` (§ Estrella norte).
+
+## Posición
+
+- No competir en captura con EMS; no posicionarse como otro Qualtrics, builder genérico ni pantalla de captura sustitutiva.
+- Un solo flujo inteligente: **pensamiento → preparación → ejecución → supervisión → aprendizaje**.
+- PRE-FIELD estructura **intención** metodológica y operacional; FIELD **verifica** que la ejecución la respete. Esa continuidad es el moat (intención viva en campo).
+
+## UX de superficie
+
+Preferir claridad, espacio, foco visual, tarjetas y resúmenes, lenguaje humano, progressive disclosure y **un objetivo claro por pantalla**. Evitar densidad “enterprise”, tablas como primera clase, jerga innecesaria y configuración infinita visible.
+
+## IA
+
+**Consultiva**, contextual, metodológica y operacional, dentro del framework y gates humanos — no autonomía caótica ni estudios completos generados sin control.
+
+## Antes de ensanchar — checklist por pantalla o feature
+
+1. ¿Ayuda a pensar mejor?
+2. ¿Ayuda a ejecutar mejor?
+3. ¿Mantiene continuidad PRE-FIELD ↔ FIELD?
+4. ¿Se siente simple aunque debajo haya complejidad?
+5. ¿Aumenta percepción premium o inteligente?
+6. ¿Genera confianza en demo en menos de ~3 minutos?
+
+Si varias respuestas son débiles, posponer o recortar.

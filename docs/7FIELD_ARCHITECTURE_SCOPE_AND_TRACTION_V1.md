@@ -15,6 +15,61 @@
 
 ---
 
+## Estrella norte: continuidad PRE-FIELD ↔ FIELD
+
+**Percepción objetivo:** la **capa inteligente encima del caos operacional de la investigación** — preparación, supervisión, consistencia y claridad operacional. **No** competir contra EMS en captura ni posicionarse como “otro Qualtrics”, otro builder genérico, otro EMS ni otra pantalla de captura sustitutiva.
+
+### El corazón del producto
+
+Conectar de forma **continua** (un solo flujo inteligente, no dos módulos que “se visitan” por separado):
+
+**pensamiento → preparación → ejecución → supervisión → aprendizaje.**
+
+- **PRE-FIELD** no es solo “crear un cuestionario”. Es **estructurar intención metodológica y operacional** (brief contratable, riesgos, foco del flujo del participante, qué importa medir y por qué).
+- **FIELD** no es solo “ver métricas”. Es **verificar que la ejecución respete esa intención** y priorizar atención donde el estudio dijo que importaba.
+
+**Idea central:** *el trabajo inteligente del inicio debe mantenerse vivo durante el campo.* Esa **continuidad es parte del moat**: si el brief hablaba de fricción en onboarding bancario, FIELD debe poder **heredar contexto** — bloques sensibles, zonas de mayor abandono esperado, partes del flujo que merecen más atención, peso relativo de hallazgos, riesgos que realmente importan para ese estudio — sin que el usuario vuelva a “explicar el mundo” en cada pantalla.
+
+### Experiencia deseada (usuario)
+
+El usuario debe sentir, en orden:
+
+1. **“7Field me ayuda a pensar mejor.”**
+2. **“7Field me ayuda a ejecutar mejor.”**
+
+No: *“estoy operando un framework complejo”.* En mercados como República Dominicana y LATAM, el producto también resuelve tensión real de **seniority y consistencia** (elevar criterio de juniors, reducir dependencia extrema de seniors, menos retrabajo): eso debe **transmitirse por claridad y guía**, no por copiar esa narrativa en etiquetas de la UI.
+
+### Dirección UX/UI (superficie)
+
+| Preferir | Evitar como superficie por defecto |
+|----------|-------------------------------------|
+| Claridad, espacio, foco visual | Densidad “enterprise” |
+| Tarjetas y resúmenes | Tablas como primera clase |
+| Lenguaje humano | Jerga metodológica innecesaria |
+| Progressive disclosure; **un objetivo claro por pantalla** | Configuración infinita visible |
+| Demo que encaja en **menos de ~3 minutos** de confianza | Complejidad como sustituto de valor |
+
+**Demo “wow” correcto:** pegar un brief → recibir **estructura inteligente** → sentir **acompañamiento** → detectar **riesgos** → visualizar el **recorrido del participante** → ver rápido **qué falta** → pasar **naturalmente** a campo; luego FIELD **entiende el contexto** de ese estudio. El wow incorrecto: builder gigante, cientos de opciones, estudios completos generados sin control.
+
+### Rol de la IA
+
+La IA debe sentirse **contextual, útil, consultiva, metodológica y operacional**. **No** autónoma al punto del caos ni generando estudios enteros sin control humano explícito: acelera y advierte **dentro** del framework y gates ya definidos en este documento.
+
+### Checklist por pantalla o feature
+
+Antes de ensanchar superficie, cada entrega debe poder responder **sí** de forma honesta a:
+
+1. ¿Ayuda a **pensar mejor**?
+2. ¿Ayuda a **ejecutar mejor**?
+3. ¿**Mantiene continuidad** entre PRE-FIELD y FIELD (intención viva en ejecución)?
+4. ¿Se siente **simple** aunque debajo haya complejidad?
+5. ¿Aumenta **percepción premium / inteligente**?
+6. ¿Genera **confianza en demo** en menos de ~3 minutos?
+
+Si varias respuestas son débiles, probablemente se está ensanchando sin fortalecer el núcleo.
+
+---
+
 ## Flujo de usuario (alto nivel)
 
 1. **Credenciales del conector**  
@@ -223,5 +278,6 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v2.9 (2026‑05‑08):** motor Auto QA bootstrap **QA_RULE_001–005** (`instrument_qa_runtime`) + histórico `field_instrument_qa_runs`.
 - **v3.0 (2026‑05‑09):** **Readiness Gate L4** — políticas de bloqueo por empresa, signatarios opcionales obligatorios, firmas con snapshot y estado `approved` en revisión.
 - **v3.1 (2026‑05‑11):** PRE-FIELD — **flujo explícito en tres capas** (brief → técnico/versionado → inteligencia asistida acotada a framework) + **banco de guías** tras aprobación cliente; alineación roadmap vs implementación actual (capa 2 prioritaria).
-- **v3.3 (2026‑05‑11):** Principio **hallazgos auditables mismo contrato** (premisa 6); PRE-FIELD nombres oficiales tres capas; prioridad **A→G** y waiver por revisión remitidos a ADR/modelo canónico.
 - **v3.2 (2026‑05‑11):** PRE-FIELD — **ADR 001** (brief, framework obligatorio, trazabilidad IA, banco de guías, gates) + **modelo canónico** enlazado desde esta doc maestra.
+- **v3.3 (2026‑05‑11):** Principio **hallazgos auditables mismo contrato** (premisa 6); PRE-FIELD nombres oficiales tres capas; prioridad **A→G** y waiver por revisión remitidos a ADR/modelo canónico.
+- **v3.4 (2026‑05‑06):** **Estrella norte** — continuidad PRE-FIELD ↔ FIELD como un solo flujo inteligente (intención viva en campo); anti‑patrones UX vs dirección deseada; rol consultivo de la IA; checklist por pantalla/feature; demo wow correcto; percepción “capa inteligente” sin competir en captura; consistencia con seniority LATAM vía producto, no copy explícito.
