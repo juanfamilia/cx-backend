@@ -1,4 +1,4 @@
-# 7Field — PRE-FIELD modelo canónico y bounded contexts (v1.2)
+# 7Field — PRE-FIELD modelo canónico y bounded contexts (v1.3)
 
 **Estado:** activo — **contrato de dominio** derivado del [ADR 001 — Brief, Framework, IA, Banco de guías](adr/001-pre-field-brief-framework-ai-guide-bank-governance.md). Objetivo: que backend, UX y auditoría compartan **la misma verdad** sin reabrir filosofía en cada sprint.
 
@@ -158,7 +158,7 @@ Orden normativo para ingeniería — **antes** de abrir nuevas superficies UX gr
 
 La plataforma incorpora **inteligencia de estudio** como capacidad de servidor: recorrido del participante (`participant_journey` / `journey_phase`), señales metodológicas, fatiga, riesgos operacionales, zonas de abandono esperado, scoring contextual, insights con prioridad y continuidad serializable **PRE‑FIELD → FIELD**. Norma de implementación y capas L1–L9: **[7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md](7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md)**. Contratos runtime: `app/study_intelligence/contracts.py`; orquestación: `StudyIntelligenceService`; **prompts LLM** solo vía `app/study_intelligence/prompt_registry.py` (sin strings dispersos en servicios).
 
-Persistencia de tablas dedicadas es **roadmap** (fases P1–P4 del blueprint); el modelo canónico v1 sigue anclado en Study, Brief, `instrument_revision`, QA runs y Readiness.
+Persistencia de tablas dedicadas es **roadmap** (fases P1–P4 del blueprint); el modelo canónico v1 sigue anclado en Study, Brief, `instrument_revision`, QA runs y Readiness. **P2 en curso:** snapshots `field_participant_journeys` / `field_journey_phases` al calcular Study Intelligence (ver blueprint §7).
 
 ---
 
@@ -166,6 +166,7 @@ Persistencia de tablas dedicadas es **roadmap** (fases P1–P4 del blueprint); e
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.3** | 2026-05-16 | §7 nota P2: tablas `field_participant_journeys` / `field_journey_phases` (snapshots Study Intelligence). |
 | **v1.2** | 2026-05-16 | §7 extensión Study Intelligence — enlace blueprint backend, contratos Python, política prompt registry; línea base vs persistencia P2+. |
 | **v1.1** | 2026-05-11 | Principio plataforma hallazgos únicos; **FrameworkWaiver** cerrado a `instrument_revision_id`; paquete IA alineado ADR (`model_version`, `actor`, `tenant`, `timestamp`); §4 orden implementación A–G (§5 exclusiones v1). |
 | **v1.0** | 2026-05-11 | Primera versión: bounded contexts, entidades, gates, exclusiones v1, alineación L2–L4. |

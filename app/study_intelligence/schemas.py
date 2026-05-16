@@ -96,6 +96,7 @@ class StudyIntelligenceBundlePublic(BaseModel):
     engine_version: str
     ruleset_versions: list[str]
 
+    participant_journey_snapshot_id: int | None = None
     participant_journey: ParticipantJourneyPublic | None = None
     operational_risks: list[OperationalRiskPublic] = Field(default_factory=list)
     methodological_signals: list[MethodologicalSignalPublic] = Field(default_factory=list)

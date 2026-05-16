@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +20,7 @@ from app.services.instrument_qa_rules_v1 import (
     summarize_qa_severities,
 )
 
+from app.study_intelligence.constants import STUDY_INTELLIGENCE_ENGINE_VERSION
 from app.study_intelligence.contracts import (
     ExpectedDropoutZone,
     FatigueRisk,
@@ -46,8 +48,9 @@ from app.study_intelligence.schemas import (
     SensitivityAreaPublic,
     StudyIntelligenceBundlePublic,
 )
+from app.study_intelligence.persistence import upsert_participant_journey_snapshot
 
-STUDY_INTELLIGENCE_ENGINE_VERSION = "SI_ENGINE_2026_1"
+logger = logging.getLogger(__name__)
 
 READINESS_BLOCK_HUMAN: dict[str, str] = {
     "revision_archived": "La revisión está archivada; no aplica salida a campo.",
@@ -368,7 +371,11 @@ def assemble_study_intelligence_bundle(
     )
 
 
-def bundle_to_public(contract: StudyIntelligenceBundle) -> StudyIntelligenceBundlePublic:
+def bundle_to_public(
+    contract: StudyIntelligenceBundle,
+    *,
+    participant_journey_snapshot_id: int | None = None,
+) -> StudyIntelligenceBundlePublic:
     pj = contract.participant_journey
     pj_pub = None
     if pj is not None:
@@ -393,6 +400,7 @@ def bundle_to_public(contract: StudyIntelligenceBundle) -> StudyIntelligenceBund
     return StudyIntelligenceBundlePublic(
         engine_version=STUDY_INTELLIGENCE_ENGINE_VERSION,
         ruleset_versions=list(contract.ruleset_versions),
+        participant_journey_snapshot_id=participant_journey_snapshot_id,
         participant_journey=pj_pub,
         operational_risks=[
             OperationalRiskPublic(
@@ -483,4 +491,11 @@ async def build_study_intelligence_bundle_for_revision(
         qa_findings=qa_findings,
         readiness_blocking_codes=tuple(readiness.blocking_codes),
     )
-    return bundle_to_public(bundle)
+    snapshot_id: int | None = None
+    try:
+        snapshot_id = await upsert_participant_journey_snapshot(
+            session, revision_pub=pub, bundle=bundle
+        )
+    except Exception:
+        logger.exception("study_intelligence: falló persistencia participant_journey snapshot")
+    return bundle_to_public(bundle, participant_journey_snapshot_id=snapshot_id)

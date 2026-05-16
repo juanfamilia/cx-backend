@@ -135,7 +135,7 @@ Nombres en **snake_case** alineados a tablas futuras. Claves foráneas típicas:
 |------|---------|
 | **P0** | Contratos Python + `prompt_registry` + facade (`StudyIntelligenceService`). |
 | **P1** | **`GET /field/instrument-revisions/{revision_id}/study-intelligence`** — `StudyIntelligenceBundlePublic` (journey + QA instantáneo `QA_RULESET_BOOTSTRAP_V1` + Readiness + insights); implementación `app/study_intelligence/pipeline.py`. |
-| **P2** | Persistencia `participant_journey` + `journey_phase` + enlaces a QA runs. |
+| **P2** | Tablas **`field_participant_journeys`** + **`field_journey_phases`**; upsert en cada `GET .../study-intelligence` (mismo `revision_id` + `instrument_spec_content_hash`); respuesta incluye `participant_journey_snapshot_id`. Persistencia ampliada (insights JSON, runs QA) — backlog. |
 | **P3** | Señales fatiga/sesgo/redundancia ampliadas + scoring contextual versionado. |
 | **P4** | Propagación a Field overview / findings priority cuando exista estudio vinculado. |
 
@@ -145,6 +145,7 @@ Nombres en **snake_case** alineados a tablas futuras. Claves foráneas típicas:
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.3** | 2026‑05‑16 | P2 parcial: tablas `field_participant_journeys`, `field_journey_phases`; upsert al responder `study-intelligence`; `participant_journey_snapshot_id` en JSON. |
 | **v1.2** | 2026‑05‑16 | §1.1 semántica Readiness oficial vs QA/study-intelligence dinámico (sin mezclar en UI). |
 | **v1.1** | 2026‑05‑16 | P1: endpoint `study-intelligence`, pipeline + `journey_heuristics` + esquemas Pydantic; P1 marcado entregado en §7. |
 | **v1.0** | 2026‑05‑16 | Blueprint motor backend: capas, entidades, prompts centralizados, continuidad Field, export/mappings, fases P0–P4. |
