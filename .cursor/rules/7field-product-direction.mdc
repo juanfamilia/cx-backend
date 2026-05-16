@@ -1,37 +1,44 @@
 ---
-description: 7Field north star — PRE-FIELD↔FIELD continuity, UX bar, IA posture, feature checklist
+description: 7Field obligatorio — producto/UX/IA/Journey Intelligence + Angular + Python antes de ampliar superficie
 alwaysApply: true
 ---
 
-# 7Field — dirección de producto
+# 7Field — dirección obligatoria
 
-Fuente canónica en este repo: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` (§ Estrella norte).
+Fuente canónica: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico**.
 
-## Posición
+## Lo que NO somos
 
-- No competir en captura con EMS; no posicionarse como otro Qualtrics, builder genérico ni pantalla de captura sustitutiva.
-- Un solo flujo inteligente: **pensamiento → preparación → ejecución → supervisión → aprendizaje**.
-- PRE-FIELD estructura **intención** metodológica y operacional; FIELD **verifica** que la ejecución la respete. Esa continuidad es el moat (intención viva en campo).
+No otro Qualtrics / SurveyMonkey / Dooblo / builder genérico / pantalla de captura. No competir en tipos de pregunta ni scripting infinito.
 
-## UX de superficie
+## Tesis
 
-Preferir claridad, espacio, foco visual, tarjetas y resúmenes, lenguaje humano, progressive disclosure y **un objetivo claro por pantalla**. Evitar densidad “enterprise”, tablas como primera clase, jerga innecesaria y configuración infinita visible.
+**Capa inteligente:** preparación + ejecución + supervisión. Flujo continuo **pensamiento → preparación → ejecución → supervisión → aprendizaje**. **PRE-FIELD ↔ FIELD** un solo flujo; intención metodológica **viva** en campo (moat).
 
-## Siguiente gran salto (no drag/drop)
+## UX superficie
 
-El salto **no** es el builder tipo lienzo ni drag/drop como protagonista. **Sí**: preview elegante del recorrido, narrativa visual del participante, riesgos contextuales, señales automáticas, continuidad viva en Field, insights accionables y sensación de acompañamiento.
+Progressive disclosure **siempre**. JSON, hashes, lineage, QA packages → **Detalles técnicos**. Superficie: lenguaje humano, un objetivo por pantalla, más espacio/tarjetas/narrativa, **menos tablas/badges/estados técnicos**. Sensación **editorial**, no consola enterprise.
+
+Percepción: primero “piensa mejor”, luego “ejecuta mejor”; no “operando un sistema complejo”.
+
+**PRE-FIELD:** copiloto metodológico / guía / preparación — **no** builder como protagonista. **FIELD:** continuidad contextual y supervisión alineada a intención — **no** solo monitoreo abstracto.
 
 ## IA
 
-**Consultiva**, contextual, metodológica y operacional, dentro del framework y gates humanos — no autonomía caótica ni estudios completos generados sin control.
+Consultiva, contextual, metodológica, operacional, accionables — **seniority encapsulado**. No chatbot infinito, generación descontrolada, cuestionarios autónomos, “AI magic” caótico.
 
-## Antes de ensanchar — checklist por pantalla o feature
+## Journey Intelligence (siguiente salto)
 
-1. ¿Ayuda a pensar mejor?
-2. ¿Ayuda a ejecutar mejor?
-3. ¿Mantiene continuidad PRE-FIELD ↔ FIELD?
-4. ¿Se siente simple aunque debajo haya complejidad?
-5. ¿Aumenta percepción premium o inteligente?
-6. ¿Genera confianza en demo en menos de ~3 minutos?
+No drag/drop/builder gigante como wow. Sí: brief → estructura → **recorrido participante** → riesgos → sugerencias → campo → FIELD con contexto.
 
-Si varias respuestas son débiles, posponer o recortar.
+## Angular (este repo / frontend compañero)
+
+Smart + dumb; componentes pequeños; copy en helpers; signals/`computed` limpios. Primitivas objetivo: `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`. Evitar mega-templates `@if`, IA en HTML, tablas complejas en superficie.
+
+## Python / backend IA
+
+No IA que reemplace criterio humano ni gates. Sí: heurísticas, señales, clasificación contextual, resúmenes auditables, **servicios pequeños**, prompts acotados, **reglas explícitas + IA contextual** — no pipelines gigantes prematuros.
+
+## Checklist antes de cualquier feature
+
+¿Piensa mejor? ¿Ejecuta mejor? ¿Continuidad PRE-FIELD ↔ FIELD? ¿Simple en superficie? ¿Premium/inteligente? ¿Demo creíble en menos de ~3 minutos? Si no, no ensanchar.

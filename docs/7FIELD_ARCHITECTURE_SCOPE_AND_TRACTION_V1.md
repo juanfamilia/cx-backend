@@ -1,6 +1,6 @@
 # 7Field — Arquitectura de experiencia (producto)
 
-**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos*. El detalle técnico, fases largas y gobierno profundo siguen en los enlaces al final.
+**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos*. La **norma obligatoria** de producto, UX/UI y criterio técnico (Angular / backend) está en § **Dirección de producto, UX/UI y criterio técnico**. El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
 
 ---
 
@@ -15,72 +15,123 @@
 
 ---
 
-## Estrella norte: continuidad PRE-FIELD ↔ FIELD
+## Dirección de producto, UX/UI y criterio técnico (obligatorio antes de ampliar superficie)
 
-**Percepción objetivo:** la **capa inteligente encima del caos operacional de la investigación** — preparación, supervisión, consistencia y claridad operacional. **No** competir contra EMS en captura ni posicionarse como “otro Qualtrics”, otro builder genérico, otro EMS ni otra pantalla de captura sustitutiva.
+Norma de equipo: **ninguna feature nueva de superficie** sin pasar por esta sección y por el checklist final. La complejidad puede vivir en backend y modelo; la **superficie** debe cumplir tono, densidad y continuidad aquí descritos.
 
-### El corazón del producto
+### Lo que NO construimos
 
-Conectar de forma **continua** (un solo flujo inteligente, no dos módulos que “se visitan” por separado):
+- **No** otro Qualtrics, SurveyMonkey, Dooblo, builder genérico ni pantalla de captura sustitutiva.
+- **No** competir en “quién tiene más tipos de pregunta” ni en scripting infinito.
+
+### Tesis del producto
+
+**7Field = capa inteligente de preparación + ejecución + supervisión de investigación.** Interpretamos y gobernamos ejecución sobre datos que el cliente ya tiene en EMS/conectores; **no** reemplazamos el EMS en su fortaleza (captura / scripting).
+
+### Núcleo y moat (continuidad PRE-FIELD ↔ FIELD)
+
+El núcleo es una cadena continua:
 
 **pensamiento → preparación → ejecución → supervisión → aprendizaje.**
 
-- **PRE-FIELD** no es solo “crear un cuestionario”. Es **estructurar intención metodológica y operacional** (brief contratable, riesgos, foco del flujo del participante, qué importa medir y por qué).
-- **FIELD** no es solo “ver métricas”. Es **verificar que la ejecución respete esa intención** y priorizar atención donde el estudio dijo que importaba.
+**PRE-FIELD** y **FIELD** deben sentirse como **un solo flujo**, no como módulos desconectados. La **intención metodológica** creada al inicio debe **mantenerse viva** durante el campo.
 
-**Idea central:** *el trabajo inteligente del inicio debe mantenerse vivo durante el campo.* Esa **continuidad es parte del moat**: si el brief hablaba de fricción en onboarding bancario, FIELD debe poder **heredar contexto** — bloques sensibles, zonas de mayor abandono esperado, partes del flujo que merecen más atención, peso relativo de hallazgos, riesgos que realmente importan para ese estudio — sin que el usuario vuelva a “explicar el mundo” en cada pantalla.
+**Ejemplo (moat):** si el brief habla de onboarding bancario, FIELD debe poder **heredar contexto** sin que el usuario re-explique el estudio en cada pantalla:
 
-### Experiencia deseada (usuario)
+- qué bloques eran sensibles,
+- dónde se esperaba abandono,
+- qué partes pesan más,
+- qué riesgos importan,
+- qué hallazgos son más relevantes.
 
-El usuario debe sentir, en orden:
+### Superficie UX — lo que rechazamos vs lo que buscamos
+
+**No** queremos UX “enterprise pesada”: tablas infinitas, densidad, jerga técnica en primera clase, configuraciones interminables ni **framework visible** como protagonista.
+
+La superficie debe sentirse **clara, premium, moderna, guiada, elegante, humana e inteligente** — más **editorial** que consola operacional.
+
+**Percepción objetivo (orden):**
 
 1. **“7Field me ayuda a pensar mejor.”**
 2. **“7Field me ayuda a ejecutar mejor.”**
 
-No: *“estoy operando un framework complejo”.* En mercados como República Dominicana y LATAM, el producto también resuelve tensión real de **seniority y consistencia** (elevar criterio de juniors, reducir dependencia extrema de seniors, menos retrabajo): eso debe **transmitirse por claridad y guía**, no por copiar esa narrativa en etiquetas de la UI.
+**No:** *“estoy operando un sistema complejo”.* En LATAM y mercados similares, el producto también apoya **seniority y consistencia**; eso se transmite por **claridad y guía**, no por declararlo en etiquetas de UI.
 
-### Dirección UX/UI (superficie)
+### Reglas UX/UI obligatorias
 
-| Preferir | Evitar como superficie por defecto |
-|----------|-------------------------------------|
-| Claridad, espacio, foco visual | Densidad “enterprise” |
-| Tarjetas y resúmenes | Tablas como primera clase |
-| Lenguaje humano | Jerga metodológica innecesaria |
-| Progressive disclosure; **un objetivo claro por pantalla** | Configuración infinita visible |
-| Demo que encaja en **menos de ~3 minutos** de confianza | Complejidad como sustituto de valor |
+- Menos es más.
+- **Progressive disclosure siempre:** JSON, hashes, lineage, paquetes QA y metadata viven en **“Detalles técnicos”** (o equivalente); no en la primera lectura.
+- La superficie principal usa **lenguaje humano**.
+- **Un objetivo claro por pantalla.**
+- Más espacio visual; más tarjetas y resúmenes; **menos tablas** en primera clase.
+- Menos badges; menos estados técnicos visibles sin necesidad.
+- Más narrativa, más foco, menos ruido.
 
-**Demo “wow” correcto:** pegar un brief → recibir **estructura inteligente** → sentir **acompañamiento** → detectar **riesgos** → visualizar el **recorrido del participante** → ver rápido **qué falta** → pasar **naturalmente** a campo; luego FIELD **entiende el contexto** de ese estudio. El wow incorrecto: builder gigante, cientos de opciones, estudios completos generados sin control.
+### PRE-FIELD y FIELD — definición operativa
 
-### Siguiente gran salto visual / producto (prioridad explícita)
+**PRE-FIELD no es un builder.** Es: copiloto metodológico, guía estructurada, preparación inteligente, claridad operacional.
 
-El siguiente salto **no** debe centrarse en **drag/drop** ni en un builder tipo lienzo como protagonista del valor percibido.
+**FIELD no es solo monitoreo.** Es: continuidad contextual del estudio, supervisión alineada a la intención, lectura inteligente de la ejecución.
 
-**Sí** debe centrarse en:
+### IA — criterio obligatorio
 
-- **Preview elegante del recorrido** del instrumento / participante.
-- **Narrativa visual del participante** (qué vive, en qué orden, con qué fricción esperada).
-- **Riesgos contextuales** ligados al brief y al tipo de estudio — no avisos genéricos.
-- **Señales automáticas** (patrones, umbrales, reglas + IA consultiva) que reduzcan carga cognitiva.
-- **Continuidad viva en Field**: lo decidido en PRE-FIELD visible y útil durante ejecución.
-- **Insights accionables** (qué hacer ahora, por qué importa, enlace a regla / versión cuando aplique).
-- **Sensación de acompañamiento** — guiado, humano, premium — sin convertir la UX en panel operativo denso.
+**No construir:** chatbot infinito; generación descontrolada; cuestionarios completos autónomos; “AI magic” caótico.
 
-### Rol de la IA
+La IA correcta es **contextual, metodológica, consultiva, operacional y accionable**. Debe sentirse como **seniority encapsulado**, no como autonomía fuera de control.
 
-La IA debe sentirse **contextual, útil, consultiva, metodológica y operacional**. **No** autónoma al punto del caos ni generando estudios enteros sin control humano explícito: acelera y advierte **dentro** del framework y gates ya definidos en este documento.
+**Ejemplos de tono correcto:**
 
-### Checklist por pantalla o feature
+- “Detectamos posible fatiga.”
+- “El bloque demográfico aparece demasiado temprano.”
+- “La pregunta de negocio no está reflejada.”
+- “Esperábamos fricción aquí y el abandono es mayor.”
+- “Las respuestas abiertas sugieren ansiedad.”
 
-Antes de ensanchar superficie, cada entrega debe poder responder **sí** de forma honesta a:
+### Dirección visual futura — Journey Intelligence
+
+El siguiente salto **no** es drag/drop complejo ni un builder gigante como protagonista.
+
+El **wow correcto** es: pegar un brief → estructura inteligente → **visualizar el recorrido del participante** → detectar riesgos → sugerencias útiles → pasar **naturalmente** a campo → que **FIELD entienda ese contexto**.
+
+Producto visual objetivo: **Journey Intelligence** (preview elegante del recorrido, narrativa del participante, riesgos contextuales, señales automáticas, continuidad viva en Field, insights accionables, sensación de acompañamiento). Ver también premisa de **regla de 3 clics** arriba y demo corta de confianza.
+
+### Angular — reglas técnicas (frontend)
+
+**Arquitectura:**
+
+- Contenedores “smart” + componentes presentacionales “dumb”.
+- Componentes **pequeños** y reutilizables.
+- **Helpers de copy** separados del markup cuando crezca el texto.
+- Signals / `computed` limpios; **evitar mega-components**.
+
+**Primitivas reutilizables** (convención de naming orientativa): `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner` (implementar como selectores Angular coherentes con el proyecto).
+
+**Evitar:** templates enormes llenos de `@if`; lógica de IA mezclada en HTML; helpers gigantes; interfaces duplicadas; tablas complejas en superficie; utilities Tailwind caóticos repetidos.
+
+**Sistema visual:** spacing consistente; tipografía que respire; menos bold; menos uppercase; menos ruido visual.
+
+### Python / IA / backend
+
+**No** usar IA para **reemplazar** criterio humano ni gates de publicación.
+
+**Sí** usar: heurísticas; clasificación contextual; extracción de intención; agrupación semántica; riesgos metodológicos; señales operacionales; resúmenes ejecutivos. Preferir **recomendaciones pequeñas y accionables** sobre generación masiva.
+
+Python para: heurísticas metodológicas, scoring, señales, NLP liviano, embeddings, clasificación, clustering, detección de patrones, resúmenes — **sin** pipelines gigantes prematuros.
+
+Preferir **servicios pequeños**, outputs **auditables**, **prompts acotados**, **reglas explícitas + IA contextual**.
+
+### Checklist obligatorio antes de agregar cualquier feature
+
+Preguntar siempre:
 
 1. ¿Ayuda a **pensar mejor**?
 2. ¿Ayuda a **ejecutar mejor**?
-3. ¿**Mantiene continuidad** entre PRE-FIELD y FIELD (intención viva en ejecución)?
+3. ¿**Mantiene continuidad** PRE-FIELD ↔ FIELD?
 4. ¿Se siente **simple** aunque debajo haya complejidad?
 5. ¿Aumenta **percepción premium / inteligente**?
 6. ¿Genera **confianza en demo** en menos de ~3 minutos?
 
-Si varias respuestas son débiles, probablemente se está ensanchando sin fortalecer el núcleo.
+Si no cumple: probablemente se está **ensanchando superficie sin fortalecer el núcleo**.
 
 ---
 
@@ -296,3 +347,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v3.3 (2026‑05‑11):** Principio **hallazgos auditables mismo contrato** (premisa 6); PRE-FIELD nombres oficiales tres capas; prioridad **A→G** y waiver por revisión remitidos a ADR/modelo canónico.
 - **v3.4 (2026‑05‑06):** **Estrella norte** — continuidad PRE-FIELD ↔ FIELD como un solo flujo inteligente (intención viva en campo); anti‑patrones UX vs dirección deseada; rol consultivo de la IA; checklist por pantalla/feature; demo wow correcto; percepción “capa inteligente” sin competir en captura; consistencia con seniority LATAM vía producto, no copy explícito.
 - **v3.5 (2026‑05‑06):** prioridad del **siguiente salto visual/producto**: recorrido preview + narrativa participante + riesgos contextuales + señales automáticas + continuidad viva en Field + insights accionables + acompañamiento — explícitamente **no** drag/drop/builder como eje del valor.
+- **v3.6 (2026‑05‑06):** § **Dirección de producto, UX/UI y criterio técnico** — marco obligatorio unificado: anti‑Qualtrics/SurveyMonkey/Dooblo/builder/captura; tesis capa inteligente; moat PRE‑FIELD↔FIELD; reglas UX (progressive disclosure, detalles técnicos, menos tablas/badges); PRE‑FIELD/FIELD definiciones; IA consultiva con ejemplos; **Journey Intelligence**; reglas **Angular** (smart/dumb, primitivas `field-*`, evitar mega‑templates); **Python/IA** (servicios pequeños, auditables, sin pipelines gigantes); checklist previo a features.
