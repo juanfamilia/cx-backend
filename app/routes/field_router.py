@@ -117,6 +117,8 @@ from app.services.field_instrument_qa_services import (
     execute_instrument_qa_bootstrap_run,
     list_instrument_qa_runs,
 )
+from app.study_intelligence.pipeline import build_study_intelligence_bundle_for_revision
+from app.study_intelligence.schemas import StudyIntelligenceBundlePublic
 from app.services.field_instrument_revision_services import (
     create_instrument_revision,
     get_instrument_revision,
@@ -1079,6 +1081,29 @@ async def list_instrument_revision_qa_runs(
 ):
     return await list_instrument_qa_runs(
         session, request.state.user, revision_id, company_id, limit=limit
+    )
+
+
+@router.get(
+    "/instrument-revisions/{revision_id}/study-intelligence",
+    response_model=StudyIntelligenceBundlePublic,
+    dependencies=[Depends(require_field_product_access)],
+    summary="Motor Study Intelligence (journey + QA + Readiness + señales)",
+    description=(
+        "Ejecuta heurísticas en servidor sobre el `instrument_spec` vigente y el brief del estudio: "
+        "fases de recorrido, hallazgos QA_RULE_001–005 (pasada instantánea, sin persistir corrida nueva), "
+        "riesgos operacionales desde Readiness, fatiga, sensibilidad y tarjetas de insight priorizadas. "
+        "Ver `docs/7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md`."
+    ),
+)
+async def get_instrument_revision_study_intelligence(
+    revision_id: int,
+    request: Request,
+    company_id: Optional[int] = Query(None, description="Rol 0: misma regla que otros listados Field."),
+    session: AsyncSession = Depends(get_db),
+):
+    return await build_study_intelligence_bundle_for_revision(
+        session, request.state.user, revision_id, company_id
     )
 
 

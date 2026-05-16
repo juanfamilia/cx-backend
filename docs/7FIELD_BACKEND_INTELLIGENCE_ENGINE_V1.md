@@ -124,8 +124,8 @@ Nombres en **snake_case** alineados a tablas futuras. Claves foráneas típicas:
 
 | Fase | Entrega |
 |------|---------|
-| **P0** | Congelar contratos Python + facade stub + registry de prompts vacío versionado. |
-| **P1** | API interna que devuelve `StudyIntelligenceBundle` desde revisión actual (heurísticas + QA existente). |
+| **P0** | Contratos Python + `prompt_registry` + facade (`StudyIntelligenceService`). |
+| **P1** | **`GET /field/instrument-revisions/{revision_id}/study-intelligence`** — `StudyIntelligenceBundlePublic` (journey + QA instantáneo `QA_RULESET_BOOTSTRAP_V1` + Readiness + insights); implementación `app/study_intelligence/pipeline.py`. |
 | **P2** | Persistencia `participant_journey` + `journey_phase` + enlaces a QA runs. |
 | **P3** | Señales fatiga/sesgo/redundancia ampliadas + scoring contextual versionado. |
 | **P4** | Propagación a Field overview / findings priority cuando exista estudio vinculado. |
@@ -136,4 +136,5 @@ Nombres en **snake_case** alineados a tablas futuras. Claves foráneas típicas:
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.1** | 2026‑05‑16 | P1: endpoint `study-intelligence`, pipeline + `journey_heuristics` + esquemas Pydantic; P1 marcado entregado en §7. |
 | **v1.0** | 2026‑05‑16 | Blueprint motor backend: capas, entidades, prompts centralizados, continuidad Field, export/mappings, fases P0–P4. |

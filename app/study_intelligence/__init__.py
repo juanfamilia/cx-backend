@@ -17,6 +17,12 @@ from app.study_intelligence.contracts import (
     StudyIntelligenceBundle,
 )
 from app.study_intelligence.layers import StudyIntelligenceService
+from app.study_intelligence.pipeline import (
+    assemble_study_intelligence_bundle,
+    build_study_intelligence_bundle_for_revision,
+    bundle_to_public,
+)
+from app.study_intelligence.schemas import StudyIntelligenceBundlePublic
 
 __all__ = [
     "ExpectedDropoutZone",
@@ -29,5 +35,9 @@ __all__ = [
     "ParticipantJourney",
     "SensitivityArea",
     "StudyIntelligenceBundle",
+    "StudyIntelligenceBundlePublic",
     "StudyIntelligenceService",
+    "assemble_study_intelligence_bundle",
+    "build_study_intelligence_bundle_for_revision",
+    "bundle_to_public",
 ]

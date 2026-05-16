@@ -182,6 +182,7 @@ Errores y pérdidas en ejecución siguen en **Field Control** ya implementado; P
 | `POST` | `/field/instrument-revisions/{revision_id}/validate` | Ejecuta schema, persiste auditoría (`last_validation_at`, `last_validation_ok`, `issue_count`, `content_hash`) y devuelve informe. |
 | `POST` | `/field/instrument-revisions/{revision_id}/qa-run` | Ejecuta QA_RULE_001–005 y guarda corrida; actualiza **`last_ruleset_version`** en la revisión. |
 | `GET` | `/field/instrument-revisions/{revision_id}/qa-runs` | Historial de corridas QA (`limit` 1–100; últimas primero). |
+| `GET` | `/field/instrument-revisions/{revision_id}/study-intelligence` | Motor **Study Intelligence**: journey participante, QA instantáneo (sin nueva corrida persistida), Readiness, insights — ver `7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md`. |
 | `GET` | `/field/readiness-policy` | Política efectiva (`FieldReadinessPolicyPublic`; incluye **`require_brief_approved`**). |
 | `PUT` | `/field/readiness-policy` | Upsert política (solo **superadmin** o **gerente** de la empresa). |
 | `GET` | `/field/readiness-signatories` | Lista signatarios autorizados (cuando `enforce_signatory_grants=true`). |
@@ -241,6 +242,7 @@ No vender PRE-FIELD aislado primero. Historia acordada: **Field Control → Auto
 
 | Versión | Fecha | Cambios |
 |---------|-------|---------|
+| **v1.9** | 2026-05-16 | §7 tabla API: `GET .../instrument-revisions/{id}/study-intelligence` (motor Study Intelligence). |
 | **v1.8** | 2026-05-11 | §7: API brief, waivers por revisión, lineage revisión/QA, política `require_brief_approved`; backlog ajustado (adjuntos, IA, biblioteca). |
 | **v1.7** | 2026-05-11 | §1 contrato único hallazgos; rol IA ampliado; waiver por revisión; orden A→G; §10 ítem 6 paquete trazabilidad IA obligatorio. |
 | **v1.6** | 2026-05-11 | Encabezado: enlaces a **ADR 001** y **modelo canónico** como fuente normativa de gobierno y dominio. |
