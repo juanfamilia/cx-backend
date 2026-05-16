@@ -1,6 +1,6 @@
 # 7Field — Arquitectura de experiencia (producto)
 
-**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos*. La **norma obligatoria** de producto, UX/UI y criterio técnico (Angular / backend) está en § **Dirección de producto, UX/UI y criterio técnico**. El **orden de ejecución** para implementación (Cursor) está en [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md). El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
+**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos*. La **norma obligatoria** de producto, UX/UI, investigación y criterio técnico está en § **Dirección de producto, UX/UI y criterio técnico**. El **orden de ejecución** para implementación (Cursor) está en [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md). El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
 
 ---
 
@@ -28,6 +28,40 @@ Norma de equipo: **ninguna feature nueva de superficie** sin pasar por esta secc
 
 **7Field = capa inteligente de preparación + ejecución + supervisión de investigación.** Interpretamos y gobernamos ejecución sobre datos que el cliente ya tiene en EMS/conectores; **no** reemplazamos el EMS en su fortaleza (captura / scripting).
 
+**Territorio obligatorio del diseño (Cursor / producto):** dejar de mirar **solo** “otro software SaaS”. Combinar de forma explícita:
+
+- **research methodology** (patrones y estándares reales del sector),
+- **UX moderna** (ritmo, jerarquía, foco),
+- **operational intelligence** (claridad operativa sin consola heredada),
+- **AI copilots** (consultivos, no autónomos),
+- **premium visual storytelling** (relato del estudio y del participante).
+
+**Percepción objetivo:** la versión **moderna, inteligente y visual** de cómo debería operar investigación en 2026 — **no** otro sistema enterprise genérico de investigación, **no** ERP ni panel administrativo disfrazado.
+
+### Referencias UX/UI (gold standard — estudiar patrones, no copiar literal)
+
+Extraer **sensación, ritmo, densidad, jerarquía y disclosure**; **no** clonar interfaces.
+
+| Referencia | Qué absorber |
+|------------|----------------|
+| **Notion AI** | IA contextual y humana; “piensa conmigo”; superficie limpia; bloques claros; complejidad oculta; cero sensación ERP. |
+| **Linear** | Foco extremo; velocidad percibida; claridad operacional; densidad muy controlada; estados simples; minimalismo premium. |
+| **Stripe Dashboard** | Enterprise moderno; jerarquía impecable; spacing premium; complejidad simplificada; cards y summaries fuertes. |
+| **Dovetail** | Síntesis de research; narrativa visual; insights; agrupación humana; tono metodológico moderno (**muy relevante PRE-FIELD**). |
+| **Maze** | Onboarding guiado; planning legible; lenguaje humano; claridad de flujo. |
+| **Airtable Interfaces** | Vistas enfocadas; progressive disclosure; flexibilidad visual; experiencias contextuales (**no** por idolatría tabular). |
+| **FigJam / Figma Slides** | Storytelling visual; participant journey; pensamiento en flujo; narrativa. |
+
+### Referencias metodológicas (patrones reales — no teoría académica en superficie)
+
+Tomar **buenas prácticas reconocibles** del ecosistema de investigación y CX; **no** inventar metodología arbitraria ni exponer marcos como manual pesado.
+
+**Estudiar / alinear patrones con:** Ipsos, Kantar, NielsenIQ, Gallup, Bain CX, Qualtrics XM Institute, Forrester Research, ESOMAR, MRS, estándares de UX research, marcos JTBD, marcos de madurez CX — entre otros equivalentes serios.
+
+**Traducción obligatoria a producto:** frameworks → **decisiones guiadas**, recomendaciones simples, señales visuales, mejores prácticas aplicadas, estructura sugerida, warnings útiles, preguntas inteligentes. El usuario debe sentir **“esto me ayuda a pensar mejor”**, no *“estoy leyendo metodología académica”*.
+
+**Tono deseado de la IA/guidance:** mezcla creíble entre **consultor senior + director metodológico + operaciones inteligentes** — siempre **consultivo** y acotado por datos y gates humanos.
+
 ### Núcleo y moat (continuidad PRE-FIELD ↔ FIELD)
 
 El núcleo es una cadena continua:
@@ -48,7 +82,9 @@ El núcleo es una cadena continua:
 
 **No** queremos UX “enterprise pesada”: tablas infinitas, densidad, jerga técnica en primera clase, configuraciones interminables ni **framework visible** como protagonista.
 
-La superficie debe sentirse **clara, premium, moderna, guiada, elegante, humana e inteligente** — más **editorial** que consola operacional.
+La superficie debe sentirse **clara, premium, moderna, guiada, elegante, humana e inteligente** — más **editorial** que consola operacional. **Lo visual vende:** priorizar whitespace, jerarquía fuerte, cards grandes, summaries, iconografía suave, tipografía respirable, ritmo vertical elegante, **una acción principal** por pantalla. **Reducir:** densidad, grids gigantes, tablas largas, formularios infinitos, labels técnicos en primera línea, bloques enormes de texto, múltiples CTAs compitiendo.
+
+**No:** ERP, consola legacy, software administrativo o panel lleno de tablas como primera experiencia.
 
 **Percepción objetivo (orden):**
 
@@ -71,13 +107,17 @@ La superficie debe sentirse **clara, premium, moderna, guiada, elegante, humana 
 
 **PRE-FIELD no es un builder.** Es: copiloto metodológico, guía estructurada, preparación inteligente, claridad operacional.
 
+Debe sentirse como **“estructurar inteligentemente un estudio”**, no como *“configurar un sistema”*. Flujo emocionalmente moderno: explica el problema → guidance contextual → recomendaciones → ajusta estructura sugerida → visualiza journey → revisa → aprueba → publica/exporta.
+
 **FIELD no es solo monitoreo.** Es: continuidad contextual del estudio, supervisión alineada a la intención, lectura inteligente de la ejecución.
+
+Debe sentirse como **“ejecutar con contexto”**: **no** dashboards genéricos desconectados. FIELD debe reflejar **qué era importante**, **qué riesgos vigilar**, **qué partes eran críticas**, **qué hallazgos pesan más** y **qué merece atención** para **este** estudio.
 
 ### IA — criterio obligatorio
 
 **No construir:** chatbot infinito; generación descontrolada; cuestionarios completos autónomos; “AI magic” caótico.
 
-La IA correcta es **contextual, metodológica, consultiva, operacional y accionable**. Debe sentirse como **seniority encapsulado**, no como autonomía fuera de control.
+La IA correcta es **contextual, metodológica, consultiva, operacional y accionable**. Debe sentirse como **seniority encapsulado** y **copilot senior**, **no** como autonomía fuera de control ni “AI magic”.
 
 **Ejemplos de tono correcto:**
 
@@ -104,7 +144,7 @@ Producto visual objetivo: **Journey Intelligence** (preview elegante del recorri
 - **Helpers de copy** separados del markup cuando crezca el texto.
 - Signals / `computed` limpios; **evitar mega-components**.
 
-**Primitivas reutilizables** (convención de naming orientativa): `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner` (implementar como selectores Angular coherentes con el proyecto).
+**Primitivas y experiencias dedicadas** (evitar reciclar layouts “admin” genéricos como base visual): `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`, `field-participant-journey-preview`, y hacia donde apunte el roadmap: `guided-brief-flow`, `framework-recommendation-cards`, `insight-callouts`, `study-review-experience`, `operational-priority-cards` (nombres orientativos; selectores Angular coherentes con el repo).
 
 **Evitar:** templates enormes llenos de `@if`; lógica de IA mezclada en HTML; helpers gigantes; interfaces duplicadas; tablas complejas en superficie; utilities Tailwind caóticos repetidos.
 
@@ -127,11 +167,11 @@ Preguntar siempre:
 1. ¿Ayuda a **pensar mejor**?
 2. ¿Ayuda a **ejecutar mejor**?
 3. ¿**Mantiene continuidad** PRE-FIELD ↔ FIELD?
-4. ¿Se siente **simple** aunque debajo haya complejidad?
-5. ¿Aumenta **percepción premium / inteligente**?
-6. ¿Genera **confianza en demo** en menos de ~3 minutos?
+4. ¿**Se ve premium** y **se siente inteligente**?
+5. ¿**Reduce complejidad visible** (sin sacrificar rigor debajo)?
+6. ¿Genera **confianza rápida** y podría **sorprender positivamente** en demo de ~3 minutos?
 
-Si no cumple: probablemente se está **ensanchando superficie sin fortalecer el núcleo**.
+Si no cumple: **iterar** antes de ensanchar superficie.
 
 ---
 
@@ -349,3 +389,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v3.4 (2026‑05‑06):** **Estrella norte** — continuidad PRE-FIELD ↔ FIELD como un solo flujo inteligente (intención viva en campo); anti‑patrones UX vs dirección deseada; rol consultivo de la IA; checklist por pantalla/feature; demo wow correcto; percepción “capa inteligente” sin competir en captura; consistencia con seniority LATAM vía producto, no copy explícito.
 - **v3.5 (2026‑05‑06):** prioridad del **siguiente salto visual/producto**: recorrido preview + narrativa participante + riesgos contextuales + señales automáticas + continuidad viva en Field + insights accionables + acompañamiento — explícitamente **no** drag/drop/builder como eje del valor.
 - **v3.7 (2026‑05‑06):** playbook **[7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md)** — secuencia obligatoria Journey Intelligence → preview visual → continuidad PRE‑FIELD→FIELD → IA consultiva → UX → progressive disclosure → Angular → Python → regla de percepción; enlace desde cabecera y documentación relacionada.
+- **v3.8 (2026‑05‑16):** dirección **metodología + UX moderna + operational intelligence + copilot IA + storytelling premium**; referencias UX gold standard (Notion AI, Linear, Stripe, Dovetail, Maze, Airtable Interfaces, FigJam/Figma Slides) y metodológicas (Ipsos, Kantar, NielsenIQ, Gallup, Bain CX, XM Institute, Forrester, ESOMAR, MRS, UX research, JTBD, CX maturity); traducción a guidance sin teoría pesada; PRE‑FIELD/FIELD/IA/visual ampliados; primitivas Angular dedicadas (`guided-brief-flow`, `framework-recommendation-cards`, etc.); checklist pantalla (premium/inteligente/complejidad visible/demo).

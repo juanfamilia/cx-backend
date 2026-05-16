@@ -1,5 +1,5 @@
 ---
-description: 7Field — orden Cursor 1→9 (ejecución) + normas producto/UX/Angular/Python
+description: 7Field — ejecución 1→9 + metodología/UX/gold standards + checklist pantalla
 alwaysApply: true
 ---
 
@@ -7,36 +7,30 @@ alwaysApply: true
 
 **Secuencia obligatoria (no saltar fases):** `docs/7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md`
 
-1. **Journey Intelligence** — preview recorrido, bloques sensibles, fatiga, abandono esperado, riesgos operacionales, narrativa participante, prioridades contextuales en FIELD; tarjetas + señales; **no** builders complejos; IA solo con datos reales (brief/spec/readiness), **no fake AI**; Angular pequeño + `signals`/`computed` + `field-*`.
-2. **Preview visual del cuestionario** — **no** drag/drop; cards por fase, flow, storytelling, highlights; demo: “entiendo el recorrido en segundos”.
-3. **Continuidad PRE-FIELD → FIELD** — contexto viaja en modelo/API/UI; cada vista FIELD: *¿qué significa para este estudio?* **No** dashboards genéricos.
-4. **IA consultiva** — sugerencias cortas, riesgos, redacción, fatiga, gaps, próximos pasos; microcopy humano; **no** “pipeline/schema/validator/rule package” en superficie.
-5. **UX simplificación** — menos densidad; una acción principal; cards/summaries; **no** ERP.
-6. **Progressive disclosure** — JSON/lineage/hashes/QA técnico solo en **Detalles técnicos**.
-7. **Angular** — smart/dumb; sin mega-templates ni lógica pesada en HTML; build limpio.
-8. **Python/heurísticas** — scoring, QA inteligente, recomendaciones, contextualización; **sin** complejidad antes de valor perceptible.
-9. **Priorizar solo si** genera al menos una percepción: entiende mi estudio / ayuda a pensar / ayuda a ejecutar / premium / menos dependencia seniors / avanzado pero fácil.
+1. **Journey Intelligence** — preview recorrido, bloques sensibles, fatiga, abandono, riesgos, narrativa, prioridades FIELD; **no** builders complejos; IA con datos reales (brief/spec/readiness), **no fake AI**; `signals`/`computed` + `field-*`.
+2. **Preview visual cuestionario** — **no** drag/drop; cards, flow, storytelling, highlights.
+3. **Continuidad PRE-FIELD → FIELD** — contexto en modelo/API/UI; *¿qué significa para este estudio?* **No** dashboards genéricos.
+4. **IA consultiva** — copilot senior; **no** pipeline/schema/validator/rule package en superficie.
+5. **UX** — premium, aireada, una acción principal; **no** ERP/consola legacy.
+6. **Progressive disclosure** — técnico solo en **Detalles técnicos**.
+7. **Angular** — smart/dumb; experiencias dedicadas (ver doc maestro: `guided-brief-flow`, `framework-recommendation-cards`, `field-participant-journey-preview`, …); sin mega-templates.
+8. **Python/backend** — heurísticas auditables, servicios pequeños; sin complejidad antes de valor visible.
+9. **Priorizar** si genera percepción: entiende mi estudio / piensa mejor / ejecuta mejor / premium / avanzado pero fácil.
 
 ---
 
-## Norma de producto (recordatorio)
+## Territorio del producto (no solo “otro SaaS”)
 
-Documentación completa: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico**.
+Combinar: **research methodology** (patrones reales del sector) + **UX moderna** + **operational intelligence** + **AI copilots** (consultivos) + **premium visual storytelling**. Objetivo: investigación **2026**, **no** enterprise investigación genérico.
 
-**No somos:** Qualtrics / SurveyMonkey / Dooblo / builder genérico / captura sustitutiva.
+**Referencias UX — estudiar sensación y patrones, no copiar:** Notion AI · Linear · Stripe Dashboard · Dovetail (clave PRE-FIELD) · Maze · Airtable Interfaces · FigJam/Figma Slides.
 
-**Tesis:** capa inteligente preparación + ejecución + supervisión; PRE-FIELD ↔ FIELD flujo único; intención viva en campo.
+**Referencias metodológicas — patrones, no teoría en UI:** Ipsos, Kantar, NielsenIQ, Gallup, Bain CX, XM Institute, Forrester, ESOMAR, MRS, UX research, JTBD, CX maturity (y equivalentes serios). Traducir a: decisiones guiadas, warnings, preguntas inteligentes, señales visuales — tono **consultor senior + metodología + operaciones**.
 
-**UX superficie:** progressive disclosure; Detalles técnicos para artefactos crudos; humano, editorial, menos tablas/badges/jerga.
+Doc maestro: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico**.
 
-**PRE-FIELD:** copiloto — **no** builder protagonista. **FIELD:** supervisión contextual — **no** solo métricas aisladas.
+---
 
-**IA:** consultiva y accionable — **no** autonomía caótica.
+## Checklist por pantalla / feature
 
-**Journey Intelligence:** no drag/drop como wow; sí recorrido + riesgos + campo con contexto.
-
-**Angular:** primitivas `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`; evitar mega-`@if` y tablas complejas en superficie.
-
-**Backend:** servicios pequeños, auditables, reglas explícitas + IA acotada — no pipelines gigantes prematuros.
-
-**Checklist rápido:** ¿piensa mejor? ¿ejecuta mejor? ¿continuidad? ¿simple? ¿premium? ¿demo ~3 min? Si no, no ensanchar.
+¿Piensa mejor? ¿Ejecuta mejor? ¿Continuidad PRE-FIELD ↔ FIELD? ¿**Premium e inteligente**? ¿**Menos complejidad visible**? ¿Confianza rápida + demo ~3 min sorprendente? Si no → **iterar**, no ensanchar.
