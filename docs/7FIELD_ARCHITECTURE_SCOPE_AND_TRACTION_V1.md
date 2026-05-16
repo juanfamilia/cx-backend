@@ -1,6 +1,6 @@
 # 7Field — Arquitectura de experiencia (producto)
 
-**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos*. La **norma obligatoria** de producto, UX/UI y criterio técnico (Angular / backend) está en § **Dirección de producto, UX/UI y criterio técnico**. El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
+**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos*. La **norma obligatoria** de producto, UX/UI y criterio técnico (Angular / backend) está en § **Dirección de producto, UX/UI y criterio técnico**. El **orden de ejecución** para implementación (Cursor) está en [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md). El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
 
 ---
 
@@ -317,6 +317,7 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 
 ## Documentación relacionada (detalle)
 
+- **Secuencia de ejecución (Cursor) — orden obligatorio 1→9:** [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md)
 - PRE-FIELD — **gobierno cerrado** (ADR): [adr/001-pre-field-brief-framework-ai-guide-bank-governance.md](adr/001-pre-field-brief-framework-ai-guide-bank-governance.md)
 - PRE-FIELD — **modelo canónico** (entidades, gates, bounded contexts): [7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md](7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md)
 - PRE-FIELD Intelligence (builder, framework, Auto QA, readiness, API blueprint): [7FIELD_PRE_FIELD_INTELLIGENCE_V1.md](7FIELD_PRE_FIELD_INTELLIGENCE_V1.md)
@@ -347,4 +348,4 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v3.3 (2026‑05‑11):** Principio **hallazgos auditables mismo contrato** (premisa 6); PRE-FIELD nombres oficiales tres capas; prioridad **A→G** y waiver por revisión remitidos a ADR/modelo canónico.
 - **v3.4 (2026‑05‑06):** **Estrella norte** — continuidad PRE-FIELD ↔ FIELD como un solo flujo inteligente (intención viva en campo); anti‑patrones UX vs dirección deseada; rol consultivo de la IA; checklist por pantalla/feature; demo wow correcto; percepción “capa inteligente” sin competir en captura; consistencia con seniority LATAM vía producto, no copy explícito.
 - **v3.5 (2026‑05‑06):** prioridad del **siguiente salto visual/producto**: recorrido preview + narrativa participante + riesgos contextuales + señales automáticas + continuidad viva en Field + insights accionables + acompañamiento — explícitamente **no** drag/drop/builder como eje del valor.
-- **v3.6 (2026‑05‑06):** § **Dirección de producto, UX/UI y criterio técnico** — marco obligatorio unificado: anti‑Qualtrics/SurveyMonkey/Dooblo/builder/captura; tesis capa inteligente; moat PRE‑FIELD↔FIELD; reglas UX (progressive disclosure, detalles técnicos, menos tablas/badges); PRE‑FIELD/FIELD definiciones; IA consultiva con ejemplos; **Journey Intelligence**; reglas **Angular** (smart/dumb, primitivas `field-*`, evitar mega‑templates); **Python/IA** (servicios pequeños, auditables, sin pipelines gigantes); checklist previo a features.
+- **v3.7 (2026‑05‑06):** playbook **[7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md)** — secuencia obligatoria Journey Intelligence → preview visual → continuidad PRE‑FIELD→FIELD → IA consultiva → UX → progressive disclosure → Angular → Python → regla de percepción; enlace desde cabecera y documentación relacionada.

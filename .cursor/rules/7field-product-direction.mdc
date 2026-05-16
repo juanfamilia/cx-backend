@@ -1,44 +1,42 @@
 ---
-description: 7Field obligatorio — producto/UX/IA/Journey Intelligence + Angular + Python antes de ampliar superficie
+description: 7Field — orden Cursor 1→9 (ejecución) + normas producto/UX/Angular/Python
 alwaysApply: true
 ---
 
-# 7Field — dirección obligatoria
+# 7Field — cómo trabajar en Cursor
 
-Fuente canónica: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico**.
+**Secuencia obligatoria (no saltar fases):** `docs/7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md`
 
-## Lo que NO somos
+1. **Journey Intelligence** — preview recorrido, bloques sensibles, fatiga, abandono esperado, riesgos operacionales, narrativa participante, prioridades contextuales en FIELD; tarjetas + señales; **no** builders complejos; IA solo con datos reales (brief/spec/readiness), **no fake AI**; Angular pequeño + `signals`/`computed` + `field-*`.
+2. **Preview visual del cuestionario** — **no** drag/drop; cards por fase, flow, storytelling, highlights; demo: “entiendo el recorrido en segundos”.
+3. **Continuidad PRE-FIELD → FIELD** — contexto viaja en modelo/API/UI; cada vista FIELD: *¿qué significa para este estudio?* **No** dashboards genéricos.
+4. **IA consultiva** — sugerencias cortas, riesgos, redacción, fatiga, gaps, próximos pasos; microcopy humano; **no** “pipeline/schema/validator/rule package” en superficie.
+5. **UX simplificación** — menos densidad; una acción principal; cards/summaries; **no** ERP.
+6. **Progressive disclosure** — JSON/lineage/hashes/QA técnico solo en **Detalles técnicos**.
+7. **Angular** — smart/dumb; sin mega-templates ni lógica pesada en HTML; build limpio.
+8. **Python/heurísticas** — scoring, QA inteligente, recomendaciones, contextualización; **sin** complejidad antes de valor perceptible.
+9. **Priorizar solo si** genera al menos una percepción: entiende mi estudio / ayuda a pensar / ayuda a ejecutar / premium / menos dependencia seniors / avanzado pero fácil.
 
-No otro Qualtrics / SurveyMonkey / Dooblo / builder genérico / pantalla de captura. No competir en tipos de pregunta ni scripting infinito.
+---
 
-## Tesis
+## Norma de producto (recordatorio)
 
-**Capa inteligente:** preparación + ejecución + supervisión. Flujo continuo **pensamiento → preparación → ejecución → supervisión → aprendizaje**. **PRE-FIELD ↔ FIELD** un solo flujo; intención metodológica **viva** en campo (moat).
+Documentación completa: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md` § **Dirección de producto, UX/UI y criterio técnico**.
 
-## UX superficie
+**No somos:** Qualtrics / SurveyMonkey / Dooblo / builder genérico / captura sustitutiva.
 
-Progressive disclosure **siempre**. JSON, hashes, lineage, QA packages → **Detalles técnicos**. Superficie: lenguaje humano, un objetivo por pantalla, más espacio/tarjetas/narrativa, **menos tablas/badges/estados técnicos**. Sensación **editorial**, no consola enterprise.
+**Tesis:** capa inteligente preparación + ejecución + supervisión; PRE-FIELD ↔ FIELD flujo único; intención viva en campo.
 
-Percepción: primero “piensa mejor”, luego “ejecuta mejor”; no “operando un sistema complejo”.
+**UX superficie:** progressive disclosure; Detalles técnicos para artefactos crudos; humano, editorial, menos tablas/badges/jerga.
 
-**PRE-FIELD:** copiloto metodológico / guía / preparación — **no** builder como protagonista. **FIELD:** continuidad contextual y supervisión alineada a intención — **no** solo monitoreo abstracto.
+**PRE-FIELD:** copiloto — **no** builder protagonista. **FIELD:** supervisión contextual — **no** solo métricas aisladas.
 
-## IA
+**IA:** consultiva y accionable — **no** autonomía caótica.
 
-Consultiva, contextual, metodológica, operacional, accionables — **seniority encapsulado**. No chatbot infinito, generación descontrolada, cuestionarios autónomos, “AI magic” caótico.
+**Journey Intelligence:** no drag/drop como wow; sí recorrido + riesgos + campo con contexto.
 
-## Journey Intelligence (siguiente salto)
+**Angular:** primitivas `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`; evitar mega-`@if` y tablas complejas en superficie.
 
-No drag/drop/builder gigante como wow. Sí: brief → estructura → **recorrido participante** → riesgos → sugerencias → campo → FIELD con contexto.
+**Backend:** servicios pequeños, auditables, reglas explícitas + IA acotada — no pipelines gigantes prematuros.
 
-## Angular (este repo / frontend compañero)
-
-Smart + dumb; componentes pequeños; copy en helpers; signals/`computed` limpios. Primitivas objetivo: `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`. Evitar mega-templates `@if`, IA en HTML, tablas complejas en superficie.
-
-## Python / backend IA
-
-No IA que reemplace criterio humano ni gates. Sí: heurísticas, señales, clasificación contextual, resúmenes auditables, **servicios pequeños**, prompts acotados, **reglas explícitas + IA contextual** — no pipelines gigantes prematuros.
-
-## Checklist antes de cualquier feature
-
-¿Piensa mejor? ¿Ejecuta mejor? ¿Continuidad PRE-FIELD ↔ FIELD? ¿Simple en superficie? ¿Premium/inteligente? ¿Demo creíble en menos de ~3 minutos? Si no, no ensanchar.
+**Checklist rápido:** ¿piensa mejor? ¿ejecuta mejor? ¿continuidad? ¿simple? ¿premium? ¿demo ~3 min? Si no, no ensanchar.
