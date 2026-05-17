@@ -1,6 +1,6 @@
 # Ecosistema Siete (tenant / sub-tenant / productos)
 
-**Visión:** Siete Inteligencia Creativa **no** es una colección de pantallas aisladas: es un **ecosistema de inteligencia aplicada** a investigación, experiencia y operación. Field, CX, InS, Clever y Perfil comparten **contexto, identidad, lenguaje, señales y memoria metodológica**. Dirección de experiencia y criterio transversal: [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
+**Visión:** Siete Inteligencia Creativa **no** es una colección de pantallas aisladas ni “productos” solo por menú: es un **ecosistema de inteligencia aplicada** y **memoria metodológica viva** — Field, CX, InS, Clever y Perfil comparten **contexto, identidad, lenguaje, señales y continuidad**. Dirección transversal: [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
 
 **Criterios de plataforma, ancla comercial (Field) y contrato mínimo compartido (hallazgos, auditoría, decisiones):** [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md)
 

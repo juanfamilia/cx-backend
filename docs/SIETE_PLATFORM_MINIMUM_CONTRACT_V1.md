@@ -4,7 +4,7 @@
 
 ## 1. Constitución (criterios de negocio)
 
-1. **Una plataforma**, no productos sueltos: mejora continua y **reducción de riesgo operativo**. Hilo: **señal → riesgo → decisión → acción → aprendizaje**. La propuesta de valor global es **inteligencia aplicada** sobre investigación y experiencia, no “otro EMS ni otro builder”.
+1. **Una plataforma**, no productos sueltos: mejora continua y **reducción de riesgo operativo**. Hilo: **señal → riesgo → decisión → acción → aprendizaje**. La propuesta de valor global es **inteligencia aplicada** y **memoria metodológica viva** (persistida, versionada y compartida entre módulos — no solo pantallas conectadas a APIs), sobre investigación y experiencia, no “otro EMS ni otro builder”.
 
 2. **Papeles por módulo**
    - **Field** — **PRE-FIELD:** diseño inteligente del estudio (brief, framework, journey, riesgos, QA consultivo, readiness). **FIELD:** control operativo, salud, hallazgos, scoring, ejecución real sobre datos de captura externa. FIELD **consume intención metodológica** creada en PRE-FIELD (continuidad operacional, no dos silos).

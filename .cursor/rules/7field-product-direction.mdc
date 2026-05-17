@@ -1,15 +1,21 @@
 ---
-description: Siete Inteligencia Creativa — ecosistema, Field/CX/InS/Clever/Perfil, UX/IA, FastAPI↔Angular, sin improvisar infra
+description: Siete — memoria metodológica viva; FastAPI cerebro; Angular presentación; Cursor solo implementa según docs
 alwaysApply: true
 ---
 
 # Siete Inteligencia Creativa — cómo operar en Cursor
 
-**No es** una colección de pantallas ni productos aislados. Es un **ecosistema de inteligencia aplicada** a investigación, experiencia y operación. Arquitectura, UX y decisiones técnicas deben responder a esa visión **completa**.
+## Tesis (no negociable en código sin decisión explícita)
+
+**Siete no es** APIs conectadas a pantallas ni menús de productos aislados.
+
+**Siete es memoria metodológica viva:** inteligencia operacional **persistida**, **versionada** y **compartida**. Field, CX, InS, Clever y Perfil son **vistas especializadas** sobre la misma capa de contexto — no silos.
+
+**Moat central:** lo que PRE-FIELD detecta (fatiga, sesgo, sensibilidad, abandono esperado, preguntas débiles, riesgo metodológico, journey, hipótesis) **no puede morir en PRE-FIELD**. Debe convertirse en **signals**, **contextual scores**, **journey intelligence**, **expectativas operativas**, **study intelligence persistido** — y **FIELD lo consume**. FIELD no actúa como si el estudio naciera con las respuestas.
 
 **Documentos canónicos (leer antes de ampliar superficie):**
 
-- Visión producto / PRE-FIELD vs FIELD / checklist PRs: `docs/7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md`
+- Memoria viva, arquitectura, checklist PR, rol Cursor vs producto: `docs/7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md`
 - Contrato plataforma (hallazgos, decisiones, auditoría): `docs/SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md`
 - Tenant, flags, API transversal: `docs/ECOSYSTEM_SIETE.md`
 - Alcance y UX maestro Field: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md`
@@ -21,89 +27,44 @@ alwaysApply: true
 
 ---
 
-## Productos del ecosistema (continuidad obligatoria)
+## Rol de Cursor vs rol de producto
 
-| Producto | Rol resumido |
-|----------|----------------|
-| **Siete Field** | PRE-FIELD (diseño inteligente del estudio) + FIELD (supervisión operativa); **FIELD consume intención** persistida desde PRE-FIELD. |
-| **Siete CX** | Medición, cumplimiento, experiencia, cierre operativo. |
-| **Siete InS** | Voz, sesiones, hallazgos cualitativos. |
-| **Siete Clever** | Aceleración ejecutiva (lectura, síntesis); **no** sustituye reglas ni hallazgos oficiales. |
-| **Siete Perfil** | Identidad y contexto del usuario/equipo en el ecosistema (capacidades en evolución; ver docs). |
+**Cursor implementa** según docs y decisiones ya fijadas (refactor, estructura, velocidad).
 
-**Compartido entre todos:** contexto, identidad, lenguaje visual, inteligencia y señales, **memoria metodológica**, **continuidad operacional**.
+**Cursor no decide** visión de producto, UX definitiva, moat, narrativa comercial, priorización del puente PRE-FIELD ↔ FIELD, ni políticas IA sensibles sin fuente escrita.
 
-**No construimos:** otro Qualtrics, SurveyMonkey, builder infinito ni EMS de captura sustituto. Construimos la **capa inteligente encima del caos operacional**.
+Si falta criterio: **pedirlo al equipo** o **documentarlo** (ADR / doc) antes de asumir.
 
 ---
 
-## Tesis central
-
-Valor = ciclo **pensamiento → preparación → ejecución → supervisión → aprendizaje**, con contexto **vivo entre productos**.
-
-Ejemplo de continuidad: si PRE-FIELD detecta riesgos en un tema (p. ej. onboarding sensible), **FIELD** debe saber qué monitorear; **CX** qué señales observar; **InS** qué patrones buscar; **Clever** qué narrativa sintetizar — cuando el modelo de datos/API lo permita, sin inventar integraciones.
-
----
-
-## División técnica (obligatoria)
+## División técnica
 
 | Capa | Responsabilidad |
 |------|------------------|
-| **Frontend (Angular)** | Presentación, navegación, UX, componentes visuales, progressive disclosure. **No “piensa” metodología.** |
-| **Backend (FastAPI)** | Inteligencia, reglas, heurísticas, contexto, bundles coherentes, IA aplicada, scoring, journey intelligence, copilots. **Fuente de verdad.** |
+| **Angular (Vercel u otro)** | Experiencia, navegación, copiloto **visual**, storytelling operacional, visualización. **No** inteligencia pesada, scoring principal ni heurísticas metodológicas centrales. |
+| **FastAPI** | **Cerebro operacional:** gateway HTTP, **orchestration**, **intelligence**, **policy**, **memory** tenant-aware — **no** mentalidad “solo CRUD”. |
+| **Workers (roadmap)** | Pipelines async (Whisper, embeddings, batch QA/scoring, etc.) cuando infra lo confirme — **no inventar colas**. |
+| **PostgreSQL** | Verdad operacional: contratos, snapshots, lineage, approvals, findings. |
+| **Vector store (roadmap)** | pgvector y/o Qdrant/Weaviate para similitud y contexto semántico cuando esté adoptado. |
 
-**Stack real de referencia** (no asumir PHP/Laravel ni piezas no confirmadas): Angular, FastAPI, PostgreSQL; evolutivo según repo (S3, OpenAI, Whisper, workers, Vercel/Cloud Run, etc.). **Antes de diseñar contra Redis, Celery, pgvector, embeddings o workers:** pedir explícitamente contrato, env o confirmación en código — **no improvisar infraestructura inexistente ni simular IA.**
+**IA:** consultiva; eleva criterio humano; **no** estudios mágicos ni automatización opaca.
 
----
-
-## IA
-
-**Sí:** consultiva, contextual, metodológica, operacional, elegante. Eleva juniors, acelera criterio, reduce retrabajo, mantiene consistencia.
-
-**No:** autónoma caótica, gimmick, estudios completos sin control humano, “fake AI”.
+**Dirección IA-first:** prompt registry versionado; evolución hacia `prompt_registry/{field,cx,ins,clever,perfil}/`; **LLM router** multi-proveedor (OpenAI, Anthropic, Gemini, …) — **no atar** el negocio a un solo vendor sin decisión.
 
 ---
 
-## UX/UI
+## Checklist PR / feature (resumen)
 
-**Debe sentirse:** moderna, premium, limpia, humana, clara, elegante, inteligente.
-
-**No debe parecer:** enterprise pesada, consola técnica, admin viejo, sistema dominado por tablas.
-
-**Referencias (patrones, no copiar):** Linear, Notion, Stripe, Vercel, Intercom, Pitch (+ Dovetail/Maze/Airtable Interfaces donde ya citan docs Field).
-
-**Anti-referencias:** SAP, Qualtrics admin, Jira legacy.
-
-**Reglas:** una pantalla ≈ una pregunta mental; menos densidad; más espacio; menos tablas protagonistas; más tarjetas y narrativa; progressive disclosure; lenguaje humano; JSON/hashes/specs solo en **Detalles técnicos**.
+Ver §9 completo en `docs/7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md`. En corto: ¿continuidad PRE-FIELD ↔ FIELD? ¿memoria viva persistida? ¿piensa/ejecuta mejor? ¿reduce caos? ¿superficie honesta (backend fuente de verdad)? ¿premium e inteligencia real, no automatización barata?
 
 ---
 
-## Prioridades técnicas de plataforma (roadmap — validar en código antes de asumir)
+## Infra
 
-1. Formalizar `/intelligence` (o equivalente) como capa oficial coherente.
-2. Persistir y versionar Study Intelligence / bundles como memoria metodológica.
-3. Redis + Celery (u orquestación async) cuando esté adoptado en repo.
-4. pgvector / memoria semántica compartida cuando esté adoptado.
-5. Prompt registry centralizado (ya referenciado en motor inteligencia).
-6. Continuidad explícita PRE-FIELD ↔ FIELD ↔ otros consumidores cuando existan APIs.
+No asumir Redis, Celery, pgvector, workers o keys sin confirmación en repo/.env/infra.
 
 ---
 
-## Checklist obligatorio (feature / pantalla / PR)
+## Secuencia Field
 
-Responder **sí** con honestidad:
-
-1. ¿**Piensa mejor** el usuario?
-2. ¿**Ejecuta mejor**?
-3. ¿Mantiene **continuidad** (PRE-FIELD ↔ FIELD y ecosistema cuando aplique)?
-4. ¿Se siente **simple** aunque debajo haya complejidad?
-5. ¿Aumenta percepción **premium / inteligente**?
-6. ¿**Wow útil** en menos de ~3 minutos?
-
-Si no: **iterar o recortar** — no ensanchar sin fortalecer el núcleo. Detalle adicional: ver checklist §9 en `docs/7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md`.
-
----
-
-## Secuencia Field en Cursor (no saltar)
-
-Implementación ordenada Field: `docs/7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md` (fases 1→9).
+`docs/7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md` (fases 1→9).

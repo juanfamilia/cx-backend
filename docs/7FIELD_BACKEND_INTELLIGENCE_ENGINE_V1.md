@@ -11,11 +11,12 @@
 ## 1. Principios obligatorios
 
 1. **Backend = motor.** Framework catalog + rule packs + heurísticas CX + análisis de journey + fatiga + scoring contextual + generación de insights + interpretación operativa + continuidad hacia Field + exportadores + mappings EMS.
-2. **Sin prompts dispersos.** Todo texto LLM vive en un **registro central versionado** (`app/study_intelligence/prompt_registry.py` y artefactos asociados en repo); los servicios **referencian** `prompt_id` + versión, no strings inline ad hoc.
+2. **Sin prompts dispersos.** Todo texto LLM vive en un **registro central versionado** (`app/study_intelligence/prompt_registry.py` y artefactos asociados en repo); los servicios **referencian** `prompt_id` + versión, no strings inline ad hoc. **Dirección:** evolucionar hacia árbol por vertical (`field/`, `cx/`, `ins/`, `clever/`, `perfil/`) con router LLM multi-proveedor según producto — ver §11 doc experiencia.
 3. **Patrones metodológicos reales.** Calibrar reglas y plantillas con práctica reconocible (Ipsos, Kantar, NielsenIQ, Gallup, Bain CX, Qualtrics XM Institute, Forrester, ESOMAR, MRS, estándares UX research, JTBD, CX maturity, etc.) — **traducidos** a reglas audtables y UX humano, no teoría en API.
 4. **Percepción deseada:** mezcla creíble de **consultor senior + director metodológico + operaciones inteligentes**.
 5. **Continuidad PRE-FIELD → FIELD.** El mismo bundle de contexto (journey, riesgos, prioridades, señales) debe poder **serializarse y reusarse** en overview/decisión Field cuando exista vínculo estudio–proyecto.
 6. **Horizonte ecosistema.** Los mismos artefactos versionados deben poder **alimentar** en el futuro a CX, InS y Clever (p. ej. resúmenes ejecutivos, patrones cualitativos, narrativa) **sin** duplicar fuentes de verdad; Perfil y permisos consumen el mismo tenant y auditoría.
+7. **Plataforma = memoria + orquestación, no CRUD accidental.** FastAPI debe cargar orchestration, intelligence, policy y capas de memoria según evolución del repo; **workers** asíncronos y **vector store** son roadmap explícito en [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md) §7–§11 — **no** codificar colas o vectores sin evidencia en infra.
 
 ### 1.1 Readiness oficial vs QA dinámico (semántica única)
 
