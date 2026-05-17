@@ -28,6 +28,7 @@ from app.models.field_readiness_model import (
     ReadinessSignResult,
 )
 from app.models.user_model import User
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.services.field_instrument_revision_services import (
     _effective_company_id,
     _get_revision_writable,
@@ -492,13 +493,35 @@ async def sign_readiness_for_revision(
 
     gate_after = await build_readiness_gate(session, rev, policy_public=policy_public, policy_view=policy_view)
 
+    revision_approved_now = False
     if gate_after.aggregate_status == "ready" and rev.status == "draft":
         rev.status = "approved"
         rev.updated_by_user_id = user.id
         await session.commit()
         await session.refresh(rev)
+        revision_approved_now = True
 
     gate_final = await build_readiness_gate(session, rev, policy_public=policy_public, policy_view=policy_view)
+
+    if revision_approved_now:
+        await emit_platform_signal_safe(
+            session,
+            company_id=cid,
+            user_id=user.id,
+            source_domain="pre_field",
+            signal_code="pre_field.readiness_revision_approved",
+            summary=(
+                f"PRE-FIELD: revisión de instrumento aprobada (Readiness) — «{(rev.revision_label or '')[:220]}»"
+            ),
+            severity="low",
+            payload={
+                "field_instrument_revision_id": revision_id,
+                "field_study_id": rev.study_id,
+                "revision_status": rev.status,
+                "readiness_aggregate": gate_final.aggregate_status,
+            },
+            field_study_id=rev.study_id,
+        )
 
     return ReadinessSignResult(
         readiness=gate_final,

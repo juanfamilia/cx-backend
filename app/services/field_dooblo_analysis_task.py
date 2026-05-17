@@ -44,6 +44,8 @@ from app.models.field_decision_model import (
     SYNC_RUN_PROCESSING,
 )
 from app.models.field_ledger_model import FieldFinding
+from app.models.field_project_model import FieldProject
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 
 
 def _utc_naive() -> datetime:
@@ -335,6 +337,25 @@ async def _process_sync_run(session: AsyncSession, sync_run_id: int) -> None:
         run.field_policy_set_id = policy.id
     run.field_project_external_source_id = src.id
     await session.commit()
+
+    proj = await session.get(FieldProject, run.field_project_id)
+    study_id = proj.study_id if proj else None
+    await emit_platform_signal_safe(
+        session,
+        company_id=run.company_id,
+        user_id=None,
+        source_domain="field",
+        signal_code="field.dooblo_analysis_completed",
+        summary=f"Field: análisis Dooblo completado (sync run {run.id})",
+        severity="low",
+        payload={
+            "field_sync_run_id": run.id,
+            "field_project_id": run.field_project_id,
+            "total_records": run.total_records,
+        },
+        field_project_id=run.field_project_id,
+        field_study_id=study_id,
+    )
 
 
 async def _insert_no_survey_finding(session: AsyncSession, run: FieldSyncRun) -> None:

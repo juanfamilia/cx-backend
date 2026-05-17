@@ -33,7 +33,7 @@ async def get_evaluation_analysis(
     return db_evaluation_analysis
 
 
-async def _company_id_for_evaluation(
+async def resolve_company_id_for_evaluation(
     session: AsyncSession, evaluation_id: int
 ) -> int | None:
     ev = await session.get(Evaluation, evaluation_id)
@@ -56,7 +56,7 @@ async def create_evaluation_analysis(
 
     eid = db_evaluation_analysis.evaluation_id
     if eid is not None:
-        cid = await _company_id_for_evaluation(session, eid)
+        cid = await resolve_company_id_for_evaluation(session, eid)
         if cid is not None:
             await emit_platform_signal_safe(
                 session,

@@ -31,6 +31,9 @@ jobs:
           app/services/field_readiness_services.py
           app/services/field_framework_template_services.py
           app/services/evaluation_analysis_services.py
+          app/services/evaluation_services.py
+          app/services/field_import_services.py
+          app/services/field_dooblo_analysis_task.py
           app/services/field_project_services.py
           app/services/field_study_brief_services.py
           app/services/field_study_services.py

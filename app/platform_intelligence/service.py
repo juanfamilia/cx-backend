@@ -172,9 +172,10 @@ def _static_cross_feed() -> list[CrossFeedChannel]:
         CrossFeedChannel(
             source="cx",
             sink="pre_field",
-            status="planned",
+            status="partial",
             examples=[
-                "journeys observados → mejoras en diseño de instrumento futuro",
+                "señales `cx.evaluation_created` / `cx.evaluation_status_changed` en memoria compartida",
+                "journeys observados → mejoras en diseño de instrumento futuro (roadmap)",
             ],
         ),
         CrossFeedChannel(

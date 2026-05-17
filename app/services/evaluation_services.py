@@ -19,6 +19,8 @@ from app.models.notification_model import NotificationBase
 from app.models.survey_forms_model import SurveyForm
 from app.models.survey_model import SurveySection
 from app.models.user_model import User, UserPublic
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
+from app.services.evaluation_analysis_services import resolve_company_id_for_evaluation
 from app.services.notification_services import create_notification
 from app.types.pagination import Pagination
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
@@ -39,7 +41,7 @@ async def get_evaluations(
         .join(Campaign, Evaluation.campaigns_id == Campaign.id, isouter=True)
         .join(User, Evaluation.user_id == User.id, isouter=True)
         .options(selectinload(Evaluation.campaign), selectinload(Evaluation.user))
-        .where(Evaluation.deleted_at == None)
+        .where(Evaluation.deleted_at.is_(None))
     )
 
     if company_id is not None:
@@ -90,7 +92,7 @@ async def get_evaluation(session: AsyncSession, evaluation_id: int) -> Evaluatio
 
     query = (
         select(Evaluation)
-        .where(Evaluation.id == evaluation_id, Evaluation.deleted_at == None)
+        .where(Evaluation.id == evaluation_id, Evaluation.deleted_at.is_(None))
         .options(
             selectinload(Evaluation.evaluation_answers),
             selectinload(Evaluation.video),
@@ -132,7 +134,7 @@ async def get_evaluation_answer(
 ) -> EvaluationAnswer:
     query = select(EvaluationAnswer).where(
         EvaluationAnswer.id == evaluation_answer_id,
-        EvaluationAnswer.deleted_at == None,
+        EvaluationAnswer.deleted_at.is_(None),
     )
 
     result = await session.execute(query)
@@ -164,6 +166,23 @@ async def create_evaluation(
         db_answers.append(db_answer)
 
     await session.commit()
+
+    cid = await resolve_company_id_for_evaluation(session, db_evaluation.id)
+    if cid is not None:
+        await emit_platform_signal_safe(
+            session,
+            company_id=cid,
+            user_id=db_evaluation.user_id,
+            source_domain="cx",
+            signal_code="cx.evaluation_created",
+            summary=f"CX: nueva evaluación {db_evaluation.id}",
+            severity="low",
+            payload={
+                "evaluation_id": db_evaluation.id,
+                "campaign_id": db_evaluation.campaigns_id,
+                "initial_status": str(db_evaluation.status),
+            },
+        )
 
     return db_evaluation
 
@@ -222,6 +241,28 @@ async def change_evaluation_status(
     session.add(db_evaluation)
     await session.commit()
     await session.refresh(db_evaluation)
+
+    cid = await resolve_company_id_for_evaluation(session, evaluation_id)
+    if cid is not None:
+        await emit_platform_signal_safe(
+            session,
+            company_id=cid,
+            user_id=actor_user_id,
+            source_domain="cx",
+            signal_code="cx.evaluation_status_changed",
+            summary=(
+                f"CX: evaluación {evaluation_id} "
+                f"{old_status.value if hasattr(old_status, 'value') else old_status} → "
+                f"{status.status.value if hasattr(status.status, 'value') else status.status}"
+            ),
+            severity="low",
+            payload={
+                "evaluation_id": evaluation_id,
+                "old_status": getattr(old_status, "value", str(old_status)),
+                "new_status": getattr(status.status, "value", str(status.status)),
+                "comment_present": status.comment is not None,
+            },
+        )
 
     # Notificación in-app (siempre al dueño de la evaluación)
     notification = NotificationBase(

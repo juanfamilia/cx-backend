@@ -13,6 +13,7 @@ from app.models.field_decision_model import SOURCE_TYPE_CSV
 from app.models.field_ledger_model import FieldFinding, FieldImportRow, FieldLedgerEvent
 from app.models.field_project_model import FieldImportRun, FieldProject
 from app.models.user_model import User
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.services.field_project_services import assert_field_staff
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
@@ -345,4 +346,24 @@ async def import_field_csv_2026_1(
 
     await session.commit()
     await session.refresh(run)
+    await emit_platform_signal_safe(
+        session,
+        company_id=project.company_id,
+        user_id=actor_id,
+        source_domain="field",
+        signal_code="field.import_csv_completed",
+        summary=(
+            f"Field: importación CSV completada ({inserted_rows} filas, {finding_count} hallazgos)"
+        ),
+        severity="low",
+        payload={
+            "field_import_run_id": run.id,
+            "field_project_id": project.id,
+            "rows_materialized": inserted_rows,
+            "findings_created": finding_count,
+            "format_version": FORMAT_VERSION,
+        },
+        field_project_id=project.id,
+        field_study_id=project.study_id,
+    )
     return run
