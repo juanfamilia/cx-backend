@@ -17,6 +17,7 @@ from app.platform_intelligence.schemas import (
     SharedPrimitive,
     TenantOperationalFootprint,
 )
+from app.platform_intelligence.signals_service import list_recent_signals_public
 
 
 def _static_lenses(flags: ProductFlags) -> list[DomainLens]:
@@ -210,6 +211,11 @@ async def build_platform_memory_envelope(
         if company_id is not None
         else TenantOperationalFootprint()
     )
+    recent_signals = (
+        await list_recent_signals_public(session, company_id, limit=15)
+        if company_id is not None
+        else []
+    )
     return PlatformMemoryEnvelopePublic(
         schema_version=PLATFORM_MEMORY_SCHEMA_VERSION,
         company_id=company_id,
@@ -218,4 +224,5 @@ async def build_platform_memory_envelope(
         shared_primitives=_static_shared_primitives(),
         cross_feed_channels=_static_cross_feed(),
         footprint=footprint,
+        recent_signals=recent_signals,
     )

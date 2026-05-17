@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ProductFlags(BaseModel):
@@ -70,6 +70,57 @@ class TenantOperationalFootprint(BaseModel):
     ins_study_count: int = 0
 
 
+_ALLOWED_DOMAINS = frozenset({"field", "ins", "cx", "clever", "perfil", "platform"})
+
+
+class PlatformSignalCreateBody(BaseModel):
+    """Cuerpo para registrar una señal en la memoria compartida del tenant."""
+
+    source_domain: str = Field(max_length=32)
+    signal_code: str = Field(max_length=64)
+    summary: str = Field(max_length=4000)
+    severity: str | None = Field(default=None, max_length=16)
+    payload: dict = Field(default_factory=dict)
+    field_study_id: int | None = None
+    field_project_id: int | None = None
+    ins_study_id: int | None = None
+
+    @field_validator("source_domain")
+    @classmethod
+    def normalize_domain(cls, v: str) -> str:
+        s = v.strip().lower()
+        if s not in _ALLOWED_DOMAINS:
+            raise ValueError(
+                f"source_domain debe ser uno de: {', '.join(sorted(_ALLOWED_DOMAINS))}",
+            )
+        return s
+
+    @field_validator("signal_code")
+    @classmethod
+    def strip_code(cls, v: str) -> str:
+        s = v.strip()
+        if not s:
+            raise ValueError("signal_code no puede estar vacío")
+        return s
+
+
+class PlatformSignalPublic(BaseModel):
+    """Evento de señal ya persistido."""
+
+    id: int
+    company_id: int
+    source_domain: str
+    signal_code: str
+    severity: str | None
+    summary: str
+    payload: dict
+    field_study_id: int | None
+    field_project_id: int | None
+    ins_study_id: int | None
+    created_by_user_id: int | None
+    created_at: str
+
+
 class PlatformMemoryEnvelopePublic(BaseModel):
     """Envelope único: cómo piensa la plataforma como sistema, no como silos."""
 
@@ -80,3 +131,7 @@ class PlatformMemoryEnvelopePublic(BaseModel):
     shared_primitives: list[SharedPrimitive]
     cross_feed_channels: list[CrossFeedChannel]
     footprint: TenantOperationalFootprint
+    recent_signals: list[PlatformSignalPublic] = Field(
+        default_factory=list,
+        description="Últimas señales cross-dominio persistidas para el tenant.",
+    )

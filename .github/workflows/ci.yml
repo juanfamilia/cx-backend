@@ -34,6 +34,7 @@ jobs:
           app/models/field_framework_template_model.py
           app/models/field_instrument_qa_run_model.py
           app/models/field_readiness_model.py
+          app/models/platform_signal_model.py
           app/platform_intelligence
           app/routes/intelligence_router.py
           tests/
