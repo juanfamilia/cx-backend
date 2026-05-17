@@ -1,6 +1,6 @@
 # 7Field — Arquitectura de experiencia (producto)
 
-**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos*. La **norma obligatoria** de producto, UX/UI, investigación y criterio técnico está en § **Dirección de producto, UX/UI y criterio técnico**. El **orden de ejecución** para implementación (Cursor) está en [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md). El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
+**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos* dentro del **ecosistema Siete** (Field, CX, InS, Clever, Perfil), no solo un módulo aislado. La **norma transversal** de producto, UX/UI y criterio técnico está también en [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md). La **norma obligatoria** ampliada de experiencia Field está en § **Dirección de producto, UX/UI y criterio técnico** (abajo). El **orden de ejecución** para implementación (Cursor) está en [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md). El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
 
 ---
 

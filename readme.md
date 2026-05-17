@@ -1,9 +1,12 @@
 # Siete CX Backend
 
+API principal del **ecosistema Siete Inteligencia Creativa** (inteligencia aplicada a investigación, experiencia y operación): **Field**, **CX**, **InS**, **Clever**, **Perfil** — sobre **FastAPI** + **PostgreSQL**. Visión de producto y continuidad PRE-FIELD ↔ FIELD: [`docs/7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md`](docs/7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md). Tenant, flags y contrato compartido: [`docs/ECOSYSTEM_SIETE.md`](docs/ECOSYSTEM_SIETE.md), [`docs/SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md`](docs/SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md).
+
 ## Project Specs
 
 - Python 3.13
 - PostgreSQL 14
+- FastAPI (`app/main.py`)
 
 ## Siete InS (producto investigación)
 

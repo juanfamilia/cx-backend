@@ -7,6 +7,7 @@
 - **Gobierno cerrado (ADR):** [adr/001-pre-field-brief-framework-ai-guide-bank-governance.md](adr/001-pre-field-brief-framework-ai-guide-bank-governance.md).
 - **Modelo canónico PRE-FIELD** (entidades, snapshots, IA trace package, biblioteca, gates): [7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md](7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md).
 - Visión y UX: [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md) (sección PRE-FIELD).
+- Experiencia unificada del ecosistema Siete y continuidad entre productos: [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
 - Decisiones cerradas (motor de reglas, formato QA, Study, Readiness, Clever): [7FIELD_STRUCTURAL_DECISIONS_V1.md](7FIELD_STRUCTURAL_DECISIONS_V1.md).
 
 ---

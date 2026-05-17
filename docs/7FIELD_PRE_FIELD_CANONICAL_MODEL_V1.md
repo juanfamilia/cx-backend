@@ -4,7 +4,7 @@
 
 ### Principio de plataforma (fuera solo de PRE-FIELD)
 
-En **todo** 7Field, la dirección es que **observaciones relevantes converjan en hallazgos auditables bajo el mismo contrato** (fuente, severidad, vínculos a reglas/versiones, tenant, actor donde aplique) — PRE-FIELD, Field, scoring, IA, Readiness y capa ejecutiva. Evitar subsistemas que “cuenten cosas” sin camino de auditoría al mismo modelo de hallazgo.
+En **todo** 7Field, la dirección es que **observaciones relevantes converjan en hallazgos auditables bajo el mismo contrato** (fuente, severidad, vínculos a reglas/versiones, tenant, actor donde aplique) — PRE-FIELD, Field, scoring, IA, Readiness y capa ejecutiva. Evitar subsistemas que “cuentan cosas” sin camino de auditoría al mismo modelo de hallazgo. **Continuidad PRE-FIELD → FIELD y con CX/InS/Clever/Perfil:** [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
 
 **Audiencia:** arquitectura, backend, producto UX, seguridad.
 

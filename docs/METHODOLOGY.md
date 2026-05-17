@@ -4,6 +4,8 @@
 > integrado en la plataforma. Esta metodología es **híbrida**: no pretende ser
 > investigación propia, sino una **orquestación operativa** de marcos reconocidos
 > internacionalmente, adaptada al contexto LATAM y a la industria de cada cliente.
+>
+> **Ecosistema Siete:** este framework alimenta la dimensión CX / evaluación dentro de la plataforma unificada; criterios transversales de producto y continuidad entre módulos en [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md) y [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
 
 ---
 

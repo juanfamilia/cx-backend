@@ -1,6 +1,6 @@
 # 7Field — Decisiones estructurales cerradas (v1)
 
-**Propósito:** sustituir **zonas grises** por línea base ejecutable para ingeniería. **No sustituye** la visión en [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md); **acota** cómo implantarla.
+**Propósito:** sustituir **zonas grises** por línea base ejecutable para ingeniería. **No sustituye** la visión en [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md) ni la dirección de experiencia en [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md); **acota** cómo implantarla.
 
 **Audiencia:** arquitectura, backend, seguridad producto — **sin** expansión funcional nueva en este documento.
 

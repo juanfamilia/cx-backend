@@ -10,7 +10,7 @@
 
 PRE-FIELD mezcla **experiencia de usuario**, **gobierno**, **auditoría enterprise** y **asistencia IA**. Sin criterios cerrados, arquitectura y UX divergen (dónde vive el brief, qué puede hacer la IA, qué entra al banco de guías, qué bloquea Readiness).
 
-Este ADR **cierra** política de producto y gobierno; el modelo físico detallado vive en [7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md](../7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md).
+Este ADR **cierra** política de producto y gobierno; el modelo físico detallado vive en [7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md](../7FIELD_PRE_FIELD_CANONICAL_MODEL_V1.md). **Continuidad PRE-FIELD → FIELD y con el resto del ecosistema** (CX, InS, Clever, Perfil): [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](../7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
 
 ### Producto ancla
 

@@ -4,13 +4,14 @@
 
 ## 1. Constitución (criterios de negocio)
 
-1. **Una plataforma**, no cuatro productos sueltos: mejora continua y **reducción de riesgo operativo**. Hilo: **señal → riesgo → decisión → acción → aprendizaje**.
+1. **Una plataforma**, no productos sueltos: mejora continua y **reducción de riesgo operativo**. Hilo: **señal → riesgo → decisión → acción → aprendizaje**. La propuesta de valor global es **inteligencia aplicada** sobre investigación y experiencia, no “otro EMS ni otro builder”.
 
 2. **Papeles por módulo**
-   - **Field** — control de ejecución; evita pérdida (campo, integraciones sobre captura, no reemplazar captura).
-   - **InS (INS)** — voz, sesiones, hallazgos cualitativos.
-   - **CX** — medición, cumplimiento, experiencia, cierre operativo.
-   - **Clever** — aceleración (lectura, síntesis, soporte ejecutivo); **no** sustituye reglas ni gobernanza; **no** es el core.
+   - **Field** — **PRE-FIELD:** diseño inteligente del estudio (brief, framework, journey, riesgos, QA consultivo, readiness). **FIELD:** control operativo, salud, hallazgos, scoring, ejecución real sobre datos de captura externa. FIELD **consume intención metodológica** creada en PRE-FIELD (continuidad operacional, no dos silos).
+   - **InS (INS)** — voz, sesiones, hallazgos cualitativos; debe poder **alinearse** en el futuro a la misma memoria metodológica / señales que Field y CX cuando las APIs lo permitan.
+   - **CX** — medición, cumplimiento, experiencia, cierre operativo; observa señales coherentes con **intención de estudio** donde exista vínculo de contexto.
+   - **Clever** — aceleración (lectura, síntesis, soporte ejecutivo); **no** sustituye reglas ni gobernanza; **no** es el core; narra y resume con referencia a artefactos auditables.
+   - **Perfil** — identidad y contexto del usuario o equipo dentro del ecosistema (capacidades, preferencias, continuidad entre productos); evolución técnica según roadmap; **no** sustituye tenant (`companies`) ni sub-tenant (`end_clients`).
 
 3. **Ancla comercial hoy: Field** — primer mercado: investigación y campo; entrada por dolor: **pérdida por mala ejecución de campo**. Orden de expansión **no negociable por ahora:** Field abre → InS expande → CX madura relación → Clever eleva (sin ser requisito).
 
@@ -138,6 +139,7 @@ Cada módulo puede tener tablas propias, pero el **significado** exportable / cr
 ## 5. Relación con otros documentos
 
 - Tenant, flags de producto y API transversal: [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md)
+- **Dirección de experiencia y continuidad PRE-FIELD ↔ FIELD ↔ ecosistema:** [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md)
 - Formato Field CSV: [FIELD_CSV_2026_1.md](FIELD_CSV_2026_1.md)
 - **7Field — hallazgos (criticidad operativa, STOP/FIX_NOW/MONITOR), gobierno de reglas, Clever Executive Intelligence:** [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
 - **7Field — estrategia comercial (top 3 vendibles, narrativa inevitable, Clever, ancla Field):** [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md)

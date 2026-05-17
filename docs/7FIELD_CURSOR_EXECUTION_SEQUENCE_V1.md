@@ -1,6 +1,8 @@
 # 7Field — Secuencia de ejecución (Cursor)
 
-**Propósito:** orden **obligatorio** de implementación — prioridad, reglas técnicas, dirección visual y percepción UX. **No** amplía filosofía de producto; **operacionaliza** lo ya definido en [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md).
+**Propósito:** orden **obligatorio** de implementación — prioridad, reglas técnicas, dirección visual y percepción UX. **Operacionaliza** la visión del ecosistema Siete Inteligencia Creativa definida en [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md) y el alcance Field en [7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md](7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md).
+
+**Contexto ecosistema:** lo implementado en Field (PRE-FIELD → FIELD, bundles de inteligencia) debe **mantener continuidad** y preparar consumo por otros productos (CX, InS, Clever, Perfil) cuando existan contratos API — sin ensanchar pantallas que contradigan “una pregunta mental por vista” ni duplicar inteligencia que debe vivir en **FastAPI**.
 
 **Regla de trabajo:** ejecutar **en este orden (1 → 9)**. No abrir builders complejos, drag/drop avanzado ni superficie “ERP” antes de cubrir lo que corresponde en cada fase.
 

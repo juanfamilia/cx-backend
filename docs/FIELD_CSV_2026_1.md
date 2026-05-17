@@ -1,6 +1,6 @@
 # Field — formato CSV `2026.1` (piloto)
 
-Primera versión orientada a **torre de control** (avance y calidad), no a microdatos de cuestionario.
+Primera versión orientada a **torre de control** (avance y calidad), no a microdatos de cuestionario. Forma parte del producto **Field** dentro del **ecosistema Siete Inteligencia Creativa**; criterios transversales de experiencia y continuidad entre productos: [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
 
 ## Columnas obligatorias
 

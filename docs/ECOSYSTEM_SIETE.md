@@ -1,5 +1,7 @@
 # Ecosistema Siete (tenant / sub-tenant / productos)
 
+**Visión:** Siete Inteligencia Creativa **no** es una colección de pantallas aisladas: es un **ecosistema de inteligencia aplicada** a investigación, experiencia y operación. Field, CX, InS, Clever y Perfil comparten **contexto, identidad, lenguaje, señales y memoria metodológica**. Dirección de experiencia y criterio transversal: [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
+
 **Criterios de plataforma, ancla comercial (Field) y contrato mínimo compartido (hallazgos, auditoría, decisiones):** [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md)
 
 **Hallazgos, tri‑estado operativo (STOP / FIX_NOW / MONITOR), versionado de scoring y Clever:** [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md)
@@ -20,11 +22,12 @@
 | Columna | Producto |
 |---------|----------|
 | *(implícito)* | **CX** — siempre `true` en `GET /entitlements/me` para un tenant válido. |
-| `siete_ins_enabled` | InS |
-| `siete_field_enabled` | Field |
-| `siete_clever_enabled` | Clever |
+| `siete_ins_enabled` | **InS** — investigación cualitativa (sesiones, pipeline evolutivo). |
+| `siete_field_enabled` | **Field** — PRE-FIELD (diseño del estudio) + FIELD (supervisión operativa); sin sustituir EMS de captura. |
+| `siete_clever_enabled` | **Clever** — aceleración ejecutiva; no sustituye reglas ni hallazgos oficiales. |
+| *(roadmap / modelo evolutivo)* | **Perfil** — identidad y contexto del usuario o equipo en el ecosistema (preferencias, continuidad entre productos); activación técnica según evolución de `companies` / perfil extendido. |
 
-Activación InS/Field/Clever: superadmin vía `PUT /company/{id}` (`CompanyUpdate`).
+Activación InS/Field/Clever: superadmin vía `PUT /company/{id}` (`CompanyUpdate`). **Perfil** se documenta aquí como pilar de producto; el mecanismo exacto de flag o tabla seguirá el contrato de plataforma cuando se formalice en código.
 
 ## API transversal
 

@@ -1,7 +1,7 @@
 # 7Field — Dirección comercial, prioridades y narrativa (v1)
 
 **Estado:** activo — **ámbito:** ventas, producto, inversiones.  
-**Propósito:** fijar **dirección estratégica** y **prioridades comerciales** para que el producto no sea una suma de capacidades sin historia; alineado con [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md) y con [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md).
+**Propósito:** fijar **dirección estratégica** y **prioridades comerciales** para que el producto no sea una suma de capacidades sin historia; alineado con [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md), [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md) y con [7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md](7FIELD_FINDINGS_GOVERNANCE_AND_EXEC_INTEL_V1.md).
 
 ---
 

@@ -9,6 +9,8 @@ Producto **separado** de Siete CX sobre la **misma infraestructura** (auth, empr
 - **API** bajo el mismo prefijo que CX: `/api/v1/ins/...`.
 - **Pipeline** `POST /ins/studies/{id}/run`: por ahora marca `pipeline_status=ready` (stub). La secuencia real será: cola → vídeo/audio → transcripción → rúbrica → informe JSON + narrativa.
 
+**Continuidad ecosistema:** InS forma parte de Siete Inteligencia Creativa; en evolución debe **compartir contexto** con intención metodológica y señales definidas en Field/CX cuando existan contratos y vínculos en datos — ver [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md) §10.
+
 ## Acceso
 
 | Quién | Comportamiento |

@@ -15,6 +15,7 @@
 3. **Patrones metodológicos reales.** Calibrar reglas y plantillas con práctica reconocible (Ipsos, Kantar, NielsenIQ, Gallup, Bain CX, Qualtrics XM Institute, Forrester, ESOMAR, MRS, estándares UX research, JTBD, CX maturity, etc.) — **traducidos** a reglas audtables y UX humano, no teoría en API.
 4. **Percepción deseada:** mezcla creíble de **consultor senior + director metodológico + operaciones inteligentes**.
 5. **Continuidad PRE-FIELD → FIELD.** El mismo bundle de contexto (journey, riesgos, prioridades, señales) debe poder **serializarse y reusarse** en overview/decisión Field cuando exista vínculo estudio–proyecto.
+6. **Horizonte ecosistema.** Los mismos artefactos versionados deben poder **alimentar** en el futuro a CX, InS y Clever (p. ej. resúmenes ejecutivos, patrones cualitativos, narrativa) **sin** duplicar fuentes de verdad; Perfil y permisos consumen el mismo tenant y auditoría.
 
 ### 1.1 Readiness oficial vs QA dinámico (semántica única)
 

@@ -3,7 +3,7 @@
 **Estado:** activo — **prioridad ejecutiva / producto / arquitectura**.  
 **Alcance:** clasificación de criticidad **operativa** (no solo “cómo se ve”), política de decisión (**STOP · FIX_NOW · MONITOR**), scoring con **contexto de negocio**, **versionado de reglas**, condiciones enterprise (logs, Clever, integraciones), y **rol contrato-compatible** de Clever frente al shared contract documentado en [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md).
 
-**No negociable:** el marco de investigación (RIF) vive como **núcleo de 7Field**; sin **shared contract**, no hay ecosistema. Ver constitución en el documento de plataforma.
+**No negociable:** el marco de investigación (RIF) vive como **núcleo de 7Field**; sin **shared contract**, no hay ecosistema. Ver constitución en el documento de plataforma. **Experiencia y continuidad entre productos Siete:** [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md).
 
 **Prioridades comerciales y narrativa ejecutiva (top 3 vendibles, Clever, ancla Field):** [7FIELD_COMMERCIAL_STRATEGY_V1.md](7FIELD_COMMERCIAL_STRATEGY_V1.md).
 
