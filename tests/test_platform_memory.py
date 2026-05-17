@@ -14,11 +14,11 @@ def test_five_domain_lenses():
     assert all(x.enabled_for_tenant for x in lenses)
 
 
-def test_cross_feed_ins_to_field_planned():
+def test_cross_feed_ins_to_field_partial():
     ch = _static_cross_feed()
     ins_field = [c for c in ch if c.source == "ins" and c.sink == "field"]
     assert len(ins_field) == 1
-    assert ins_field[0].status == "planned"
+    assert ins_field[0].status == "partial"
 
 
 def test_shared_primitives_include_findings_and_embeddings():

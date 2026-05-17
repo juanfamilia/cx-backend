@@ -30,6 +30,8 @@ jobs:
           app/services/field_readiness_evaluator.py
           app/services/field_readiness_services.py
           app/services/field_framework_template_services.py
+          app/services/field_study_services.py
+          app/services/ins_study_services.py
           app/models/field_instrument_revision_model.py
           app/models/field_framework_template_model.py
           app/models/field_instrument_qa_run_model.py

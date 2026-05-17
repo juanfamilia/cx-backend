@@ -7,6 +7,7 @@ from sqlmodel import select
 from app.models.company_model import Company
 from app.models.ins_study_model import InsStudy, InsStudyCreate, InsStudyPublic
 from app.models.user_model import User
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.utils.exeptions import PermissionDeniedException
 
 logger = logging.getLogger(__name__)
@@ -58,6 +59,17 @@ async def create_ins_study(
     await session.commit()
     await session.refresh(row)
     logger.info("ins_study created id=%s company_id=%s", row.id, company_id)
+    await emit_platform_signal_safe(
+        session,
+        company_id=company_id,
+        user_id=user.id,
+        source_domain="ins",
+        signal_code="ins.study_created",
+        summary=f"InS: nuevo estudio «{row.title[:280]}»",
+        severity="low",
+        payload={"ins_study_id": row.id, "title": row.title, "status": row.status},
+        ins_study_id=row.id,
+    )
     return InsStudyPublic.model_validate(row)
 
 
@@ -127,4 +139,19 @@ async def run_ins_study_pipeline_stub(
     await session.commit()
     await session.refresh(row)
     logger.info("ins_study pipeline stub OK id=%s", study_id)
+    await emit_platform_signal_safe(
+        session,
+        company_id=row.company_id,
+        user_id=user.id,
+        source_domain="ins",
+        signal_code="ins.pipeline_ready_stub",
+        summary=f"InS: pipeline marcado listo (stub) — «{row.title[:240]}»",
+        severity="low",
+        payload={
+            "ins_study_id": row.id,
+            "pipeline_status": row.pipeline_status,
+            "study_status": row.status,
+        },
+        ins_study_id=row.id,
+    )
     return InsStudyPublic.model_validate(row)

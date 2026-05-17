@@ -132,10 +132,11 @@ def _static_cross_feed() -> list[CrossFeedChannel]:
         CrossFeedChannel(
             source="ins",
             sink="field",
-            status="planned",
+            status="partial",
             examples=[
-                "frustración / ambigüedad en sesiones → riesgos metodológicos en PRE-FIELD",
-                "rechazo a onboarding → expectativas operativas en FIELD",
+                "señales `platform_signal_events` emitidas desde InS visibles en memoria compartida",
+                "frustración / ambigüedad en sesiones → riesgos metodológicos en PRE-FIELD (roadmap)",
+                "rechazo a onboarding → expectativas operativas en FIELD (roadmap)",
             ],
         ),
         CrossFeedChannel(

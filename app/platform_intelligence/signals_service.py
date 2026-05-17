@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import logging
+from typing import Any
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -11,6 +14,8 @@ from app.models.field_study_model import FieldStudy
 from app.models.ins_study_model import InsStudy
 from app.models.platform_signal_model import PlatformSignalEvent
 from app.platform_intelligence.schemas import PlatformSignalCreateBody, PlatformSignalPublic
+
+logger = logging.getLogger(__name__)
 
 
 async def _assert_refs_for_tenant(
@@ -82,6 +87,47 @@ async def create_platform_signal(
     await session.commit()
     await session.refresh(row)
     return _to_public(row)
+
+
+async def emit_platform_signal_safe(
+    session: AsyncSession,
+    *,
+    company_id: int,
+    user_id: int | None,
+    source_domain: str,
+    signal_code: str,
+    summary: str,
+    severity: str | None = None,
+    payload: dict[str, Any] | None = None,
+    field_study_id: int | None = None,
+    field_project_id: int | None = None,
+    ins_study_id: int | None = None,
+) -> None:
+    """Registra una señal sin tumbar el flujo de negocio si falla persistencia o validación."""
+    try:
+        body = PlatformSignalCreateBody(
+            source_domain=source_domain,
+            signal_code=signal_code,
+            summary=summary[:4000],
+            severity=severity,
+            payload=dict(payload) if payload else {},
+            field_study_id=field_study_id,
+            field_project_id=field_project_id,
+            ins_study_id=ins_study_id,
+        )
+        await create_platform_signal(
+            session,
+            company_id=company_id,
+            user_id=user_id,
+            body=body,
+        )
+    except Exception:
+        logger.warning(
+            "emit_platform_signal_safe failed company_id=%s signal_code=%s",
+            company_id,
+            signal_code,
+            exc_info=True,
+        )
 
 
 async def list_recent_signals_public(

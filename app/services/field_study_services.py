@@ -6,6 +6,7 @@ from sqlmodel import select
 from app.models.end_client_model import EndClient
 from app.models.field_study_model import FieldStudy, FieldStudyCreate, FieldStudyPublic
 from app.models.user_model import User
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.services.field_project_services import (
     _company_id_for_write,
     assert_field_staff,
@@ -69,4 +70,19 @@ async def create_field_study(
     await session.commit()
     await session.refresh(row)
     await ensure_field_study_brief_row(session, row.id, cid)
+    await emit_platform_signal_safe(
+        session,
+        company_id=cid,
+        user_id=user.id,
+        source_domain="field",
+        signal_code="field.study_created",
+        summary=f"Field: estudio canónico «{row.name[:280]}»",
+        severity="low",
+        payload={
+            "field_study_id": row.id,
+            "client_id": row.client_id,
+            "status": row.status,
+        },
+        field_study_id=row.id,
+    )
     return FieldStudyPublic.model_validate(row)
