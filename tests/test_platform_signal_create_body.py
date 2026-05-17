@@ -25,3 +25,12 @@ def test_platform_signal_create_normalizes_domain_and_code():
     )
     assert body.source_domain == "ins"
     assert body.signal_code == "qualitative_friction"
+
+
+def test_platform_signal_accepts_pre_field_domain():
+    body = PlatformSignalCreateBody(
+        source_domain="pre_field",
+        signal_code="test.signal",
+        summary="ok",
+    )
+    assert body.source_domain == "pre_field"

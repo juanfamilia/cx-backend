@@ -12,6 +12,7 @@ from app.models.field_project_model import (
 )
 from app.models.field_study_model import FieldStudy
 from app.models.user_model import User
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
 
@@ -125,6 +126,24 @@ async def create_field_project(
     session.add(row)
     await session.commit()
     await session.refresh(row)
+    await emit_platform_signal_safe(
+        session,
+        company_id=cid,
+        user_id=user.id,
+        source_domain="field",
+        signal_code="field.project_created",
+        summary=f"Field: proyecto «{row.name[:240]}»",
+        severity="low",
+        payload={
+            "field_project_id": row.id,
+            "field_study_id": row.study_id,
+            "ingest_mode": row.ingest_mode,
+            "client_id": row.client_id,
+            "status": row.status,
+        },
+        field_study_id=row.study_id,
+        field_project_id=row.id,
+    )
     return FieldProjectPublic.model_validate(row)
 
 

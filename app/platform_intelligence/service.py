@@ -23,6 +23,19 @@ from app.platform_intelligence.signals_service import list_recent_signals_public
 def _static_lenses(flags: ProductFlags) -> list[DomainLens]:
     return [
         DomainLens(
+            domain="pre_field",
+            title="PRE-FIELD",
+            focus=[
+                "brief",
+                "instrumento",
+                "validación schema",
+                "readiness",
+                "journey diseñado",
+                "riesgos antes de campo",
+            ],
+            enabled_for_tenant=flags.field,
+        ),
+        DomainLens(
             domain="field",
             title="Siete Field",
             focus=[
@@ -142,9 +155,10 @@ def _static_cross_feed() -> list[CrossFeedChannel]:
         CrossFeedChannel(
             source="field",
             sink="cx",
-            status="planned",
+            status="partial",
             examples=[
-                "anomalías de campo → scoring o alertas de experiencia observada",
+                "señales desde análisis de evaluación (`cx.evaluation_analysis_created`) en memoria compartida",
+                "anomalías de campo → scoring o alertas de experiencia observada (roadmap)",
             ],
         ),
         CrossFeedChannel(

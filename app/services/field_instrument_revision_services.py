@@ -21,6 +21,7 @@ from app.models.field_instrument_revision_model import (
 )
 from app.models.field_study_model import FieldStudy
 from app.models.user_model import User
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.services.field_framework_template_services import get_field_framework_template_by_slug_version
 from app.services.field_study_brief_services import ensure_field_study_brief_row
 from app.services.field_study_services import assert_field_staff
@@ -347,6 +348,27 @@ async def validate_instrument_revision_and_persist(
 
     await session.commit()
     await session.refresh(row)
+
+    await emit_platform_signal_safe(
+        session,
+        company_id=cid,
+        user_id=user.id,
+        source_domain="pre_field",
+        signal_code="pre_field.instrument_schema_validated",
+        summary=(
+            f"PRE-FIELD: validación de instrumento «{row.revision_label[:120]}» — "
+            f"{'OK' if report.ok else 'con issues'}"
+        ),
+        severity="medium" if not report.ok else "low",
+        payload={
+            "field_instrument_revision_id": row.id,
+            "field_study_id": row.study_id,
+            "validation_ok": report.ok,
+            "issue_count": len(report.schema_issues),
+            "content_hash": report.content_hash,
+        },
+        field_study_id=row.study_id,
+    )
 
     return FieldInstrumentRevisionValidateResponse(
         revision=FieldInstrumentRevisionPublic.model_validate(row),

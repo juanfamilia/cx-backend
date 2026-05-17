@@ -23,7 +23,7 @@ class DomainLens(BaseModel):
 
     domain: str = Field(
         ...,
-        description="field | ins | cx | clever | perfil",
+        description="field | pre_field | ins | cx | clever | perfil",
         examples=["field"],
     )
     title: str
@@ -70,7 +70,7 @@ class TenantOperationalFootprint(BaseModel):
     ins_study_count: int = 0
 
 
-_ALLOWED_DOMAINS = frozenset({"field", "ins", "cx", "clever", "perfil", "platform"})
+_ALLOWED_DOMAINS = frozenset({"field", "pre_field", "ins", "cx", "clever", "perfil", "platform"})
 
 
 class PlatformSignalCreateBody(BaseModel):

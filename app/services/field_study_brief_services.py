@@ -17,6 +17,7 @@ from app.models.field_study_brief_model import (
 )
 from app.models.field_study_model import FieldStudy
 from app.models.user_model import User
+from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.services.field_project_services import assert_field_staff
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
@@ -161,6 +162,23 @@ async def approve_field_study_brief_internal(
     row.updated_by_user_id = user.id
     await session.commit()
     await session.refresh(row)
+    st = await session.get(FieldStudy, study_id)
+    study_label = (st.name[:240] if st and st.name else f"estudio {study_id}")
+    await emit_platform_signal_safe(
+        session,
+        company_id=cid,
+        user_id=user.id,
+        source_domain="pre_field",
+        signal_code="pre_field.brief_approved_internal",
+        summary=f"PRE-FIELD: brief aprobado internamente — «{study_label}»",
+        severity="low",
+        payload={
+            "field_study_id": study_id,
+            "approval_state": row.approval_state,
+            "brief_body_hash": row.body_hash,
+        },
+        field_study_id=study_id,
+    )
     return FieldStudyBriefPublic.model_validate(row)
 
 
@@ -193,6 +211,23 @@ async def approve_field_study_brief_client(
     row.updated_by_user_id = user.id
     await session.commit()
     await session.refresh(row)
+    st = await session.get(FieldStudy, study_id)
+    study_label = (st.name[:240] if st and st.name else f"estudio {study_id}")
+    await emit_platform_signal_safe(
+        session,
+        company_id=cid,
+        user_id=user.id,
+        source_domain="pre_field",
+        signal_code="pre_field.brief_approved_client",
+        summary=f"PRE-FIELD: brief aprobado por cliente — «{study_label}»",
+        severity="low",
+        payload={
+            "field_study_id": study_id,
+            "approval_state": row.approval_state,
+            "brief_body_hash": row.body_hash,
+        },
+        field_study_id=study_id,
+    )
     return FieldStudyBriefPublic.model_validate(row)
 
 
