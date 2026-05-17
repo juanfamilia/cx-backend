@@ -3,7 +3,12 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import get_db
+from app.models.company_model import Company
+from app.platform_intelligence.schemas import PlatformMemoryEnvelopePublic, ProductFlags
+from app.platform_intelligence.service import build_platform_memory_envelope
 from app.utils.deps import check_company_payment_status, get_auth_user
 
 
@@ -66,6 +71,40 @@ router = APIRouter(
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+@router.get("/platform-memory", response_model=PlatformMemoryEnvelopePublic)
+async def get_platform_memory(
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+    company_id: int | None = Query(
+        None,
+        description="Rol 0: tenant a consultar (misma semántica que GET /entitlements/me).",
+    ),
+):
+    """Envelope del cerebro compartido: una memoria, vistas especializadas (Field, InS, CX, Clever, Perfil)."""
+    user = request.state.user
+    company: Company | None = None
+
+    if user.role == 0:
+        cid = company_id if company_id is not None else user.company_id
+        if cid is not None:
+            company = await session.get(Company, cid)
+    elif user.company_id is not None:
+        company = await session.get(Company, user.company_id)
+
+    if company is None or company.deleted_at is not None:
+        flags = ProductFlags(cx=True, ins=False, field=False, clever=False, perfil=False)
+        return await build_platform_memory_envelope(session, company_id=None, flags=flags)
+
+    flags = ProductFlags(
+        cx=True,
+        ins=bool(company.siete_ins_enabled),
+        field=bool(company.siete_field_enabled),
+        clever=bool(company.siete_clever_enabled),
+        perfil=False,
+    )
+    return await build_platform_memory_envelope(session, company_id=company.id, flags=flags)
 
 
 @router.get("/insights", response_model=InsightsPublic)
