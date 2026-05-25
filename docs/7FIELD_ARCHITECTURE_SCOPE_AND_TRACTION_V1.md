@@ -1,6 +1,6 @@
 # 7Field — Arquitectura de experiencia (producto)
 
-**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos* dentro del **ecosistema Siete** (Field, CX, InS, Clever, Perfil), no solo un módulo aislado. La **norma transversal** de producto, UX/UI y criterio técnico está también en [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md). La **norma obligatoria** ampliada de experiencia Field está en § **Dirección de producto, UX/UI y criterio técnico** (abajo). El **orden de ejecución** para implementación (Cursor) está en [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md). El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
+**Estado:** activo — **documento maestro simple**: describe *qué debe sentir el usuario* y *qué construimos* dentro del **ecosistema Siete** (Field, CX, InS, Clever, Perfil), no solo un módulo aislado. La **norma transversal** de producto, UX/UI y criterio técnico está también en [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md). **Arquitectura por solución y acceso común (qué es cada módulo):** [SIETE_SOLUTIONS_ARCHITECTURE_V1.md](SIETE_SOLUTIONS_ARCHITECTURE_V1.md). La **norma obligatoria** ampliada de experiencia Field está en § **Dirección de producto, UX/UI y criterio técnico** (abajo). El **orden de ejecución** para implementación (Cursor) está en [7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md). El detalle técnico largo y gobierno profundo siguen en los enlaces al final.
 
 ---
 
@@ -152,7 +152,22 @@ El **wow correcto** es: pegar un brief → estructura inteligente → **visualiz
 
 Producto visual objetivo: **Journey Intelligence** (preview elegante del recorrido, narrativa del participante, riesgos contextuales, señales automáticas, continuidad viva en Field, insights accionables, sensación de acompañamiento). Ver también premisa de **regla de 3 clics** arriba y demo corta de confianza.
 
+**Implementado (frontend `cx-frontend`, 2026-05):** la UI consume el bundle `study_intelligence` y muestra:
+
+| Área | Qué quedó hecho |
+|------|-----------------|
+| PRE-FIELD preview | **Ítem playbook 1–2:** chips de métricas (`contextual_scores`); **`narrativeSpine`** (títulos de fase en orden); **`glanceHighlights`** (destacados cortos priorizados por el motor); flujo por fases (`field-participant-journey-flow` full); insights globales; sección **«Relato por etapa»** en columna editorial + acento visual en fases con abandono/señales |
+| FIELD (operativo) | Panel `field-project-journey-context-panel` en **tablero**, **hallazgos** y **métricas/scoring** (`field-scoring-breakdown`): mismo bundle `overview.study_intelligence`, spine, highlights, métricas de journey, flujo compacto, enlace PRE-FIELD si aplica |
+
+**Mapper / tipos:** `study-intelligence-to-preview.mapper.ts` — `journeyMetrics`, `narrativeSpine`, `glanceHighlights`; fallback y modelo alineados.
+
+**Roadmap abierto (mejoras continuas UX):** microcopy IA consultiva y refinamiento incremental (§ playbook 4). *Sprint C (2026‑05):* primera pasada de «densidad brief» cerrada del lado servidor (`brief_density_band` + hints en respuesta brief; PRE-FIELD compone vistas sin motor de umbrales en cliente).
+
+- **2026‑05‑25 (Sprint B):** dentro de PRE-FIELD, bloque «Detalles técnicos» reorganizado en sub‑`<details>`; resumen ejecutivo Clever muestra texto en primera clase si la API devuelve string y mueve JSON bajo disclosure.
+
 ### Angular — reglas técnicas (frontend)
+
+Persistencia (**2026‑05‑25, Sprint D parcial PRE-FIELD):** derivaciones estables con **`computed`** para «versión actual», historial de revisiones ordenado y `contextualInsightRows` frente a `dismissedInsightIds`/`brief`/`readinessGate` — menos recálculos bajo OnPush.
 
 **Arquitectura:**
 
@@ -161,7 +176,7 @@ Producto visual objetivo: **Journey Intelligence** (preview elegante del recorri
 - **Helpers de copy** separados del markup cuando crezca el texto.
 - Signals / `computed` limpios; **evitar mega-components**.
 
-**Primitivas y experiencias dedicadas** (evitar reciclar layouts “admin” genéricos como base visual): `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`, `field-participant-journey-preview`, y hacia donde apunte el roadmap: `guided-brief-flow`, `framework-recommendation-cards`, `insight-callouts`, `study-review-experience`, `operational-priority-cards` (nombres orientativos; selectores Angular coherentes con el repo).
+**Primitivas y experiencias dedicadas** (evitar reciclar layouts “admin” genéricos como base visual): `field-hero-card`, `field-guided-step`, `field-insight-card`, `field-empty-state`, `field-checklist`, `field-next-step-banner`, `field-participant-journey-preview`, **`field-participant-journey-flow`** (flujo por fases full/compact), **`field-project-journey-context-panel`** (métricas + journey en FIELD), y hacia donde apunte el roadmap: `guided-brief-flow`, `framework-recommendation-cards`, `insight-callouts`, `study-review-experience`, `operational-priority-cards` (nombres orientativos; selectores Angular coherentes con el repo).
 
 **Evitar:** templates enormes llenos de `@if`; lógica de IA mezclada en HTML; **heurísticas de instrumento duplicadas** que debieran vivir en backend (ver § Contrato análisis backend ↔ frontend); helpers gigantes; interfaces duplicadas; tablas complejas en superficie; utilities Tailwind caóticos repetidos.
 
@@ -407,9 +422,15 @@ En Swagger / OpenAPI, el overview está en el tag **Siete Field** (no sustituye 
 - **v3.2 (2026‑05‑11):** PRE-FIELD — **ADR 001** (brief, framework obligatorio, trazabilidad IA, banco de guías, gates) + **modelo canónico** enlazado desde esta doc maestra.
 - **v3.3 (2026‑05‑11):** Principio **hallazgos auditables mismo contrato** (premisa 6); PRE-FIELD nombres oficiales tres capas; prioridad **A→G** y waiver por revisión remitidos a ADR/modelo canónico.
 - **v3.4 (2026‑05‑06):** **Estrella norte** — continuidad PRE-FIELD ↔ FIELD como un solo flujo inteligente (intención viva en campo); anti‑patrones UX vs dirección deseada; rol consultivo de la IA; checklist por pantalla/feature; demo wow correcto; percepción “capa inteligente” sin competir en captura; consistencia con seniority LATAM vía producto, no copy explícito.
-- **v3.5 (2026‑05‑06):** prioridad del **siguiente salto visual/producto**: recorrido preview + narrativa participante + riesgos contextuales + señales automáticas + continuidad viva en Field + insights accionables + acompañamiento — explícitamente **no** drag/drop/builder como eje del valor.
+- **v3.5 (2026‑05‑06):** prioridad del **siguiente salto visual/producto**: recorrido preview + narrativa participante + riesgos contextuales + señales automáticas + continuidad viva en Field + insights accionables + acompañamiento — explícitamente **no** drag/drop/builder como eje del valor. **Entrega frontend:** v4.3 (ítem 1 Journey Intelligence) + v4.4 (ítem 2 preview elegante) + v4.5 (paridad panel en scoring).
 - **v3.7 (2026‑05‑06):** playbook **[7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md](7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md)** — secuencia obligatoria Journey Intelligence → preview visual → continuidad PRE‑FIELD→FIELD → IA consultiva → UX → progressive disclosure → Angular → Python → regla de percepción; enlace desde cabecera y documentación relacionada.
 - **v3.9 (2026‑05‑16):** § **Contrato análisis (backend) ↔ presentación (frontend)** — backend analiza longitud, fatiga, sesgo, redundancia, orden, consistencia, cobertura metodológica, validaciones y riesgos operacionales; frontend solo presenta insights humanos (sin duplicar motor).
+- **v4.8 (2026‑05‑25):** enlace desde cabecera a **[SIETE_SOLUTIONS_ARCHITECTURE_V1.md](SIETE_SOLUTIONS_ARCHITECTURE_V1.md)** — arquitectura por solución (CX / InS / Clever / Field / Pre Field / Perfil) y capa común de acceso.
+- **v4.7.1 (2026‑05‑25):** Refino § playbook 7 Angular — **`computed`** para revisión más reciente, historial ordenado y `contextualInsightRows` en PRE-FIELD.
+- **v4.7 (2026‑05‑25):** Sprint C — IA consultiva **sin umbrales de brief en cliente**: `brief_density_band` + `consultive_hints` en `FieldStudyBriefPublic` (servicio `field_study_brief_surface_intel`); PRE-FIELD compone desde `field-prefield-*` (insights / revisión / detalles técnicos).
+- **v4.6 (2026‑05‑25):** Sprint B — **progressive disclosure** en PRE-FIELD (`Detalles técnicos` anidados: brief JSON avanzado, huellas/spec, waivers, tabla revisiones); resumen ejecutivo Field — JSON Clever sólo tras `<details>` salvo texto plano.
+- **v4.4 (2026‑05‑06):** **Preview visual elegante (playbook Cursor ítem 2)** — `narrativeSpine`, `glanceHighlights`, jerarquía storytelling en `field-participant-journey-preview`; panel FIELD alineado; acento en `field-participant-phase-card` cuando hay abandono esperado o señales automáticas.
+- **v4.3 (2026‑05‑06):** **Journey Intelligence (playbook Cursor ítem 1)** — frontend `cx-frontend`: chips de métricas desde `contextual_scores`, flujo narrativo por fases (`field-participant-journey-flow`), panel `field-project-journey-context-panel` en proyecto FIELD y en hallazgos; mapper `study-intelligence-to-preview`; ver **Dirección visual futura — Journey Intelligence**.
 - **v4.2 (2026‑05‑16):** P2 parcial — persistencia **`field_participant_journeys`** + **`field_journey_phases`** al responder `study-intelligence`; migración `p9q8r7s6t5u4`; API devuelve `participant_journey_snapshot_id`.
 - **v4.1 (2026‑05‑16):** **`GET /field/instrument-revisions/{revision_id}/study-intelligence`** — motor Study Intelligence (journey, QA instantáneo, Readiness, insights); ver `7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md` v1.1 y `7FIELD_PRE_FIELD_INTELLIGENCE_V1.md` §7.
 - **v4.0 (2026‑05‑16):** blueprint **[7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md](7FIELD_BACKEND_INTELLIGENCE_ENGINE_V1.md)** — capas recommendation / insights / QA / operacional / facade `StudyIntelligenceService`; entidades `participant_journey`, `journey_phase`, `operational_risk`, `methodological_signal`, `fatigue_risk`, `sensitivity_area`, `expected_dropout_zone`, `insight_priority`; **prompt registry** centralizado (`app/study_intelligence/prompt_registry.py`); continuidad PRE‑FIELD→FIELD; exportadores y mappings EMS en servidor; contratos Python `app/study_intelligence/contracts.py` (P0).

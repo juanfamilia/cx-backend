@@ -3,12 +3,24 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import ConfigDict, Field as PydanticField
 from sqlalchemy import Column, DateTime, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, SQLModel
+
+
+class FieldBriefConsultHintPublic(SQLModel):
+    """Mensaje consultivo emitido por el servidor (no reglas en navegador)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    tone: Literal["warn", "ok"]
+    message: str
+    apply_label: str = "Ir al brief"
+    show_apply: bool = True
 
 
 class FieldStudyBrief(SQLModel, table=True):
@@ -61,4 +73,8 @@ class FieldStudyBriefPublic(SQLModel):
     approved_client_at: datetime | None = None
     body_hash: str
     updated_at: datetime
+
+    #: Clasificación de «densidad» del brief desde `completeness_score` (solo FastAPI).
+    brief_density_band: Literal["unknown", "thin", "adequate", "rich"] = "unknown"
+    consultive_hints: list[FieldBriefConsultHintPublic] = Field(default_factory=list)
 

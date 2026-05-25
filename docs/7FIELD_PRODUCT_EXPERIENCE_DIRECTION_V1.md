@@ -1,4 +1,4 @@
-# 7Field — Dirección de experiencia de producto (v1.2)
+# 7Field — Dirección de experiencia de producto (v1.3)
 
 **Tipo:** criterio transversal (producto, diseño, frontend, backend, IA).  
 **Tiempo de lectura:** ~8 minutos.  
@@ -245,7 +245,7 @@ Siete Inteligencia Creativa es **una sola capa de inteligencia operacional**: Fi
 
 | Módulo | Enfoque |
 |--------|---------|
-| **Field** | Ejecución y supervisión operativa |
+| **Field** | **PRE-FIELD:** diseño guiado del estudio (brief, instrumento, journey, QA, readiness). **FIELD:** ejecución y supervisión operativa sobre captura externa |
 | **InS** | Significado humano (voz, cualitativo) |
 | **CX** | Experiencia observada |
 | **Clever** | Comunicación ejecutiva (sin sustituir hallazgos oficiales) |
@@ -286,9 +286,9 @@ Orden **orientativo** para fortalecer el núcleo (validar siempre en código e i
 
 | Campo | Valor |
 |-------|--------|
-| Versión | v1.2 (§0 memoria viva; puente PRE-FIELD→FIELD por artefactos; §7 FastAPI/workers/PG/vector/registry/router; §9 checklist ampliado; §9bis Cursor vs producto; §10 tabla vistas; §11 roadmap ampliado) |
+| Versión | v1.3 (§0–§11 sin cambios de tesis; metadatos: enlace vista arquitectónica por solución [SIETE_SOLUTIONS_ARCHITECTURE_V1.md](SIETE_SOLUTIONS_ARCHITECTURE_V1.md)) |
 | Alcance | Dirección de producto y criterio transversal |
-| Relación con otros docs | Complementa arquitectura y alcance; [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md); [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md) |
+| Relación con otros docs | Complementa arquitectura y alcance; [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md); [SIETE_SOLUTIONS_ARCHITECTURE_V1.md](SIETE_SOLUTIONS_ARCHITECTURE_V1.md); [SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md](SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md) |
 
 ---
 

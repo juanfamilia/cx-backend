@@ -17,6 +17,7 @@ alwaysApply: true
 
 - Memoria viva, arquitectura, checklist PR, rol Cursor vs producto: `docs/7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md`
 - Contrato plataforma (hallazgos, decisiones, auditoría): `docs/SIETE_PLATFORM_MINIMUM_CONTRACT_V1.md`
+- Arquitectura por solución (CX, InS, Clever, Field, PRE-FIELD, Perfil; acceso común): `docs/SIETE_SOLUTIONS_ARCHITECTURE_V1.md`
 - Tenant, flags, API transversal: `docs/ECOSYSTEM_SIETE.md`
 - Alcance y UX maestro Field: `docs/7FIELD_ARCHITECTURE_SCOPE_AND_TRACTION_V1.md`
 - Secuencia implementación Field (1→9): `docs/7FIELD_CURSOR_EXECUTION_SEQUENCE_V1.md`

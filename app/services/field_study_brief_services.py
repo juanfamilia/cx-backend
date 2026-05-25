@@ -21,6 +21,8 @@ from app.platform_intelligence.signals_service import emit_platform_signal_safe
 from app.services.field_project_services import assert_field_staff
 from app.utils.exeptions import NotFoundException, PermissionDeniedException
 
+from app.services.field_study_brief_surface_intel import enrich_field_study_brief_public
+
 BRIEF_APPROVED_FOR_READINESS = frozenset({"approved_internal", "approved"})
 
 
@@ -102,10 +104,10 @@ async def get_field_study_brief_public(
     cid = _effective_company_id(user, company_id)
     existing = await _select_brief_for_study_company(session, study_id, cid)
     if existing is not None:
-        return FieldStudyBriefPublic.model_validate(existing)
+        return enrich_field_study_brief_public(FieldStudyBriefPublic.model_validate(existing))
     await _get_study_for_company(session, study_id, cid)
     row = await ensure_field_study_brief_row(session, study_id, cid)
-    return FieldStudyBriefPublic.model_validate(row)
+    return enrich_field_study_brief_public(FieldStudyBriefPublic.model_validate(row))
 
 
 async def patch_field_study_brief(
@@ -137,7 +139,7 @@ async def patch_field_study_brief(
     row.updated_by_user_id = user.id
     await session.commit()
     await session.refresh(row)
-    return FieldStudyBriefPublic.model_validate(row)
+    return enrich_field_study_brief_public(FieldStudyBriefPublic.model_validate(row))
 
 
 async def approve_field_study_brief_internal(
@@ -228,7 +230,7 @@ async def approve_field_study_brief_client(
         },
         field_study_id=study_id,
     )
-    return FieldStudyBriefPublic.model_validate(row)
+    return enrich_field_study_brief_public(FieldStudyBriefPublic.model_validate(row))
 
 
 def brief_allows_readiness(row: FieldStudyBrief | None) -> bool:

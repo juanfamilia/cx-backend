@@ -138,6 +138,7 @@ Cada módulo puede tener tablas propias, pero el **significado** exportable / cr
 
 ## 5. Relación con otros documentos
 
+- **Arquitectura de cada solución + capa común de acceso (PRE-FIELD, FIELD, CX, InS, Clever, Perfil):** [SIETE_SOLUTIONS_ARCHITECTURE_V1.md](SIETE_SOLUTIONS_ARCHITECTURE_V1.md)
 - Tenant, flags de producto y API transversal: [ECOSYSTEM_SIETE.md](ECOSYSTEM_SIETE.md)
 - **Dirección de experiencia y continuidad PRE-FIELD ↔ FIELD ↔ ecosistema:** [7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md](7FIELD_PRODUCT_EXPERIENCE_DIRECTION_V1.md)
 - Formato Field CSV: [FIELD_CSV_2026_1.md](FIELD_CSV_2026_1.md)
@@ -148,4 +149,5 @@ Cada módulo puede tener tablas propias, pero el **significado** exportable / cr
 
 ## 6. Versionado de este documento
 
+- **v1.1 (2026-05-25):** enlace a vista arquitectónica por solución y acceso común: [SIETE_SOLUTIONS_ARCHITECTURE_V1.md](SIETE_SOLUTIONS_ARCHITECTURE_V1.md).
 - **v1 (2026-04-24):** constitución, flujo Mermaid, matriz plantilla, contrato mínimo hallazgo/auditoría/decisión.
